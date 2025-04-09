@@ -1,11 +1,24 @@
 [project]
-description = "A starter template for marimo notebooks with uv"
-name = "marimo-template"
+description = "Tariff and trade analysis for MPIL"
+name = "mpil_tariff_trade_analysis"
 requires-python = ">=3.12"
 version = "0.1.0"
+dependencies = [
+    "duckdb>=1.2.2",
+    "marimo>=0.12.6",
+    "tqdm>=4.67.1",
+]
+
+[build-system]
+requires = ["setuptools>=42"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [dependency-groups]
 dev = [
+  "mpil-tariff-trade-analysis",
   "pre-commit>=4.0.1",
   "pytest>=8.3.4",
   "ruff>=0.8.3",
@@ -13,7 +26,7 @@ dev = [
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
-testpaths = ["tests", "marimo_template"]
+testpaths = ["tests", "dev", "utils"]
 
 [tool.ruff]
 line-length = 100
@@ -37,3 +50,6 @@ format_on_save = true
 
 [tool.marimo.package_management]
 manager = "uv"
+
+[tool.uv.sources]
+mpil-tariff-trade-analysis = { workspace = true }
