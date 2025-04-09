@@ -14,10 +14,6 @@ def _():
 
 @app.cell
 def test_cell():
-    from utils import add
-
-    assert add(1, 2) == 3
-    assert 2 == 2
     return
 
 
