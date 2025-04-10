@@ -7,6 +7,7 @@ dependencies = [
     "duckdb>=1.2.2",
     "marimo>=0.12.6",
     "tqdm>=4.67.1",
+    "world-trade-data>=0.1.1",
 ]
 
 [build-system]
