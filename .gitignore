@@ -19,5 +19,8 @@ __init__.py
 # Data folders
 data/*
 
+# Log files
+logs/*
+
 # Keep .gitkeep
 !.gitkeep

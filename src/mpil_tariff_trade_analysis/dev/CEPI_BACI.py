@@ -19,6 +19,17 @@ def _(mo):
         Documentation available [here](https://www.cepii.fr/DATA_DOWNLOAD/baci/doc/DescriptionBACI.html)
 
         The dataset was last updated in January 2025.
+
+        ---
+
+        List of Variables:
+
+        - t: year
+        - i: exporter
+        - j: importer
+        - k: product
+        - v: value
+        - q: quantity
         """
     )
     return
@@ -26,17 +37,19 @@ def _(mo):
 
 @app.cell
 def _():
-    import marimo as mo
-    import mpil_tariff_trade_analysis as mtta
     import duckdb
+    import marimo as mo
+
+    import mpil_tariff_trade_analysis as mtta
+
     return duckdb, mo, mtta
 
 
 @app.cell
 def _():
-    import sys
     import os
     import platform
+    import sys
 
     print("Python version:")
     print(sys.version)
@@ -63,10 +76,10 @@ def _():
 
 @app.cell
 def _():
-    from mpil_tariff_trade_analysis.utils.baci import (
+    from mpil_tariff_trade_analysis.etl.baci import (
+        aggregate_baci,
         baci_to_parquet,
         baci_to_parquet_incremental,
-        aggregate_baci,
     )
 
     hs = "HS92"
@@ -96,8 +109,8 @@ def _(aggregate_baci, hs, release):
     # Aggregate BACI data by country
     aggregate_baci(
         input=f"data/final/BACI_{hs}_V{release}",
-        output=f"data/final/BACI_{hs}_V{release}-2digit.parquet",
-        aggregation="total",
+        output=f"data/final/BACI_{hs}_V{release}-total.parquet",
+        aggregation="total",  # 2digit #4digit
     )
     return
 
@@ -106,7 +119,7 @@ def _(aggregate_baci, hs, release):
 def _(duckdb, hs, release):
     # View some summary statistics
     duckdb.sql(
-        f"SELECT * FROM read_parquet('data/final/BACI_{hs}_V{release}-2digit.parquet')"
+        f"SELECT * FROM read_parquet('data/final/BACI_{hs}_V{release}-total.parquet')"
     ).show()
     return
 
