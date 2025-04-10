@@ -6,6 +6,7 @@ version = "0.1.0"
 dependencies = [
     "duckdb>=1.2.2",
     "marimo>=0.12.6",
+    "polars>=1.27.0",
     "tqdm>=4.67.1",
     "world-trade-data>=0.1.1",
 ]

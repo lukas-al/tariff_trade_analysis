@@ -12,8 +12,8 @@ from mpil_tariff_trade_analysis.utils.logging_config import get_logger
 LOGGER = get_logger(__name__)
 
 """Default values for the WITS requests"""
-DEFAULT_YEAR = '2017'
-DEFAULT_DATASOURCE = 'tradestats-trade'
+DEFAULT_YEAR = "2017"
+DEFAULT_DATASOURCE = "tradestats-trade"
 
 LIMITATIONS = """Please read the **Limitation on Data Request** from https://wits.worldbank.org/witsapiintro.aspx
 
@@ -38,11 +38,11 @@ def semicolon_separated_strings(value):
 
 def true_or_false(value):
     """Replace Yes/No with True/False"""
-    if value in {'0', 'Yes'}:
+    if value in {"0", "Yes"}:
         return True
-    if value in {'1', 'No'}:
+    if value in {"1", "No"}:
         return False
-    raise ValueError('{} is neither True nor False'.format(value))
+    raise ValueError("{} is neither True nor False".format(value))
 
 
 # Tariff functions
@@ -136,7 +136,10 @@ def _get_data(reporter, partner, product, year, datasource, name_or_id, is_tarif
     response = requests.get(
         "https://wits.worldbank.org/API/V1/SDMX/V21/{}?format=JSON".format("/".join(list_args))
     )
-    response.raise_for_status()
+    if response.status_code != 200:
+        LOGGER.error(f"{response.status_code} Error - payload: \n {response.text}")
+        raise requests.exceptions.HTTPError(response.status_code)
+
     data = response.json()
     df = _wits_data_to_df(data, name_or_id=name_or_id, is_tariff=is_tariff)
     if is_tariff and not len(df):
@@ -207,19 +210,20 @@ def _wits_data_to_df(data, value_name="Value", is_tariff=False, name_or_id="id")
 def get_referential(name, datasource=DEFAULT_DATASOURCE):
     """Return the desired referential"""
     LOGGER.info(f"Getting referential data for {name} from datasource {datasource}")
-    args = ['datasource', datasource, name]
-    response = requests.get('https://wits.worldbank.org/API/V1/wits/{}/'.format('/'.join(args)))
+    args = ["datasource", datasource, name]
+    response = requests.get("https://wits.worldbank.org/API/V1/wits/{}/".format("/".join(args)))
     response.raise_for_status()
     data_dict = xmltodict.parse(response.content)
 
-    if 'wits:error' in data_dict:
-        if name == 'indicator' and datasource == 'trn':
-            msg = "No indicator is available on datasource='trn'. " \
-                  "Please use either {}".format(' or '.join("datasource='{}'".format(src)
-                                                            for src in DATASOURCES if
-                                                            src != datasource))
+    if "wits:error" in data_dict:
+        if name == "indicator" and datasource == "trn":
+            msg = "No indicator is available on datasource='trn'. Please use either {}".format(
+                " or ".join(
+                    "datasource='{}'".format(src) for src in DATASOURCES if src != datasource
+                )
+            )
         else:
-            msg = data_dict['wits:error']['wits:message']['#text']
+            msg = data_dict["wits:error"]["wits:message"]["#text"]
         LOGGER.error(f"Error getting referential data: {msg}")
         raise ValueError(msg)
 
@@ -227,40 +231,41 @@ def get_referential(name, datasource=DEFAULT_DATASOURCE):
         if key not in data_dict:
             if ignore_if_missing:
                 return data_dict
-            error_msg = f'{key} not in {data_dict.keys()}'
+            error_msg = f"{key} not in {data_dict.keys()}"
             LOGGER.error(error_msg)
             raise KeyError(error_msg)
         return data_dict[key]
 
-    if name == 'country':
-        level1 = 'countries'
+    if name == "country":
+        level1 = "countries"
         level2 = name
-    elif name == 'dataavailability':
+    elif name == "dataavailability":
         level1 = name
-        level2 = 'reporter'
+        level2 = "reporter"
     else:
-        level1 = name + 's'
+        level1 = name + "s"
         level2 = name
 
-    data_dict = deeper('wits:datasource')
-    data_dict = deeper('wits:{}'.format(level1))
-    data_dict = deeper('wits:{}'.format(level2))
+    data_dict = deeper("wits:datasource")
+    data_dict = deeper("wits:{}".format(level1))
+    data_dict = deeper("wits:{}".format(level2))
 
     for obs in data_dict:
-        if 'wits:reporternernomenclature' in obs:
-            obs['wits:reporternernomenclature'] = obs['wits:reporternernomenclature']['@reporternernomenclaturecode']
+        if "wits:reporternernomenclature" in obs:
+            obs["wits:reporternernomenclature"] = obs["wits:reporternernomenclature"][
+                "@reporternernomenclaturecode"
+            ]
 
     table = pd.DataFrame(data_dict)
     # Clean up column names by removing special characters
     table.columns = [
-        col.replace('@', '').replace('#', '').replace('wits:', '') 
-        for col in table.columns
+        col.replace("@", "").replace("#", "").replace("wits:", "") for col in table.columns
     ]
 
     for col in table:
-        if col == 'notes':
-            table[col] = table[col].apply(lambda note: '' if note is None else note)
-        if col.startswith('is') and not col.startswith('iso'):
+        if col == "notes":
+            table[col] = table[col].apply(lambda note: "" if note is None else note)
+        if col.startswith("is") and not col.startswith("iso"):
             try:
                 table[col] = table[col].apply(true_or_false)
             except ValueError:
@@ -273,9 +278,10 @@ def get_referential(name, datasource=DEFAULT_DATASOURCE):
 def get_countries(datasource=DEFAULT_DATASOURCE):
     """List of countries for the given datasource"""
     LOGGER.info(f"Getting countries list from datasource {datasource}")
-    table = get_referential('country', datasource=datasource)
-    table = table.set_index('iso3Code')[
-        ['name', 'notes', 'countrycode', 'isreporter', 'ispartner', 'isgroup', 'grouptype']]
+    table = get_referential("country", datasource=datasource)
+    table = table.set_index("iso3Code")[
+        ["name", "notes", "countrycode", "isreporter", "ispartner", "isgroup", "grouptype"]
+    ]
 
     return table
 
@@ -283,38 +289,38 @@ def get_countries(datasource=DEFAULT_DATASOURCE):
 def get_nomenclatures(datasource=DEFAULT_DATASOURCE):
     """List of nomenclatures for the given datasource"""
     LOGGER.info(f"Getting nomenclatures from datasource {datasource}")
-    table = get_referential('nomenclature', datasource=datasource)
-    return table.set_index('nomenclaturecode')[['text', 'description']]
+    table = get_referential("nomenclature", datasource=datasource)
+    return table.set_index("nomenclaturecode")[["text", "description"]]
 
 
 def get_products(datasource=DEFAULT_DATASOURCE):
     """List of products for the given datasource"""
     LOGGER.info(f"Getting products list from datasource {datasource}")
-    table = get_referential('product', datasource=datasource)
-    return table.set_index('productcode')
+    table = get_referential("product", datasource=datasource)
+    return table.set_index("productcode")
 
 
 def get_dataavailability(datasource=DEFAULT_DATASOURCE):
     """Data availability for the given datasource"""
     LOGGER.info(f"Getting data availability from datasource {datasource}")
-    table = get_referential('dataavailability', datasource=datasource)
-    return table.set_index(['iso3Code', 'year']).sort_index()
+    table = get_referential("dataavailability", datasource=datasource)
+    return table.set_index(["iso3Code", "year"]).sort_index()
 
 
 def get_indicators(datasource=DEFAULT_DATASOURCE):
     """List of indicators for the given datasource"""
     LOGGER.info(f"Getting indicators list from datasource {datasource}")
-    table = get_referential('indicator', datasource=datasource)
-    return table.set_index(['indicatorcode']).sort_index()
+    table = get_referential("indicator", datasource=datasource)
+    return table.set_index(["indicatorcode"]).sort_index()
 
 
 if __name__ == "__main__":
     # Test the tariff endpoint
     LOGGER.info("Testing tariff endpoint...")
-    tariff_data = get_tariff_reported(reporter="840", partner="000", product="020110", year='all')
+    tariff_data = get_tariff_reported(reporter="840", partner="000", product="020110", year="all")
     LOGGER.info(f"Retrieved {len(tariff_data)} tariff records")
     LOGGER.info(tariff_data.head(2))
-    
+
     # Test the referential data endpoint
     LOGGER.info("Testing referential data endpoints...")
     countries = get_countries()

@@ -38,6 +38,7 @@ LOG_FILE = LOG_DIR / "mpil_tariff_trade_analysis.log"
 # Flag to track if logging has been set up
 _logging_initialized = False
 
+
 def setup_logging(log_level=None):
     """
     Set up logging configuration for the project.
@@ -49,11 +50,11 @@ def setup_logging(log_level=None):
         logging.Logger: Configured root logger
     """
     global _logging_initialized
-    
+
     # If logging is already initialized, just return the root logger
     if _logging_initialized:
         return logging.getLogger()
-        
+
     # Get log level from parameter, environment variable, or default
     if log_level is None:
         log_level = os.environ.get("LOG_LEVEL", DEFAULT_LOG_LEVEL)
@@ -95,7 +96,7 @@ def setup_logging(log_level=None):
 
     # Log initial message
     root_logger.info(f"Logging initialized at level {log_level}")
-    
+
     # Mark logging as initialized
     _logging_initialized = True
 
@@ -116,5 +117,5 @@ def get_logger(name):
     # Set up logging if it hasn't been initialized yet
     if not _logging_initialized:
         setup_logging()
-        
+
     return logging.getLogger(name)
