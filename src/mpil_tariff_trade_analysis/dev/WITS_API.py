@@ -35,7 +35,42 @@ def _():
 
 @app.cell
 def _(mtta):
-    mtta.etl.world_trade_data_api.get_dataavailability()
+    available_data = mtta.etl.world_trade_data_api.get_dataavailability()
+    return (available_data,)
+
+
+@app.cell
+def _(available_data):
+    unique_countries = (
+        available_data[available_data["isgroup"] == False].groupby(level=[0]).agg(set)
+    )
+    iso3codes = unique_countries.index.to_list()
+
+    print("ISO3 char codes examples: \n ", iso3codes[0:200:50])
+
+    iso3code_to_isonumcode = {}
+    for country_iso3code in iso3codes:
+        iso3code_to_isonumcode[country_iso3code] = unique_countries["countrycode"][
+            country_iso3code
+        ].pop()
+
+    print("USA Code is: ", iso3code_to_isonumcode["USA"])
+    return (
+        country_iso3code,
+        iso3code_to_isonumcode,
+        iso3codes,
+        unique_countries,
+    )
+
+
+@app.cell
+def _(unique_countries):
+    unique_countries
+    return
+
+
+@app.cell
+def _():
     return
 
 
@@ -131,6 +166,65 @@ def _(wits):
         time,
         tqdm,
     )
+
+
+@app.cell
+def _(mo):
+    mo.md(
+        r"""
+        # USE UNCTAD_TRAINS directly
+        The underlying data source for WITS is actually UCNCTAD_TRAINS. Rather than going through and bombarding the API for the data, which will take absolutely ages (10s for a single row right now!!!) we might use the dataset directly.
+
+        # Nope - the downloadable research DB is NTMs only...
+
+        Am creating a WITS account to download the data in a 'bulk' manner. May have to automate it using playwright etc.
+
+        """
+    )
+    return
+
+
+@app.cell
+def _():
+    import polars as pl
+
+    pl.scan_csv('data/raw/UNCTAD_TRAINS/TRAINS Data 2010-2022.csv').collect_schema()
+    return (pl,)
+
+
+@app.cell
+def _(pl):
+    df = (
+        pl.scan_csv('data/raw/UNCTAD_TRAINS/TRAINS Data 2010-2022.csv')
+        .head(10000)
+        .collect()
+    )
+    return (df,)
+
+
+@app.cell
+def _(df):
+    df.describe()
+    return
+
+
+@app.cell
+def _(df):
+    df
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(
+        r"""
+        # BULK DOWNLOAD
+        I've managed to find a bulk download option for the files. 
+
+        Need to pattern match and combine the seperate datasets into a single file like parquet. 
+        """
+    )
+    return
 
 
 if __name__ == "__main__":

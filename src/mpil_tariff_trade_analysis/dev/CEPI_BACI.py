@@ -39,39 +39,11 @@ def _(mo):
 def _():
     import duckdb
     import marimo as mo
+    import polars as pl
 
     import mpil_tariff_trade_analysis as mtta
 
-    return duckdb, mo, mtta
-
-
-@app.cell
-def _():
-    import os
-    import platform
-    import sys
-
-    print("Python version:")
-    print(sys.version)
-    print()
-
-    print("Python executable:")
-    print(sys.executable)
-    print()
-
-    print("Platform info:")
-    print(platform.platform())
-    print()
-
-    print("sys.path:")
-    for p in sys.path:
-        print(" ", p)
-    print()
-
-    print("Environment variables (relevant ones):")
-    for key in ["VIRTUAL_ENV", "PATH", "PYTHONPATH"]:
-        print(f"{key}: {os.environ.get(key)}")
-    return key, os, p, platform, sys
+    return duckdb, mo, mtta, pl
 
 
 @app.cell
@@ -109,8 +81,8 @@ def _(aggregate_baci, hs, release):
     # Aggregate BACI data by country
     aggregate_baci(
         input=f"data/final/BACI_{hs}_V{release}",
-        output=f"data/final/BACI_{hs}_V{release}-total.parquet",
-        aggregation="total",  # 2digit #4digit
+        output=f"data/final/BACI_{hs}_V{release}-2digit.parquet",
+        aggregation="2digit",  # 2digit #4digit
     )
     return
 
@@ -122,6 +94,16 @@ def _(duckdb, hs, release):
         f"SELECT * FROM read_parquet('data/final/BACI_{hs}_V{release}-total.parquet')"
     ).show()
     return
+
+
+@app.cell
+def _(hs, pl, release):
+    query = (
+        pl.scan_parquet(f"data/final/BACI_{hs}_V{release}")
+        # .collect()
+        .describe()
+    )
+    return (query,)
 
 
 if __name__ == "__main__":
