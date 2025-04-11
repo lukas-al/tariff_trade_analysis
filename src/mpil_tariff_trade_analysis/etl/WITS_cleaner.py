@@ -8,9 +8,10 @@ import os
 import re
 from pathlib import Path
 
+import pandas as pd
+
 # Third-party imports
 import polars as pl
-import pandas as pd
 
 # Local/application imports
 from mpil_tariff_trade_analysis.utils.logging_config import get_logger
@@ -203,7 +204,7 @@ def load_wits_tariff_data(tariff_type="AVEMFN", base_dir="data/raw/WITS_tariff")
                 pl.col("Max_Rate").alias("max_rate"),
             ]
         )
-        
+
         logger.info("Translating HS codes...")
         combined_df = vectorized_hs_translation(combined_df)
 
@@ -255,15 +256,18 @@ def process_and_save_wits_data(tariff_type="AVEMFN", output_dir="data/final"):
 
     return output_path
 
-def vectorized_hs_translation(df: pl.LazyFrame, mapping_dir: str = "data/raw/hs_reference") -> pl.LazyFrame:
+
+def vectorized_hs_translation(
+    df: pl.LazyFrame, mapping_dir: str = "data/raw/hs_reference"
+) -> pl.LazyFrame:
     """
     This function translates between harmonised system codes. The data in WITS is coded based on
     the HS at the time of the series date. This means we need to map from HS 1-6 to HS92,
     the HS our BACI data is in with the longest available series.
 
-    Given inaccuracies which result from this process, it may be desirable in the future to use
-    a different, shorter but more accurate BACI dataset coded in a more modern HS, and then to
-    update this function to account for that.
+    !WARNING: Given inaccuracies which result from this process, it may be desirable in the future
+    !    to use a different, shorter but more accurate BACI dataset coded in a more modern HS, and
+    !    then to update this function to account for that.
 
     The HS in use is referred to as follows in the dataset:
     H0: HS 1988/92
@@ -276,6 +280,9 @@ def vectorized_hs_translation(df: pl.LazyFrame, mapping_dir: str = "data/raw/hs_
 
     HS mappings are stored in the data/raw/hs_reference folder, with each file mapping from one
     HS to another. The files stored are H1_to_H0, H2_to_H0, H3_to_H0, H4_to_H0, H5_to_H0, H6_to_H0.
+
+    !WARNING: I haven't fully validated that this is working, but will assume for now.
+
     """
     # Define which HS revisions require mapping (all except H0)
     hs_versions = [f"H{i}" for i in range(1, 7)]  # H1, H2, H3, H4, H5, H6
@@ -286,16 +293,11 @@ def vectorized_hs_translation(df: pl.LazyFrame, mapping_dir: str = "data/raw/hs_
         path = Path(mapping_dir) / f"{hs_version}_to_H0.CSV"
         try:
             # Load mapping as pandas and convert it to a Polars DataFrame
-            mapping_pd = pd.read_csv(
-                path, 
-                dtype=str, 
-                usecols=[0, 2], 
-                encoding="ISO-8859-1"
-            )
+            mapping_pd = pd.read_csv(path, dtype=str, usecols=[0, 2], encoding="ISO-8859-1")
             mapping_pd.columns = ["source_code", "target_code"]
         except Exception as e:
             raise ValueError(f"Error loading mapping file for {hs_version}: \n {e}") from e
-        
+
         mapping_pl = pl.from_pandas(mapping_pd)
         # Add the hs_revision column to indicate which mapping this is for.
         mapping_pl = mapping_pl.with_columns(pl.lit(hs_version).alias("hs_revision"))
@@ -309,43 +311,44 @@ def vectorized_hs_translation(df: pl.LazyFrame, mapping_dir: str = "data/raw/hs_
     # Pre-process the main LazyFrame:
     # Ensure product codes are padded to 6 digits.
     df = df.with_columns(pl.col("product_code").str.zfill(6))
-    
+
     # Split rows where translation is not needed (H0) from those that need translation.
     df_h0 = df.filter(pl.col("hs_revision") == "H0")
     df_non_h0 = df.filter(pl.col("hs_revision") != "H0")
-    
+
     # # For consistency, add the product_code_h0 column to df_h0 (no translation needed)
     # df_h0 = df_h0.with_columns(pl.col("product_code").alias("product_code_h0"))
-    
+
     # Perform a vectorized join between df_non_h0 and the mapping dataframe.
     # The join is done on the hs_revision and the padded product_code versus mapping's source_code.
     df_non_h0 = df_non_h0.join(
         mapping_all,
         left_on=["hs_revision", "product_code"],
         right_on=["hs_revision", "source_code"],
-        how="left"
+        how="left",
     )
-    
+
     # print(df_non_h0.collect().columns)
-    
+
     # if True:
     #     raise ValueError("Test")
-    
+
     # Create the translated HS code column: use target_code if available, otherwise fallback to the original code.
     df_non_h0 = df_non_h0.with_columns(
         pl.when(pl.col("target_code").is_null())
-          .then(pl.col("product_code"))
-          .otherwise(pl.col("target_code"))
-          .alias("product_code")
+        .then(pl.col("product_code"))
+        .otherwise(pl.col("target_code"))
+        .alias("product_code")
     )
-    
+
     # Optionally drop unnecessary columns from join (if desired)
     df_non_h0 = df_non_h0.drop(["target_code"])
-    
+
     # Combine the rows which were already in H0 with the ones translated.
     df_final = pl.concat([df_h0, df_non_h0])
-    
+
     return df_final
+
 
 if __name__ == "__main__":
     # Process and save AVEMFN tariff data
