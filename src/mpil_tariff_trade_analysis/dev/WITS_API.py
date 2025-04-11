@@ -7,6 +7,7 @@ app = marimo.App(width="medium")
 @app.cell
 def _():
     import marimo as mo
+
     return (mo,)
 
 
@@ -23,13 +24,13 @@ def _(mo):
 
 @app.cell
 def _():
+    import mpil_tariff_trade_analysis as mtta
     from mpil_tariff_trade_analysis.etl.world_trade_data_api import (
         get_indicator,
-        get_tariff_reported,
         get_tariff_estimated,
+        get_tariff_reported,
     )
 
-    import mpil_tariff_trade_analysis as mtta
     return get_indicator, get_tariff_estimated, get_tariff_reported, mtta
 
 
@@ -188,17 +189,13 @@ def _(mo):
 def _():
     import polars as pl
 
-    pl.scan_csv('data/raw/UNCTAD_TRAINS/TRAINS Data 2010-2022.csv').collect_schema()
+    pl.scan_csv("data/raw/UNCTAD_TRAINS/TRAINS Data 2010-2022.csv").collect_schema()
     return (pl,)
 
 
 @app.cell
 def _(pl):
-    df = (
-        pl.scan_csv('data/raw/UNCTAD_TRAINS/TRAINS Data 2010-2022.csv')
-        .head(10000)
-        .collect()
-    )
+    df = pl.scan_csv("data/raw/UNCTAD_TRAINS/TRAINS Data 2010-2022.csv").head(10000).collect()
     return (df,)
 
 
