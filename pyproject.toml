@@ -7,7 +7,9 @@ dependencies = [
     "duckdb>=1.2.2",
     "marimo>=0.12.6",
     "polars>=1.27.0",
+    "pyarrow>=19.0.1",
     "tqdm>=4.67.1",
+    "watchdog>=6.0.0",
     "world-trade-data>=0.1.1",
 ]
 
