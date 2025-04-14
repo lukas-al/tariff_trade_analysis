@@ -7,7 +7,9 @@ app = marimo.App(width="medium")
 @app.cell
 def _():
     import marimo as mo
-    return (mo,)
+    import polars as pl
+    import pandas as pd
+    return mo, pd, pl
 
 
 @app.cell(hide_code=True)
@@ -32,16 +34,21 @@ def _(mo):
     return
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""# Preperation""")
+    return
+
+
 @app.cell
-def _():
+def _(pl):
     # Load BACI dataset
-    import polars as pl
 
     baci = pl.scan_parquet("data/final/BACI_HS92_V202501")
 
     baci.collect_schema()
     baci.head(100).collect()
-    return baci, pl
+    return (baci,)
 
 
 @app.cell
@@ -51,7 +58,7 @@ def _(pl):
     avemfn = pl.scan_parquet("data/final/WITS_AVEMFN.parquet")
 
     avemfn.collect_schema()
-    avemfn.collect().head(100)
+    avemfn.head(100).collect()
     return (avemfn,)
 
 
@@ -66,12 +73,9 @@ def _(pl):
 
 @app.cell
 def _(pd):
-    # pref_beneficiary_groups = pl.scan_csv("data/raw/WITS_pref_groups/WITS_pref_groups.csv")
-    # pref_beneficiary_groups.collect_schema()
-
-    # pref_beneficiary_groups.head(100).collect()
-
-    pref_groups = pd.read_csv("data/raw/WITS_pref_groups/WITS_pref_groups.csv", encoding="ISO-8859-1")
+    pref_groups = pd.read_csv(
+        "data/raw/WITS_pref_groups/WITS_pref_groups.csv", encoding="ISO-8859-1"
+    )
     return (pref_groups,)
 
 
@@ -82,48 +86,81 @@ def _(baci):
     return unique_sources, unique_years
 
 
+@app.cell(hide_code=True)
+def _():
+    # from tqdm.auto import tqdm
+
+    # # Create one large nested dictionary -> we can flatten this at the end.
+    # data_dict = {}
+
+    # pbar = tqdm(unique_years)
+    # for year in pbar:
+    #     pbar.set_postfix(item=year)
+
+    #     # Create a new empty dict for each year
+    #     data_dict[year] = {}
+
+    #     for source in unique_sources:
+    #         # For each source, create a new empty dict to store its data in
+    #         data_dict[year][source] = {}
+
+    #         # Get the collection of trades which correspond to this source and date
+    #         trade_collection = baci.filter(
+    #             (pl.col("i") == source) & (pl.col("t") == year)
+    #         ).collect()
+
+    #         # For the trade in the dictionary, representing that source, get each unique 
+    #         for trade in trade_collection.iter_rows():
+    #             # print(trade)
+    #             data_dict[year][source] = {
+    #                 "target": trade[2],
+    #                 "hs_code": trade[3],
+    #                 "value": trade[4],
+    #                 "quantity": trade[5],
+    #             }
+    #             # break
+    #         # break
+    #     # break
+
+    # data_dict
+    return
+
+
 @app.cell
-def _(baci, pl, unique_sources, unique_years):
-    from tqdm.auto import tqdm
-
-    # Create one large nested dictionary -> we can flatten this at the end.
-    data_dict = {}
-
-    pbar = tqdm(unique_years)
-    for year in pbar:
-        pbar.set_postfix(item=year)
-
-        # Create a new empty dict to store the unique source in
-        data_dict[year] = {}
-
-        for source in unique_sources:
-            # Create a new empty dict to store the unique source in
-            data_dict[year][source] = {}
-
-            # Get the collection of trades which correspond to this source and date
-            trade_collection = baci.filter(
-                (pl.col("i") == source) & (pl.col("t") == year)
-            ).collect()
-
-            for trade in trade_collection.iter_rows():
-                print(trade)
-                data_dict[year][source] = {
-                    "target": trade[2],
-                    "hs_code": trade[3],
-                    "value": trade[4],
-                    "quantity": trade[5],
-                }
-                break
-
-            break
-
-        break
-    return data_dict, pbar, source, tqdm, trade, trade_collection, year
+def _(mo):
+    mo.md(r"""# MFN Join""")
+    return
 
 
 @app.cell
-def _(data_dict):
-    data_dict
+def _(baci):
+    # Left join, using BACI as the left and MFN as the right
+    # Match each on the date, product code, reporter (source) and partner (target) code.
+
+    joined_table = baci.join()
+    return (joined_table,)
+
+
+@app.cell
+def _(mo):
+    mo.md(r"""# Pref tariff processing""")
+    return
+
+
+@app.cell
+def _():
+    # Lorem
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(
+        r"""
+        # Final Selection
+
+        """
+    )
     return
 
 
