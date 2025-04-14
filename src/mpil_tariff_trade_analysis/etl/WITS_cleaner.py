@@ -172,13 +172,13 @@ def load_wits_tariff_data(tariff_type="AVEMFN", base_dir="data/raw/WITS_tariff")
                 pl.col("Reporter_ISO_N").alias("reporter_country"),
                 pl.col("ProductCode").alias("product_code"),
                 pl.col("NomenCode").alias("hs_revision"),
-                # pl.col("SimpleAverage").cast(pl.Float64, strict=False).alias("tariff_rate"),
                 pl.col("SimpleAverage").alias("tariff_rate"),
-                pl.col("tariff_type"),
-                # pl.col("Min_Rate").cast(pl.Float64, strict=False).alias("min_rate"),
                 pl.col("Min_Rate").alias("min_rate"),
-                # pl.col("Max_Rate").cast(pl.Float64, strict=False).alias("max_rate"),
                 pl.col("Max_Rate").alias("max_rate"),
+                pl.col("tariff_type"),
+                # pl.col("SimpleAverage").cast(pl.Float64, strict=False).alias("tariff_rate"),
+                # pl.col("Min_Rate").cast(pl.Float64, strict=False).alias("min_rate"),
+                # pl.col("Max_Rate").cast(pl.Float64, strict=False).alias("max_rate"),
             ]
         )
         # .with_columns(
@@ -284,7 +284,7 @@ def vectorized_hs_translation(
     HS mappings are stored in the data/raw/hs_reference folder, with each file mapping from one
     HS to another. The files stored are H1_to_H0, H2_to_H0, H3_to_H0, H4_to_H0, H5_to_H0, H6_to_H0.
 
-    !WARNING: I haven't fully validated that this is working, but will assume for now.
+    !WARNING: I haven't fully validated that this is working, will assume so for now.
 
     """
     # Define which HS revisions require mapping (all except H0)
@@ -319,9 +319,6 @@ def vectorized_hs_translation(
     df_h0 = df.filter(pl.col("hs_revision") == "H0")
     df_non_h0 = df.filter(pl.col("hs_revision") != "H0")
 
-    # # For consistency, add the product_code_h0 column to df_h0 (no translation needed)
-    # df_h0 = df_h0.with_columns(pl.col("product_code").alias("product_code_h0"))
-
     # Perform a vectorized join between df_non_h0 and the mapping dataframe.
     # The join is done on the hs_revision and the padded product_code versus mapping's source_code.
     df_non_h0 = df_non_h0.join(
@@ -331,12 +328,8 @@ def vectorized_hs_translation(
         how="left",
     )
 
-    # print(df_non_h0.collect().columns)
-
-    # if True:
-    #     raise ValueError("Test")
-
-    # Create the translated HS code column: use target_code if available, otherwise fallback to the original code.
+    # Create the translated HS code column: use target_code if available, otherwise fallback to the
+    # original code.
     df_non_h0 = df_non_h0.with_columns(
         pl.when(pl.col("target_code").is_null())
         .then(pl.col("product_code"))
