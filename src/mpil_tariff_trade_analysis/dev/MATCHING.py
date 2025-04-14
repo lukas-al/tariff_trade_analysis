@@ -9,7 +9,9 @@ def _():
     import marimo as mo
     import polars as pl
     import pandas as pd
-    return mo, pd, pl
+    # Ensure converters are available if needed later, though not directly for the join
+    # from mpil_tariff_trade_analysis.utils import converters
+    return mo, pd, pl #, converters
 
 
 @app.cell(hide_code=True)
@@ -26,9 +28,12 @@ def _(mo):
         |   X   |    X    |    X    |    X    |     X     |   X    |            X            |
 
         ## How?
-        1. Iterate over the BACI clean dataset
-        2. For each date, for each i, j, k, attempt to match the triple against WITS
-        3. Append to a table
+        1. Load BACI and WITS (MFN, Pref) datasets using `scan_parquet` for lazy evaluation.
+        2. Rename WITS columns for clarity and consistency before joining. **Verify actual column names in your files!**
+        3. Left join BACI with MFN tariffs on year, reporter, partner, product.
+        4. Left join the result with Preferential tariffs on the same keys.
+        5. Calculate the final 'effective_tariff' using `coalesce`, prioritizing preferential tariffs.
+        6. Select and rename columns for the final output.
         """
     )
     return
@@ -36,126 +41,162 @@ def _(mo):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""# Preperation""")
+    mo.md(r"""# Preparation: Load Data""")
     return
 
 
 @app.cell
 def _(pl):
     # Load BACI dataset
-
+    # Using scan for lazy execution until .collect() or .fetch()
     baci = pl.scan_parquet("data/final/BACI_HS92_V202501")
 
-    baci.collect_schema()
-    baci.head(100).collect()
+    print("BACI Schema:")
+    baci.collect_schema() # Use collect_schema with scan_parquet
+    print("\nBACI Head:")
+    baci.head(5).collect() # Use collect() to see results
     return (baci,)
 
 
 @app.cell
 def _(pl):
-    # Load WITS datasets
-
+    # Load WITS MFN dataset
+    # !! IMPORTANT: Check the actual column names in your file !!
+    # Assuming: ReporterCode, PartnerCode, ProductCode, Year, Value
     avemfn = pl.scan_parquet("data/final/WITS_AVEMFN.parquet")
 
+    print("WITS MFN Schema:")
     avemfn.collect_schema()
-    avemfn.head(100).collect()
+    print("\nWITS MFN Head:")
+    avemfn.head(5).collect()
     return (avemfn,)
 
 
 @app.cell
 def _(pl):
+    # Load WITS Preferential dataset
+    # !! IMPORTANT: Check the actual column names in your file !!
+    # Assuming: ReporterCode, PartnerCode, ProductCode, Year, Value
     avepref = pl.scan_parquet("data/final/WITS_AVEPref.parquet")
-    avepref.collect_schema()
 
-    avepref.head(100).collect()
+    print("WITS Pref Schema:")
+    avepref.collect_schema()
+    print("\nWITS Pref Head:")
+    avepref.head(5).collect()
     return (avepref,)
 
 
 @app.cell
-def _(pd):
-    pref_groups = pd.read_csv(
-        "data/raw/WITS_pref_groups/WITS_pref_groups.csv", encoding="ISO-8859-1"
+def _(mo):
+    mo.md(r"""# Data Joining""")
+    return
+
+
+@app.cell
+def _(avemfn, pl):
+    # Rename WITS MFN columns for clarity and to match BACI join keys
+    # !! ADJUST these column names based on avemfn.collect_schema() output !!
+    # Example assumes WITS columns are named 'Year', 'ReporterCode', etc.
+    renamed_avemfn = avemfn.rename({
+        "Year": "t",              # Assuming 'Year' column exists
+        "ReporterCode": "i",    # Assuming 'ReporterCode' column exists
+        "PartnerCode": "j",     # Assuming 'PartnerCode' column exists
+        "ProductCode": "k",     # Assuming 'ProductCode' column exists (ensure it's HS92 compatible)
+        "Value": "mfn_tariff"   # Assuming 'Value' column holds the tariff rate
+    }).select(
+        "t", "i", "j", "k", "mfn_tariff" # Select only needed columns
     )
-    return (pref_groups,)
+
+    print("Renamed MFN Schema:")
+    renamed_avemfn.collect_schema()
+    print("\nRenamed MFN Head:")
+    renamed_avemfn.head(5).collect()
+    return renamed_avemfn,
 
 
 @app.cell
-def _(baci):
-    unique_years = baci.sort(by="t").select("t").unique().collect().to_pandas()["t"].to_list()
-    unique_sources = baci.sort(by="t").select("i").unique().collect().to_pandas()["i"].to_list()
-    return unique_sources, unique_years
+def _(avepref, pl):
+    # Rename WITS Preferential columns
+    # !! ADJUST these column names based on avepref.collect_schema() output !!
+    # Example assumes WITS columns are named 'Year', 'ReporterCode', etc.
+    renamed_avepref = avepref.rename({
+        "Year": "t",
+        "ReporterCode": "i",
+        "PartnerCode": "j",
+        "ProductCode": "k",
+        "Value": "pref_tariff" # Give preferential tariff a distinct name
+    }).select(
+        "t", "i", "j", "k", "pref_tariff"
+    )
 
-
-@app.cell(hide_code=True)
-def _():
-    # from tqdm.auto import tqdm
-
-    # # Create one large nested dictionary -> we can flatten this at the end.
-    # data_dict = {}
-
-    # pbar = tqdm(unique_years)
-    # for year in pbar:
-    #     pbar.set_postfix(item=year)
-
-    #     # Create a new empty dict for each year
-    #     data_dict[year] = {}
-
-    #     for source in unique_sources:
-    #         # For each source, create a new empty dict to store its data in
-    #         data_dict[year][source] = {}
-
-    #         # Get the collection of trades which correspond to this source and date
-    #         trade_collection = baci.filter(
-    #             (pl.col("i") == source) & (pl.col("t") == year)
-    #         ).collect()
-
-    #         # For the trade in the dictionary, representing that source, get each unique 
-    #         for trade in trade_collection.iter_rows():
-    #             # print(trade)
-    #             data_dict[year][source] = {
-    #                 "target": trade[2],
-    #                 "hs_code": trade[3],
-    #                 "value": trade[4],
-    #                 "quantity": trade[5],
-    #             }
-    #             # break
-    #         # break
-    #     # break
-
-    # data_dict
-    return
+    print("Renamed Pref Schema:")
+    renamed_avepref.collect_schema()
+    print("\nRenamed Pref Head:")
+    renamed_avepref.head(5).collect()
+    return renamed_avepref,
 
 
 @app.cell
-def _(mo):
-    mo.md(r"""# MFN Join""")
-    return
+def _(baci, mo, pl, renamed_avemfn, renamed_avepref):
+    # Define the join keys
+    # Ensure the data types of these keys are compatible across dataframes
+    join_keys = ["t", "i", "j", "k"]
+
+    # 1. Left join BACI with MFN tariffs
+    # Keep all rows from BACI, add MFN tariff where match found
+    joined_mfn = baci.join(
+        renamed_avemfn,
+        on=join_keys,
+        how="left"
+    )
+
+    # 2. Left join the result with Preferential tariffs
+    # Keep all rows from the previous join, add Pref tariff where match found
+    joined_all = joined_mfn.join(
+        renamed_avepref,
+        on=join_keys,
+        how="left"
+    )
+
+    # 3. Calculate the final effective tariff
+    # Use preferential tariff if available (not null), otherwise use MFN tariff
+    final_table = joined_all.with_columns(
+        pl.coalesce(pl.col("pref_tariff"), pl.col("mfn_tariff")).alias("effective_tariff")
+    )
+
+    mo.md(f"Joined table schema: `{final_table.schema}`") # Use .schema for LazyFrames
+    return final_table, join_keys, joined_all, joined_mfn, pl # Return pl for use in next cell
 
 
 @app.cell
-def _(baci):
-    # Left join, using BACI as the left and MFN as the right
-    # Match each on the date, product code, reporter (source) and partner (target) code.
+def _(final_table, mo, pl):
+    # Select and arrange final columns
+    # !! ADJUST column names 'v' and 'q' based on your BACI schema output !!
+    # Example assumes BACI columns are 't', 'i', 'j', 'k', 'v', 'q'
+    final_unified_table = final_table.select(
+        pl.col("t").alias("Year"),
+        pl.col("i").alias("Source"),      # Reporter country code
+        pl.col("j").alias("Target"),      # Partner country code
+        pl.col("k").alias("HS_Code"),     # Product code (HS92)
+        pl.col("q").alias("Quantity"),    # Assuming 'q' is Quantity in BACI
+        pl.col("v").alias("Value"),       # Assuming 'v' is Value in BACI
+        pl.col("mfn_tariff"),             # MFN tariff rate (can be null)
+        pl.col("pref_tariff"),            # Preferential tariff rate (can be null)
+        pl.col("effective_tariff")        # Calculated effective tariff
+    )
 
-    joined_table = baci.join()
-    return (joined_table,)
-
-
-@app.cell
-def _(mo):
-    mo.md(r"""# Pref tariff processing""")
-    return
-
-
-@app.cell
-def _():
-    # Lorem
-    return
+    mo.md("### Final Unified Table (First 100 rows)")
+    final_unified_table.head(100).collect() # Use collect() to view the result
+    # You might want to save this result later:
+    # final_unified_table.collect().write_parquet("data/final/unified_trade_tariff.parquet")
+    return final_unified_table,
 
 
 @app.cell
 def _(mo):
     mo.md(r"""# Final Selection""")
+    # This cell title might be redundant now, consider removing or merging
+    # with the cell above if it just displays the final table.
     return
 
 
