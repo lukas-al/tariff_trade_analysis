@@ -8,7 +8,6 @@ in the top-level logs directory and to stdout (with color).
 import logging
 import os
 import sys
-from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 # Define log levels and their names for easier reference
@@ -55,9 +54,9 @@ class ColoredFormatter(logging.Formatter):
     Only applies color if the output stream is a TTY.
     """
 
-    def __init__(self, fmt=None, datefmt=None, style='%', validate=True, *, defaults=None):
+    def __init__(self, fmt=None, datefmt=None, style="%", validate=True, *, defaults=None):
         super().__init__(fmt, datefmt, style, validate, defaults=defaults)
-        self.use_color = sys.stdout.isatty() # Check if output is a terminal
+        self.use_color = sys.stdout.isatty()  # Check if output is a terminal
 
     def format(self, record):
         # Get the original formatted message
@@ -111,18 +110,20 @@ def setup_logging(log_level=None):
     console_formatter = ColoredFormatter(fmt=console_format)
 
     # Create file handler for logging to a file (with rotation)
-    file_handler = RotatingFileHandler(
-        LOG_FILE,
-        maxBytes=10 * 1024 * 1024,
-        backupCount=5,  # 10MB max size, keep 5 backups
-    )
+    # file_handler = RotatingFileHandler(
+    #     LOG_FILE,
+    #     maxBytes=10 * 1024 * 1024,
+    #     backupCount=5,  # 10MB max size, keep 5 backups
+    # )
+    file_handler = logging.FileHandler(LOG_FILE, mode="w")
+
     file_handler.setLevel(numeric_level)
-    file_handler.setFormatter(file_formatter) # Use standard formatter for file
+    file_handler.setFormatter(file_formatter)  # Use standard formatter for file
 
     # Create console handler for logging to stdout
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(numeric_level)
-    console_handler.setFormatter(console_formatter) # Use colored formatter for console
+    console_handler.setFormatter(console_formatter)  # Use colored formatter for console
 
     # Add handlers to the root logger
     root_logger.addHandler(file_handler)
