@@ -2,7 +2,7 @@
 Logging configuration for the MPIL Tariff Trade Analysis project.
 
 This module sets up logging for the entire project, writing logs to both a file
-in the top-level logs directory and to stdout.
+in the top-level logs directory and to stdout (with color).
 """
 
 import logging
@@ -20,6 +20,7 @@ LOG_LEVELS = {
     "CRITICAL": logging.CRITICAL,
 }
 
+# ANSI escape codes for colors
 COLORS = {
     logging.DEBUG: "\x1b[34m",  # Blue for DEBUG
     logging.INFO: "\x1b[32m",  # Green for INFO
@@ -46,6 +47,27 @@ LOG_FILE = LOG_DIR / "mpil_tariff_trade_analysis.log"
 
 # Flag to track if logging has been set up
 _logging_initialized = False
+
+
+class ColoredFormatter(logging.Formatter):
+    """
+    Custom logging formatter that adds color based on log level.
+    Only applies color if the output stream is a TTY.
+    """
+
+    def __init__(self, fmt=None, datefmt=None, style='%', validate=True, *, defaults=None):
+        super().__init__(fmt, datefmt, style, validate, defaults=defaults)
+        self.use_color = sys.stdout.isatty() # Check if output is a terminal
+
+    def format(self, record):
+        # Get the original formatted message
+        log_msg = super().format(record)
+
+        # Apply color if it's a TTY
+        if self.use_color and record.levelno in COLORS:
+            return f"{COLORS[record.levelno]}{log_msg}{RESET}"
+        else:
+            return log_msg
 
 
 def setup_logging(log_level=None):
@@ -80,10 +102,13 @@ def setup_logging(log_level=None):
         root_logger.handlers.clear()
 
     # Create formatters
+    # File formatter remains standard
     file_formatter = logging.Formatter(
         "%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s"
     )
-    console_formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+    # Console formatter uses the new ColoredFormatter
+    console_format = "%(asctime)s - %(levelname)s - %(message)s"
+    console_formatter = ColoredFormatter(fmt=console_format)
 
     # Create file handler for logging to a file (with rotation)
     file_handler = RotatingFileHandler(
@@ -92,12 +117,12 @@ def setup_logging(log_level=None):
         backupCount=5,  # 10MB max size, keep 5 backups
     )
     file_handler.setLevel(numeric_level)
-    file_handler.setFormatter(file_formatter)
+    file_handler.setFormatter(file_formatter) # Use standard formatter for file
 
     # Create console handler for logging to stdout
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(numeric_level)
-    console_handler.setFormatter(console_formatter)
+    console_handler.setFormatter(console_formatter) # Use colored formatter for console
 
     # Add handlers to the root logger
     root_logger.addHandler(file_handler)
