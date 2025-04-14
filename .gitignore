@@ -7,6 +7,9 @@ wheels/
 *.egg-info
 __init__.py
 
+# Secrets
+.secrets
+
 # Virtual environments
 .venv
 
@@ -24,3 +27,4 @@ logs/*
 
 # Keep .gitkeep
 !.gitkeep
+.aider*

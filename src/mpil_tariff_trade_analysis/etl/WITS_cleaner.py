@@ -123,6 +123,9 @@ def load_wits_tariff_data(tariff_type="AVEMFN", base_dir="data/raw/WITS_tariff")
             "EstCode": pl.Utf8,
         }
 
+    else:
+        raise KeyError("Wrong tariff type")
+
     successful_files = 0
     failed_files = 0
 

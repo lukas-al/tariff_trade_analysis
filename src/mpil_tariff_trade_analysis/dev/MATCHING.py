@@ -1,13 +1,12 @@
 import marimo
 
-__generated_with = "0.12.6"
+__generated_with = "0.12.8"
 app = marimo.App(width="medium")
 
 
 @app.cell
 def _():
     import marimo as mo
-
     return (mo,)
 
 
@@ -66,13 +65,14 @@ def _(pl):
 
 
 @app.cell
-def _():
-    # # Currently erroring?
+def _(pd):
     # pref_beneficiary_groups = pl.scan_csv("data/raw/WITS_pref_groups/WITS_pref_groups.csv")
     # pref_beneficiary_groups.collect_schema()
 
     # pref_beneficiary_groups.head(100).collect()
-    return
+
+    pref_groups = pd.read_csv("data/raw/WITS_pref_groups/WITS_pref_groups.csv", encoding="ISO-8859-1")
+    return (pref_groups,)
 
 
 @app.cell
