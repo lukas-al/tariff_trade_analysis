@@ -128,7 +128,7 @@ def expand_preferential_tariffs(
         joined_pref_mapping.with_columns(
             pl.when(pl.col("partner_list").is_not_null())
             .then(pl.col("partner_list"))  # Use the list from mapping
-            .otherwise(pl.concat_list(pl.col("j")))  # Use original 'j' as a single-item list
+            .otherwise(pl.concat_list([pl.col("j")]))  # Use original 'j' as a single-item list
             .alias("final_partner_list")
         )
         .explode(
@@ -273,6 +273,9 @@ def run_matching_pipeline(
 
     # Expand preferential tariffs
     expanded_pref = expand_preferential_tariffs(renamed_avepref, pref_group_mapping)
+
+    logger.debug(f"Sample of data: \n {expanded_pref.head(100).collect()}")
+    raise NotImplementedError("PAUSE")
 
     # Join datasets
     joined_data = join_datasets(baci, renamed_avemfn, expanded_pref)
