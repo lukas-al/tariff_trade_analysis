@@ -20,8 +20,17 @@ LOG_LEVELS = {
     "CRITICAL": logging.CRITICAL,
 }
 
+COLORS = {
+    logging.DEBUG: "\x1b[34m",  # Blue for DEBUG
+    logging.INFO: "\x1b[32m",  # Green for INFO
+    logging.WARNING: "\x1b[33m",  # Yellow for WARNING
+    logging.ERROR: "\x1b[31m",  # Red for ERROR
+    logging.CRITICAL: "\x1b[41m",  # Red background for CRITICAL
+}
+RESET = "\x1b[0m"  # Reset the color at the end of the message
+
 # Default log level
-DEFAULT_LOG_LEVEL = "INFO"
+DEFAULT_LOG_LEVEL = "DEBUG"
 
 # Get the project root directory (3 levels up from this file)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
