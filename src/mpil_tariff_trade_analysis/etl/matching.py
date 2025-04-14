@@ -1,3 +1,4 @@
+import logging # Added for checking log level
 from pathlib import Path
 
 import pandas as pd
@@ -34,6 +35,7 @@ def load_pref_group_mapping(file_path: str | Path) -> pl.LazyFrame:
     try:
         # Load the raw CSV mapping file using Pandas for initial processing
         pref_groups_pd = pd.read_csv(file_path, encoding="iso-8859-1")
+        logger.debug(f"Raw preferential groups loaded (pandas shape): {pref_groups_pd.shape}")
 
         # Aggregate partners into lists per region code
         pref_group_df_pd = (
@@ -44,11 +46,18 @@ def load_pref_group_mapping(file_path: str | Path) -> pl.LazyFrame:
                 ["region_code", "partner_list"]
             ]
         )
+        logger.debug(f"Aggregated preferential groups (pandas shape): {pref_group_df_pd.shape}")
 
         # Convert to Polars LazyFrame
         pref_group_pl = pl.from_pandas(pref_group_df_pd).lazy()
         logger.info("Preferential group mapping loaded and processed.")
         logger.debug(f"Preferential Group Mapping Schema: {pref_group_pl.collect_schema()}")
+        if logger.isEnabledFor(logging.DEBUG):
+             try:
+                 logger.debug(f"Preferential Group Mapping Head:\n{pref_group_pl.head(5).collect()}")
+             except Exception as e:
+                 logger.warning(f"Could not collect head of pref_group_pl: {e}")
+
         return pref_group_pl
     except Exception as e:
         logger.error(f"Error loading or processing preferential group mapping: {e}")
@@ -58,8 +67,7 @@ def load_pref_group_mapping(file_path: str | Path) -> pl.LazyFrame:
 def rename_wits_mfn(df: pl.LazyFrame) -> pl.LazyFrame:
     """Renames columns in the WITS MFN tariff dataframe."""
     logger.debug("Renaming WITS MFN columns.")
-    # !! ADJUST column names based on actual schema if needed !!
-    return df.rename(
+    renamed_df = df.rename(
         {
             "year": "t",
             "reporter_country": "i",
@@ -67,7 +75,7 @@ def rename_wits_mfn(df: pl.LazyFrame) -> pl.LazyFrame:
             "tariff_rate": "mfn_tariff_rate",
             "min_rate": "mfn_min_tariff_rate",
             "max_rate": "mfn_max_tariff_rate",
-            "tariff_type": "tariff_type",
+            "tariff_type": "tariff_type", # Keep tariff type for potential debugging
         }
     ).select(
         "t",
@@ -78,13 +86,14 @@ def rename_wits_mfn(df: pl.LazyFrame) -> pl.LazyFrame:
         "mfn_max_tariff_rate",
         "tariff_type",
     )
+    logger.debug(f"Renamed WITS MFN Schema: {renamed_df.collect_schema()}")
+    return renamed_df
 
 
 def rename_wits_pref(df: pl.LazyFrame) -> pl.LazyFrame:
     """Renames columns in the WITS Preferential tariff dataframe."""
     logger.debug("Renaming WITS Preferential columns.")
-    # !! ADJUST column names based on actual schema if needed !!
-    return df.rename(
+    renamed_df = df.rename(
         {
             "year": "t",
             "reporter_country": "i",
@@ -95,6 +104,8 @@ def rename_wits_pref(df: pl.LazyFrame) -> pl.LazyFrame:
             "max_rate": "pref_max_tariff_rate",
         }
     ).select("t", "i", "j", "k", "pref_tariff_rate", "pref_min_tariff_rate", "pref_max_tariff_rate")
+    logger.debug(f"Renamed WITS Preferential Schema: {renamed_df.collect_schema()}")
+    return renamed_df
 
 
 def expand_preferential_tariffs(
@@ -111,9 +122,12 @@ def expand_preferential_tariffs(
         A LazyFrame with preferential tariffs expanded to individual partner countries.
     """
     logger.info("Expanding preferential tariff partner groups.")
+    logger.debug(f"Input renamed_avepref schema: {renamed_avepref.collect_schema()}")
+    logger.debug(f"Input pref_group_mapping schema: {pref_group_mapping.collect_schema()}")
+
     # Ensure consistent data types for joining keys if necessary (example below)
     # pref_group_mapping = pref_group_mapping.with_columns(pl.col("region_code").cast(pl.Utf8))
-    # renamed_avepref = renamed_avepref.with_columns(pl.col("j").cast(pl.Utf8))
+    # renamed_avepref = renamed_avepref.with_columns(pl.col("j").cast(pl.Utf8)) # Assuming j is Utf8
 
     # Left join avepref with the group mapping
     joined_pref_mapping = renamed_avepref.join(
@@ -122,16 +136,33 @@ def expand_preferential_tariffs(
         right_on="region_code",  # Group code from mapping
         how="left",
     )
+    logger.debug(f"Schema after joining avepref with group mapping: {joined_pref_mapping.collect_schema()}")
+    if logger.isEnabledFor(logging.DEBUG):
+        try:
+            logger.debug(f"Head after joining avepref with group mapping:\n{joined_pref_mapping.head(5).collect()}")
+        except Exception as e:
+            logger.warning(f"Could not collect head of joined_pref_mapping: {e}")
+
 
     # Create the final partner list and explode
-    expanded_pref = (
-        joined_pref_mapping.with_columns(
+    logger.debug("Creating final partner list before explode.")
+    expanded_pref_pre_explode = joined_pref_mapping.with_columns(
             pl.when(pl.col("partner_list").is_not_null())
             .then(pl.col("partner_list"))  # Use the list from mapping
             .otherwise(pl.concat_list([pl.col("j")]))  # Use original 'j' as a single-item list
             .alias("final_partner_list")
         )
-        .explode(
+    logger.debug(f"Schema before explode: {expanded_pref_pre_explode.collect_schema()}")
+    if logger.isEnabledFor(logging.DEBUG):
+        try:
+            logger.debug(f"Head before explode:\n{expanded_pref_pre_explode.head(5).collect()}")
+        except Exception as e:
+            logger.warning(f"Could not collect head before explode: {e}")
+
+
+    logger.debug("Exploding final partner list.")
+    expanded_pref = (
+        expanded_pref_pre_explode.explode(
             "final_partner_list"  # Explode the list into separate rows
         )
         .rename(
@@ -150,6 +181,11 @@ def expand_preferential_tariffs(
     )
     logger.info("Preferential tariffs expanded.")
     logger.debug(f"Expanded Preferential Tariff Schema: {expanded_pref.collect_schema()}")
+    if logger.isEnabledFor(logging.DEBUG):
+        try:
+            logger.debug(f"Expanded Preferential Tariff Head:\n{expanded_pref.head(5).collect()}")
+        except Exception as e:
+            logger.warning(f"Could not collect head of expanded_pref: {e}")
     return expanded_pref
 
 
@@ -168,36 +204,64 @@ def join_datasets(
         A LazyFrame containing the joined data with an 'effective_tariff_rate' column.
     """
     logger.info("Joining BACI, MFN, and Preferential datasets.")
+    logger.debug(f"Input BACI schema: {baci.collect_schema()}")
+    logger.debug(f"Input renamed_avemfn schema: {renamed_avemfn.collect_schema()}")
+    logger.debug(f"Input expanded_pref schema: {expanded_pref.collect_schema()}")
+
     # Define join keys
     mfn_join_keys = ["t", "i", "k"]
     pref_join_keys = ["t", "i", "j", "k"]
 
     # Ensure join key types are compatible (add casting if necessary)
     # Example:
+    # logger.debug("Casting join key types if necessary...")
     # baci = baci.with_columns([
     #     pl.col("t").cast(pl.Int64), pl.col("i").cast(pl.Int64),
     #     pl.col("j").cast(pl.Int64), pl.col("k").cast(pl.Utf8)
     # ])
     # renamed_avemfn = renamed_avemfn.with_columns(pl.col("k").cast(pl.Utf8))
     # expanded_pref = expanded_pref.with_columns(pl.col("k").cast(pl.Utf8))
+    # logger.debug(f"Schema after potential casting - BACI: {baci.collect_schema()}")
+    # logger.debug(f"Schema after potential casting - MFN: {renamed_avemfn.collect_schema()}")
+    # logger.debug(f"Schema after potential casting - Pref: {expanded_pref.collect_schema()}")
+
 
     # 1. Left join BACI with MFN tariffs
-    logger.debug("Joining BACI with MFN tariffs.")
+    logger.debug(f"Joining BACI with MFN tariffs on {mfn_join_keys}.")
     joined_mfn = baci.join(renamed_avemfn, on=mfn_join_keys, how="left")
+    logger.debug(f"Schema after BACI-MFN join: {joined_mfn.collect_schema()}")
+    if logger.isEnabledFor(logging.DEBUG):
+        try:
+            logger.debug(f"Head after BACI-MFN join:\n{joined_mfn.head(5).collect()}")
+        except Exception as e:
+            logger.warning(f"Could not collect head of joined_mfn: {e}")
+
 
     # 2. Left join the result with Expanded Preferential tariffs
-    logger.debug("Joining intermediate result with expanded Preferential tariffs.")
+    logger.debug(f"Joining intermediate result with expanded Preferential tariffs on {pref_join_keys}.")
     joined_all = joined_mfn.join(expanded_pref, on=pref_join_keys, how="left")
+    logger.debug(f"Schema after joining with Pref tariffs: {joined_all.collect_schema()}")
+    if logger.isEnabledFor(logging.DEBUG):
+        try:
+            logger.debug(f"Head after joining with Pref tariffs:\n{joined_all.head(5).collect()}")
+        except Exception as e:
+            logger.warning(f"Could not collect head of joined_all: {e}")
+
 
     # 3. Calculate the final effective tariff
-    logger.debug("Calculating effective tariff rate using coalesce.")
+    logger.debug("Calculating effective tariff rate using coalesce(pref_tariff_rate, mfn_tariff_rate).")
     final_table = joined_all.with_columns(
         pl.coalesce(pl.col("pref_tariff_rate"), pl.col("mfn_tariff_rate")).alias(
             "effective_tariff_rate"
         )
     )
     logger.info("Datasets joined successfully.")
-    logger.debug(f"Joined table schema: {final_table.collect_schema()}")
+    logger.debug(f"Schema after calculating effective tariff: {final_table.collect_schema()}")
+    if logger.isEnabledFor(logging.DEBUG):
+        try:
+            logger.debug(f"Head after calculating effective tariff:\n{final_table.head(5).collect()}")
+        except Exception as e:
+            logger.warning(f"Could not collect head of final_table (post-coalesce): {e}")
     return final_table
 
 
@@ -212,6 +276,7 @@ def create_final_table(joined_data: pl.LazyFrame) -> pl.LazyFrame:
         A LazyFrame representing the final unified table structure.
     """
     logger.info("Selecting and renaming columns for the final output table.")
+    logger.debug(f"Input schema for final selection: {joined_data.collect_schema()}")
     # !! ADJUST column names 'v' and 'q' based on your actual BACI schema !!
     final_unified_table = joined_data.select(
         pl.col("t").alias("Year"),
@@ -228,8 +293,15 @@ def create_final_table(joined_data: pl.LazyFrame) -> pl.LazyFrame:
         # pl.col("mfn_max_tariff_rate"),
         # pl.col("pref_min_tariff_rate"),
         # pl.col("pref_max_tariff_rate"),
+        # Optionally add tariff type for debugging
+        # pl.col("tariff_type"),
     )
-    logger.debug(f"Final table schema: {final_unified_table.collect_schema()}")
+    logger.debug(f"Final table schema after selection/renaming: {final_unified_table.collect_schema()}")
+    if logger.isEnabledFor(logging.DEBUG):
+        try:
+            logger.debug(f"Final table head:\n{final_unified_table.head(5).collect()}")
+        except Exception as e:
+            logger.warning(f"Could not collect head of final_unified_table: {e}")
     return final_unified_table
 
 
@@ -242,7 +314,7 @@ def run_matching_pipeline(
     wits_pref_path: str | Path = DEFAULT_WITS_PREF_PATH,
     pref_groups_path: str | Path = DEFAULT_PREF_GROUPS_PATH,
     output_path: str | Path = DEFAULT_OUTPUT_PATH,
-    lazy: bool = True,
+    lazy: bool = True, # Note: Debug logging now collects head() regardless of this flag
 ):
     """
     Runs the full data matching pipeline.
@@ -253,35 +325,39 @@ def run_matching_pipeline(
         wits_pref_path: Path to the WITS Preferential tariff data.
         pref_groups_path: Path to the WITS preferential groups mapping CSV.
         output_path: Path to save the final unified Parquet file.
-        lazy: If True, performs operations lazily until the final write.
-              If False, collects intermediate results (uses more memory).
+        lazy: If True, performs final sink lazily. If False, collects the
+              entire final result before writing (uses more memory).
+              Debug logging inside functions might collect head() samples regardless.
     """
     logger.info("Starting data matching pipeline...")
 
     # Load data
     logger.info(f"Loading BACI data from: {baci_path}")
     baci = pl.scan_parquet(baci_path)
+    logger.debug(f"Initial BACI schema: {baci.collect_schema()}")
+
     logger.info(f"Loading WITS MFN data from: {wits_mfn_path}")
     avemfn = pl.scan_parquet(wits_mfn_path)
+    logger.debug(f"Initial WITS MFN schema: {avemfn.collect_schema()}")
+
     logger.info(f"Loading WITS Preferential data from: {wits_pref_path}")
     avepref = pl.scan_parquet(wits_pref_path)
-    pref_group_mapping = load_pref_group_mapping(pref_groups_path)
+    logger.debug(f"Initial WITS Pref schema: {avepref.collect_schema()}")
+
+    pref_group_mapping = load_pref_group_mapping(pref_groups_path) # Logging inside
 
     # Rename columns
-    renamed_avemfn = rename_wits_mfn(avemfn)
-    renamed_avepref = rename_wits_pref(avepref)
+    renamed_avemfn = rename_wits_mfn(avemfn) # Logging inside
+    renamed_avepref = rename_wits_pref(avepref) # Logging inside
 
     # Expand preferential tariffs
-    expanded_pref = expand_preferential_tariffs(renamed_avepref, pref_group_mapping)
-
-    logger.debug(f"Sample of data: \n {expanded_pref.head(100).collect()}")
-    raise NotImplementedError("PAUSE")
+    expanded_pref = expand_preferential_tariffs(renamed_avepref, pref_group_mapping) # Logging inside
 
     # Join datasets
-    joined_data = join_datasets(baci, renamed_avemfn, expanded_pref)
+    joined_data = join_datasets(baci, renamed_avemfn, expanded_pref) # Logging inside
 
     # Create final table structure
-    final_unified_table = create_final_table(joined_data)
+    final_unified_table = create_final_table(joined_data) # Logging inside
 
     # Execute and save
     output_path = Path(output_path)
@@ -289,13 +365,16 @@ def run_matching_pipeline(
 
     logger.info(f"Saving final unified table to: {output_path}")
     if lazy:
+        logger.info("Executing final plan lazily and sinking to parquet...")
         final_unified_table.sink_parquet(output_path)
         logger.info("Lazy execution complete. Data saved.")
     else:
         # Collect the result before writing (uses more memory)
+        logger.info("Collecting final result eagerly...")
         result_df = final_unified_table.collect()
+        logger.info(f"Eager collection complete. Shape: {result_df.shape}. Writing to parquet...")
         result_df.write_parquet(output_path)
-        logger.info(f"Eager execution complete. Data saved. Shape: {result_df.shape}")
+        logger.info("Eager execution complete. Data saved.")
 
     logger.info("Data matching pipeline finished successfully.")
 
@@ -304,5 +383,15 @@ if __name__ == "__main__":
     # This block allows running the script directly
     # You might want to add argument parsing (e.g., using argparse)
     # to specify input/output paths from the command line.
+
+    # Example: Set log level to DEBUG for detailed output when running directly
+    # import logging
+    # from mpil_tariff_trade_analysis.utils.logging_config import setup_logging
+    # setup_logging(log_level="DEBUG") # Call this before get_logger is used
+
     logger.info("Running matching script directly.")
-    run_matching_pipeline()
+    try:
+        run_matching_pipeline()
+    except Exception as e:
+        logger.critical(f"Pipeline failed with error: {e}", exc_info=True) # Log critical error with traceback
+        raise # Re-raise the exception after logging
