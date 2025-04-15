@@ -104,7 +104,7 @@ def get_unique_chunk_values(paths: list[str | Path], column_name: str) -> list:
         sorted_values = sorted([str(v) for v in unique_values if v is not None])
 
     logger.info(
-        f"Found {len(sorted_values)} unique values for chunking: {sorted_values[:5]}...{sorted_values[-5:]}"
+        f"Found {len(sorted_values)} unique chunk values: {sorted_values[:5]}...{sorted_values[-5:]}"
     )
     return sorted_values
 
@@ -160,111 +160,141 @@ def run_chunked_matching_pipeline(
         logger.error(f"Failed to load preferential group mapping: {e}", exc_info=True)
         raise
 
-    # --- Determine chunks (e.g., years) ---
-    # Scan all relevant input datasets for the chunking column values
-    chunk_values = get_unique_years([baci_path, wits_mfn_path, wits_pref_path], source_chunk_column)
+    # --- Define Base LazyFrames AND Perform Initial Renaming ---
+    logger.info("Defining base LazyFrames and applying initial renames...")
+    try:
+        # Scan and immediately rename 'year' (or equivalent) to 't'
+        baci_lazy_base = pl.scan_parquet(baci_path).rename({"year": chunk_column}) # Assuming BACI uses 'year'
+        wits_mfn_lazy_base_renamed = rename_wits_mfn(pl.scan_parquet(wits_mfn_path)) # Uses 't' internally
+        wits_pref_lazy_base_renamed = rename_wits_pref(pl.scan_parquet(wits_pref_path)) # Uses 't' internally
 
-    # --- Define Base LazyFrames (Scan Once) ---
-    # These define HOW to read the data, filtering will be applied later per chunk
-    logger.info("Defining base LazyFrames for input datasets...")
-    baci_lazy_base = pl.scan_parquet(baci_path)
-    wits_mfn_lazy_base = pl.scan_parquet(wits_mfn_path)
-    wits_pref_lazy_base = pl.scan_parquet(wits_pref_path)
+        # Verify 't' exists in all base frames after renaming
+        if chunk_column not in baci_lazy_base.columns:
+             raise ValueError(f"Chunk column '{chunk_column}' missing in BACI after rename attempt.")
+        if chunk_column not in wits_mfn_lazy_base_renamed.columns:
+             raise ValueError(f"Chunk column '{chunk_column}' missing in WITS MFN after rename.")
+        if chunk_column not in wits_pref_lazy_base_renamed.columns:
+             raise ValueError(f"Chunk column '{chunk_column}' missing in WITS Pref after rename.")
 
-    # Check if the chunk column exists in the base lazy frames
-    if source_chunk_column not in baci_lazy_base.columns:
-        logger.warning(f"Chunk column '{source_chunk_column}' missing in BACI base scan.")
-    if source_chunk_column not in wits_mfn_lazy_base.columns:
-        logger.warning(f"Chunk column '{source_chunk_column}' missing in WITS MFN base scan.")
-    if source_chunk_column not in wits_pref_lazy_base.columns:
-        logger.warning(f"Chunk column '{source_chunk_column}' missing in WITS Pref base scan.")
+        logger.info("Base LazyFrames defined with consistent chunk column name 't'.")
+        logger.debug(f"BACI base schema (post-rename): {baci_lazy_base.collect_schema()}")
+        logger.debug(f"MFN base schema (post-rename): {wits_mfn_lazy_base_renamed.collect_schema()}")
+        logger.debug(f"Pref base schema (post-rename): {wits_pref_lazy_base_renamed.collect_schema()}")
+
+    except Exception as e:
+        logger.error(f"Failed during base LazyFrame definition or initial renaming: {e}", exc_info=True)
+        raise
+
+    # --- Determine chunks (e.g., years using 't') ---
+    # Now call get_unique_chunk_values looking for 't' in the original paths.
+    # The function internally handles the logic assuming 't' should exist post-rename.
+    chunk_values = get_unique_chunk_values(
+        [baci_path, wits_mfn_path, wits_pref_path], chunk_column # Pass 't' as the column name
+    )
 
     # --- Process each chunk ---
+    output_schema = None  # Initialize schema variable outside the loop
+
     for i, chunk_value in enumerate(chunk_values):
         logger.info(
-            f"--- Processing Chunk {i + 1}/{len(chunk_values)}: {source_chunk_column} = {chunk_value} ---"
+            f"--- Processing Chunk {i + 1}/{len(chunk_values)}: {chunk_column} = {chunk_value} ---"
         )
 
         try:
-            # Filter each base LazyFrame for the current chunk value
-            # This operation is lazy and cheap.
-            logger.debug(f"Applying filter: {source_chunk_column} == {chunk_value}")
-            baci_chunk_lazy = baci_lazy_base.filter(pl.col(source_chunk_column) == chunk_value)
-            wits_mfn_chunk_lazy = wits_mfn_lazy_base.filter(
-                pl.col(source_chunk_column) == chunk_value
+            # Filter each *already renamed* base LazyFrame for the current chunk value
+            logger.debug(f"Applying filter: {chunk_column} == {chunk_value}")
+            baci_chunk_lazy = baci_lazy_base.filter(pl.col(chunk_column) == chunk_value)
+            wits_mfn_chunk_lazy = wits_mfn_lazy_base_renamed.filter(
+                pl.col(chunk_column) == chunk_value
             )
-            wits_pref_chunk_lazy = wits_pref_lazy_base.filter(
-                pl.col(source_chunk_column) == chunk_value
+            wits_pref_chunk_lazy = wits_pref_lazy_base_renamed.filter(
+                pl.col(chunk_column) == chunk_value
             )
 
-            # --- Apply core logic from matching.py to the filtered LazyFrames ---
-            # Note: Pass the *filtered* lazy frames. Renaming happens within these steps.
-            # The column 't' will be created here if source_chunk_column is 'year'.
-            logger.debug("Renaming WITS MFN columns for chunk...")
-            renamed_mfn_lazy = rename_wits_mfn(wits_mfn_chunk_lazy)
-
-            logger.debug("Renaming WITS Pref columns for chunk...")
-            renamed_pref_lazy = rename_wits_pref(wits_pref_chunk_lazy)
-
+            # --- Apply core logic (NO renaming needed here anymore) ---
             logger.debug("Expanding preferential tariffs for chunk...")
-            # Pass the collected pref_group_mapping DataFrame
-            # Convert it back to LazyFrame just for this function call if the function expects Lazy
-            # Or modify expand_preferential_tariffs to accept DataFrame or LazyFrame
-            # Assuming expand_preferential_tariffs expects LazyFrame:
+            # Pass the filtered, already-renamed pref frame
             expanded_pref_lazy = expand_preferential_tariffs(
-                renamed_pref_lazy, pref_group_mapping.lazy()
+                wits_pref_chunk_lazy, pref_group_mapping.lazy()
             )
 
             logger.debug("Joining datasets for the chunk...")
-            # This is the critical step where memory/disk usage is reduced
-            joined_lazy = join_datasets(baci_chunk_lazy, renamed_mfn_lazy, expanded_pref_lazy)
+            # Pass the filtered, already-renamed frames
+            joined_lazy = join_datasets(baci_chunk_lazy, wits_mfn_chunk_lazy, expanded_pref_lazy)
 
             logger.debug("Creating final table structure for the chunk...")
             # This step renames 't' to 'Year' (our partition_column)
             final_table_lazy = create_final_table(joined_lazy)
 
-            # --- Write the processed chunk to the partitioned dataset ---
-            logger.info(
-                f"Executing plan and writing chunk for {partition_column}={chunk_value} to {output_dir}"
-            )
+            # --- Execute Plan, Convert to Arrow, and Write using PyArrow ---
+            # (This part remains the same as the previous PyArrow implementation)
+            logger.info(f"Executing Polars plan for chunk {chunk_value}...")
+            chunk_df = final_table_lazy.collect(streaming=True)
+            logger.info(f"Collected chunk {chunk_value}. Shape: {chunk_df.shape}")
 
-            # Check if the partition column exists before writing
-            if partition_column not in final_table_lazy.columns:
-                logger.error(
-                    f"Partition column '{partition_column}' not found in the final schema for chunk {chunk_value}. Available columns: {final_table_lazy.columns}. Skipping write."
+            if chunk_df.is_empty():
+                logger.warning(
+                    f"No data found for chunk {chunk_column}={chunk_value}. Skipping write."
                 )
-                continue  # Skip to the next chunk
+                continue
 
-            # Use sink_parquet for efficient streaming write with partitioning
-            final_table_lazy.sink_parquet(
-                path=output_dir,
-                partition_by=partition_column,
-                # Ensure the partition value matches the data being written
-                # Polars handles this automatically when partition_by is set
-                # compression="zstd", # Optional: Choose compression
-                # row_group_size=134217728, # Optional: Tune row group size (e.g., 128MB)
-            )
+            logger.debug(f"Converting chunk {chunk_value} to PyArrow Table...")
+            try:
+                table = chunk_df.to_arrow()
+            except Exception as e:
+                logger.error(f"Failed to convert Polars DataFrame to Arrow Table for chunk {chunk_value}: {e}", exc_info=True)
+                continue
 
-            logger.info(f"Successfully wrote chunk for {partition_column}={chunk_value}.")
+            if output_schema is None:
+                output_schema = table.schema
+                logger.info(f"Established dataset schema from first non-empty chunk ({chunk_value}):\n{output_schema}")
+            else:
+                try:
+                    if table.schema != output_schema:
+                        logger.warning(f"Schema for chunk {chunk_value} differs. Casting...")
+                        table = table.cast(output_schema, safe=False)
+                    else:
+                         logger.debug(f"Schema for chunk {chunk_value} matches.")
+                except Exception as e:
+                    logger.error(f"Failed to cast chunk {chunk_value} to established schema: {e}", exc_info=True)
+                    continue
 
+            logger.info(f"Writing chunk {chunk_value} to partitioned dataset at: {output_dir}")
+            try:
+                pq.write_to_dataset(
+                    table=table,
+                    root_path=output_dir,
+                    partition_cols=[partition_column], # Use 'Year'
+                    schema=output_schema,
+                    existing_data_behavior='overwrite_or_ignore',
+                    # write_statistics=True, # Default usually True
+                    # compression='zstd',
+                )
+                logger.info(f"Successfully wrote chunk for {partition_column}={chunk_value} using PyArrow.")
+            except Exception as e:
+                 logger.error(f"PyArrow failed to write partition for {partition_column}={chunk_value}: {e}", exc_info=True)
+
+        # ... (rest of the try/except/finally block for the loop iteration) ...
         except pl.exceptions.ComputeError as e:
-            # Catch Polars computation errors specifically
-            logger.error(f"Polars compute error processing chunk {chunk_value}: {e}", exc_info=True)
-            logger.error(
-                f"Query plan that failed:\n{final_table_lazy.explain(streaming=True)}"
-            )  # Use streaming=True for explain
-            # Decide whether to continue or stop
-            # raise # Uncomment to stop on first compute error
+             logger.error(f"Polars compute error processing chunk {chunk_value}: {e}", exc_info=True)
+             # Explain might fail if the lazy frame itself is problematic after error
+             try:
+                 logger.error(f"Query plan that failed:\n{final_table_lazy.explain(streaming=True)}")
+             except Exception as explain_e:
+                 logger.error(f"Could not explain query plan after error: {explain_e}")
         except Exception as e:
-            logger.error(
-                f"Failed to process or write chunk for {source_chunk_column}={chunk_value}: {e}",
-                exc_info=True,
-            )
-            # Decide if you want to stop or continue with other chunks
-            # raise # Uncomment to stop execution on first error
+            logger.error(f"Failed to process or write chunk for {chunk_column}={chunk_value}: {e}", exc_info=True)
         finally:
             # Explicitly trigger garbage collection after each chunk
             # May help release memory, especially if complex objects were created
+            try:
+                del chunk_df # Explicit deletion hint
+            except NameError:
+                pass # Ignore if chunk_df wasn't assigned due to error
+            try:
+                del table # Explicit deletion hint
+            except NameError:
+                pass # Ignore if table wasn't assigned due to error
             gc.collect()
             logger.debug("Garbage collection triggered after chunk processing.")
 
@@ -275,27 +305,18 @@ def run_chunked_matching_pipeline(
 
 # --- Main Execution Example ---
 if __name__ == "__main__":
-    # Setup logging (adjust level as needed)
-    # Make sure this is called *before* get_logger
     setup_logging(log_level=logging.INFO)
-    # Re-get logger instance after setup, just in case
-    logger = get_logger(__name__)
+    logger = get_logger(__name__) # Re-get logger after setup
 
     logger.info("Running matching_chunked.py script...")
-
-    # Define paths (use defaults or override here)
-    # output_directory = "data/test_partitioned_output"
     output_directory = DEFAULT_CHUNKED_OUTPUT_DIR
 
     try:
         run_chunked_matching_pipeline(
-            # You can override paths here if needed, e.g.:
-            # baci_path="path/to/your/baci/data",
             output_dir=output_directory,
         )
         logger.info("Script finished successfully.")
     except Exception as e:
         logger.critical(f"Chunked pipeline execution failed in __main__: {e}", exc_info=True)
         import sys
-
         sys.exit(1)
