@@ -1,12 +1,15 @@
 from pathlib import Path
 
-import marimo
+from pathlib import Path
+import sys # Import sys for exit codes
 
 # Import pipeline functions
-# Import default output path from matching_chunked
-from mpil_tariff_trade_analysis.etl.matching_chunked import DEFAULT_CHUNKED_OUTPUT_DIR
-
-# Import default paths from matching_logic to ensure consistency
+from mpil_tariff_trade_analysis.etl.baci import baci_to_parquet # Explicitly import needed functions
+from mpil_tariff_trade_analysis.etl.WITS_cleaner import process_and_save_wits_data # Explicitly import needed functions
+from mpil_tariff_trade_analysis.etl.matching_chunked import (
+    DEFAULT_CHUNKED_OUTPUT_DIR,
+    run_chunked_matching_pipeline, # Explicitly import needed functions
+)
 from mpil_tariff_trade_analysis.etl.matching_logic import (
     DEFAULT_BACI_PATH,
     DEFAULT_PREF_GROUPS_PATH,
@@ -15,11 +18,9 @@ from mpil_tariff_trade_analysis.etl.matching_logic import (
 )
 from mpil_tariff_trade_analysis.utils.logging_config import get_logger, setup_logging
 
-__generated_with = "0.10.12"  # Keep original or update as needed
-app = marimo.App(width="medium")
 
-# # --- Configuration ---
-# # Setup logging first
+# --- Configuration ---
+# Setup logging first
 # setup_logging()
 # logger = get_logger(__name__)
 
@@ -45,16 +46,13 @@ app = marimo.App(width="medium")
 # matching_output_dir = str(DEFAULT_CHUNKED_OUTPUT_DIR)  # data/final/unified_trade_tariff_partitioned
 
 
-# --- Configuration Cell ---
-# This cell sets up logging and all configuration parameters.
-@app.cell
-def config(mo):
-    # Setup logging
-    setup_logging()
-    global logger
-    logger = get_logger(__name__)
+# --- Global Configuration & Setup ---
+setup_logging()
+logger = get_logger(__name__)
 
-    # Define data parameters and directories
+# Define data parameters and directories directly
+def get_config():
+    """Returns a dictionary containing configuration parameters."""
     HS_CODE = "HS92"
     BACI_RELEASE = "V202501"
     RAW_DATA_DIR = "data/raw"
@@ -97,233 +95,190 @@ def config(mo):
     }
 
 
-@app.cell
-def _(mo):
-    logger.info("Pipeline Application Started")
-    return (
-        mo.md(
-            """
-        # MPIL Tariff Trade Analysis Pipeline
+# --- Pipeline Steps as Functions ---
 
-        This application orchestrates the data processing pipeline:
-        1. Process BACI data (CSV to Partitioned Parquet).
-        2. Process WITS Tariff data (MFN and Preferential).
-        3. Run the Matching Pipeline to unify trade and tariff data.
-        """
-        ),
-    )
-
-
-@app.cell
-def _(
-    BACI_RELEASE,
-    HS_CODE,
-    baci_input_folder,
-    baci_output_folder,
-    baci_to_parquet,
-    mo,
-):
-    status_md = mo.md("### 1. Processing BACI Data")
-    baci_result_path = None  # Initialize path variable
+def process_baci_data(config_params):
+    """Processes BACI data from CSV to partitioned Parquet."""
+    logger.info("--- Step 1: Processing BACI Data ---")
+    baci_result_path = None
     try:
-        logger.info(f"Starting BACI processing: HS={HS_CODE}, Release={BACI_RELEASE}")
-        logger.info(f"Input folder: {baci_input_folder}, Output folder: {baci_output_folder}")
+        hs_code = config_params["HS_CODE"]
+        baci_release = config_params["BACI_RELEASE"]
+        input_folder = config_params["baci_input_folder"]
+        output_folder = config_params["baci_output_folder"]
 
-        # Ensure the function baci_to_parquet is modified to write
+        logger.info(f"Starting BACI processing: HS={hs_code}, Release={baci_release}")
+        logger.info(f"Input folder: {input_folder}, Output folder: {output_folder}")
+
+        # baci_to_parquet writes
         # partitioned parquet to a directory named 'BACI_{hs}_V{release}'
         # inside the output_folder, partitioned by 't'.
         # The function should return the path to the created directory.
         baci_result_path = baci_to_parquet(
-            hs=HS_CODE,
-            release=BACI_RELEASE,
-            input_folder=baci_input_folder,
-            output_folder=baci_output_folder,
+            hs=hs_code,
+            release=baci_release,
+            input_folder=input_folder,
+            output_folder=output_folder,
         )
 
         if baci_result_path and Path(baci_result_path).exists():
-            logger.info(f"BACI processing completed. Output: {baci_result_path}")
-            status_md.append(
-                mo.md(f"✅ BACI data processed successfully. Output: `{baci_result_path}`")
-            )
+            logger.info(f"✅ BACI data processed successfully. Output: `{baci_result_path}`")
         else:
-            # Handle case where function didn't return a valid path or path doesn't exist
             logger.error(
-                f"BACI processing function did not return a valid output path or path does not exist: {baci_result_path}"
+                f"❌ BACI processing reported success but output path is invalid or missing: `{baci_result_path}`"
             )
-            status_md.append(
-                mo.md(
-                    f"❌ BACI processing reported success but output path is invalid or missing: `{baci_result_path}`"
-                )
-            )
-            baci_result_path = None  # Ensure it's None on failure
+            baci_result_path = None # Ensure it's None on failure
 
     except Exception as e:
-        logger.error(f"BACI processing failed: {e}", exc_info=True)
-        status_md.append(mo.md(f"❌ BACI processing failed: {e}"))
-        baci_result_path = None  # Ensure it's None on failure
-        # Optionally raise to stop execution or just log and continue
-        # raise e
-    return status_md, baci_result_path
+        logger.error(f"❌ BACI processing failed: {e}", exc_info=True)
+        baci_result_path = None # Ensure it's None on failure
+
+    return baci_result_path # Return the path or None
 
 
-@app.cell
-def _(
-    INTERMEDIATE_DATA_DIR,
-    mo,
-    process_and_save_wits_data,
-    wits_mfn_output_path,
-    wits_pref_output_path,
-    wits_raw_dir,
-):
-    status_md = mo.md("### 2. Processing WITS Tariff Data")
-    wits_processed = True  # Flag to track success
+def process_wits_data(config_params):
+    """Processes WITS MFN and Preferential tariff data."""
+    logger.info("--- Step 2: Processing WITS Tariff Data ---")
+    wits_processed_successfully = True # Flag to track overall success
+
+    intermediate_dir = config_params["INTERMEDIATE_DATA_DIR"]
+    wits_raw_dir = config_params["wits_raw_dir"]
+    mfn_output_path = config_params["wits_mfn_output_path"]
+    pref_output_path = config_params["wits_pref_output_path"]
 
     # Process MFN Tariffs
     try:
         logger.info("Starting WITS MFN Tariff processing.")
         logger.info(f"Raw WITS dir: {wits_raw_dir}")
-        logger.info(f"Output path: {wits_mfn_output_path}")
+        logger.info(f"Expected output path: {mfn_output_path}")
         mfn_result_path = process_and_save_wits_data(
             tariff_type="AVEMFN",
             base_dir=wits_raw_dir,
-            output_dir=INTERMEDIATE_DATA_DIR,  # Function constructs filename internally
+            output_dir=intermediate_dir, # Function constructs filename internally
         )
-        if mfn_result_path and Path(mfn_result_path).exists():
-            logger.info("WITS MFN Tariff processing completed.")
-            status_md.append(
-                mo.md(f"✅ WITS MFN data processed successfully. Output: `{wits_mfn_output_path}`")
-            )
+        # Verify the expected output file was created
+        if mfn_result_path and Path(mfn_result_path).exists() and str(mfn_result_path) == mfn_output_path:
+            logger.info(f"✅ WITS MFN data processed successfully. Output: `{mfn_output_path}`")
         else:
             logger.error(
-                f"WITS MFN processing failed or did not produce output at {wits_mfn_output_path}"
+                f"❌ WITS MFN processing failed or did not produce expected output at {mfn_output_path}. Actual result: {mfn_result_path}"
             )
-            status_md.append(mo.md("❌ WITS MFN processing failed or output missing."))
-            wits_processed = False
+            wits_processed_successfully = False
 
     except Exception as e:
-        logger.error(f"WITS MFN processing failed: {e}", exc_info=True)
-        status_md.append(mo.md(f"❌ WITS MFN processing failed: {e}"))
-        wits_processed = False
+        logger.error(f"❌ WITS MFN processing failed: {e}", exc_info=True)
+        wits_processed_successfully = False
 
     # Process Preferential Tariffs
     try:
         logger.info("Starting WITS Preferential Tariff processing.")
         logger.info(f"Raw WITS dir: {wits_raw_dir}")
-        logger.info(f"Output path: {wits_pref_output_path}")
+        logger.info(f"Expected output path: {pref_output_path}")
         pref_result_path = process_and_save_wits_data(
             tariff_type="AVEPref",
             base_dir=wits_raw_dir,
-            output_dir=INTERMEDIATE_DATA_DIR,  # Function constructs filename internally
+            output_dir=intermediate_dir, # Function constructs filename internally
         )
-        if pref_result_path and Path(pref_result_path).exists():
-            logger.info("WITS Preferential Tariff processing completed.")
-            status_md.append(
-                mo.md(
-                    f"✅ WITS Preferential data processed successfully. Output: `{wits_pref_output_path}`"
-                )
-            )
+         # Verify the expected output file was created
+        if pref_result_path and Path(pref_result_path).exists() and str(pref_result_path) == pref_output_path:
+            logger.info(f"✅ WITS Preferential data processed successfully. Output: `{pref_output_path}`")
         else:
             logger.error(
-                f"WITS Preferential processing failed or did not produce output at {wits_pref_output_path}"
+                f"❌ WITS Preferential processing failed or did not produce expected output at {pref_output_path}. Actual result: {pref_result_path}"
             )
-            status_md.append(mo.md("❌ WITS Preferential processing failed or output missing."))
-            wits_processed = False
+            wits_processed_successfully = False
 
     except Exception as e:
-        logger.error(f"WITS Preferential processing failed: {e}", exc_info=True)
-        status_md.append(mo.md(f"❌ WITS Preferential processing failed: {e}"))
-        wits_processed = False
+        logger.error(f"❌ WITS Preferential processing failed: {e}", exc_info=True)
+        wits_processed_successfully = False
 
-    return status_md, wits_processed
+    return wits_processed_successfully
 
 
-@app.cell
-def _(
-    Path,
-    baci_intermediate_path_for_matching,
-    baci_result_path,  # Get status from BACI cell
-    matching_output_dir,
-    mo,
-    pref_groups_path,
-    run_chunked_matching_pipeline,
-    wits_mfn_output_path,
-    wits_pref_output_path,
-    wits_processed,  # Get status from WITS cell
-):
-    status_md = mo.md("### 3. Running Matching Pipeline")
+def run_matching_pipeline(config_params, baci_result_path, wits_processed_status):
+    """Runs the matching pipeline to unify trade and tariff data."""
+    logger.info("--- Step 3: Running Matching Pipeline ---")
 
     # Check prerequisites before running
-    prereqs_met = True
-    if not wits_processed:
-        status_md.append(mo.md("Skipping matching pipeline due to errors in WITS processing."))
+    if not wits_processed_status:
         logger.warning("Skipping matching pipeline due to errors in WITS processing.")
-        prereqs_met = False
+        return False # Indicate failure
 
-    # Check if BACI processing was successful (using the path returned from the BACI cell)
+    expected_baci_path = config_params["baci_intermediate_path_for_matching"]
     if not baci_result_path or not Path(baci_result_path).exists():
-        # Use the expected path for the error message if the result path is None
-        expected_baci_path = baci_intermediate_path_for_matching
-        status_md.append(
-            mo.md(
-                f"Skipping matching pipeline: BACI input missing or failed at `{expected_baci_path}`."
-            )
-        )
         logger.warning(
-            f"Skipping matching pipeline: BACI input missing or failed at `{expected_baci_path}`."
+            f"Skipping matching pipeline: BACI input missing or failed. Expected location: `{expected_baci_path}`. Actual result path: {baci_result_path}"
         )
-        prereqs_met = False
-    elif baci_result_path != baci_intermediate_path_for_matching:
-        # Log a warning if the actual output path doesn't match the expected default path
+        return False # Indicate failure
+    elif baci_result_path != expected_baci_path:
         logger.warning(
-            f"BACI output path '{baci_result_path}' differs from expected default '{baci_intermediate_path_for_matching}'. Using actual path."
+            f"BACI output path '{baci_result_path}' differs from expected default '{expected_baci_path}'. Using actual path for matching."
         )
-        # Use the actual path from the BACI step for the matching pipeline
+        # Use the actual path from the BACI step
         baci_input_for_matching = baci_result_path
     else:
-        baci_input_for_matching = baci_intermediate_path_for_matching
-
-    if not prereqs_met:
-        return status_md  # Stop execution of this cell
+        baci_input_for_matching = expected_baci_path # Use the expected path
 
     # Proceed with matching
     try:
+        wits_mfn_path = config_params["wits_mfn_output_path"]
+        wits_pref_path = config_params["wits_pref_output_path"]
+        pref_groups_path = config_params["pref_groups_path"]
+        matching_output_dir = config_params["matching_output_dir"]
+
         logger.info("Starting Matching Pipeline.")
         logger.info(f"BACI input: {baci_input_for_matching}")
-        logger.info(f"WITS MFN input: {wits_mfn_output_path}")
-        logger.info(f"WITS Pref input: {wits_pref_output_path}")
+        logger.info(f"WITS MFN input: {wits_mfn_path}")
+        logger.info(f"WITS Pref input: {wits_pref_path}")
         logger.info(f"Pref Groups input: {pref_groups_path}")
         logger.info(f"Output directory: {matching_output_dir}")
 
         run_chunked_matching_pipeline(
-            baci_path=baci_input_for_matching,  # Use the determined BACI path
-            wits_mfn_path=wits_mfn_output_path,
-            wits_pref_path=wits_pref_output_path,
+            baci_path=baci_input_for_matching,
+            wits_mfn_path=wits_mfn_path,
+            wits_pref_path=wits_pref_path,
             pref_groups_path=pref_groups_path,
             output_dir=matching_output_dir,
             # Keep default chunk/partition columns unless needed otherwise
             # chunk_column="t",
             # partition_column="Year",
         )
-        logger.info(f"Matching Pipeline completed successfully. Output: {matching_output_dir}")
-        status_md.append(
-            mo.md(f"✅ Matching Pipeline completed successfully. Output: `{matching_output_dir}`")
-        )
+        logger.info(f"✅ Matching Pipeline completed successfully. Output: `{matching_output_dir}`")
+        return True # Indicate success
 
     except Exception as e:
-        logger.error(f"Matching Pipeline failed: {e}", exc_info=True)
-        status_md.append(mo.md(f"❌ Matching Pipeline failed: {e}"))
-        # raise e # Optional: stop execution
-
-    return status_md
+        logger.error(f"❌ Matching Pipeline failed: {e}", exc_info=True)
+        return False # Indicate failure
 
 
-@app.cell
-def _(mo):
-    logger.info("Pipeline execution finished.")
-    return mo.md("--- Pipeline Execution Finished ---")
+# --- Main Execution ---
+def main():
+    """Orchestrates the data processing pipeline."""
+    logger.info("--- Starting MPIL Tariff Trade Analysis Pipeline ---")
+
+    config_params = get_config()
+
+    # Step 1: Process BACI Data
+    baci_output_path = process_baci_data(config_params)
+    if not baci_output_path:
+        logger.critical("BACI processing failed. Aborting pipeline.")
+        sys.exit(1) # Exit with error code
+
+    # Step 2: Process WITS Data
+    wits_success = process_wits_data(config_params)
+    if not wits_success:
+        logger.critical("WITS processing failed. Aborting pipeline.")
+        sys.exit(1) # Exit with error code
+
+    # Step 3: Run Matching Pipeline
+    matching_success = run_matching_pipeline(config_params, baci_output_path, wits_success)
+    if not matching_success:
+        logger.critical("Matching pipeline failed.")
+        sys.exit(1) # Exit with error code
+
+    logger.info("--- Pipeline Execution Finished Successfully ---")
+    sys.exit(0) # Exit with success code
 
 
 if __name__ == "__main__":
-    # Logging is already set up above
-    logger.info("Starting MPIL Tariff Trade Analysis pipeline orchestrator")
-    app.run()
+    main()
