@@ -1,4 +1,4 @@
-import logging # Added for checking log level
+import logging  # Added for checking log level
 from pathlib import Path
 
 import pandas as pd
@@ -19,8 +19,6 @@ DEFAULT_OUTPUT_PATH = "data/final/unified_trade_tariff.parquet"
 
 
 # --- Helper Functions ---
-
-
 def load_pref_group_mapping(file_path: str | Path) -> pl.LazyFrame:
     """
     Loads and processes the WITS preferential group mapping file.
@@ -40,10 +38,10 @@ def load_pref_group_mapping(file_path: str | Path) -> pl.LazyFrame:
 
         # Aggregate partners into lists per region code
         # Ensure partners are strings and handle potential NaN/None values
-        pref_groups_pd['Partner'] = pref_groups_pd['Partner'].astype(str)
+        pref_groups_pd["Partner"] = pref_groups_pd["Partner"].astype(str)
         pref_group_df_pd = (
-            pref_groups_pd.groupby("RegionCode")['Partner']
-            .agg(lambda x: list(set(x.dropna()))) # Use dropna() within lambda, convert set to list
+            pref_groups_pd.groupby("RegionCode")["Partner"]
+            .agg(lambda x: list(set(x.dropna())))  # Use dropna() within lambda, convert set to list
             .reset_index()
             .rename(columns={"RegionCode": "region_code", "Partner": "partner_list"})
         )
@@ -54,11 +52,11 @@ def load_pref_group_mapping(file_path: str | Path) -> pl.LazyFrame:
         logger.info("Preferential group mapping loaded and processed.")
         logger.debug(f"Preferential Group Mapping Schema: {pref_group_pl.collect_schema()}")
         if logger.isEnabledFor(logging.DEBUG):
-             try:
-                 # Use fetch(1) for safer debugging
-                 logger.debug(f"Preferential Group Mapping Head (1 row):\n{pref_group_pl.fetch(1)}")
-             except Exception as e:
-                 logger.warning(f"Could not fetch(1) from pref_group_pl: {e}")
+            try:
+                # Use fetch(1) for safer debugging
+                logger.debug(f"Preferential Group Mapping Head (1 row):\n{pref_group_pl.fetch(1)}")
+            except Exception as e:
+                logger.warning(f"Could not fetch(1) from pref_group_pl: {e}")
 
         return pref_group_pl
     except Exception as e:
@@ -77,7 +75,7 @@ def rename_wits_mfn(df: pl.LazyFrame) -> pl.LazyFrame:
             "tariff_rate": "mfn_tariff_rate",
             "min_rate": "mfn_min_tariff_rate",
             "max_rate": "mfn_max_tariff_rate",
-            "tariff_type": "tariff_type", # Keep tariff type for potential debugging
+            "tariff_type": "tariff_type",  # Keep tariff type for potential debugging
         }
     ).select(
         "t",
@@ -134,13 +132,17 @@ def expand_preferential_tariffs(
         renamed_avepref = renamed_avepref.with_columns(pl.col("j").cast(pl.Utf8))
         pref_group_mapping = pref_group_mapping.with_columns(pl.col("region_code").cast(pl.Utf8))
         logger.debug(f"Schema after casting renamed_avepref: {renamed_avepref.collect_schema()}")
-        logger.debug(f"Schema after casting pref_group_mapping: {pref_group_mapping.collect_schema()}")
+        logger.debug(
+            f"Schema after casting pref_group_mapping: {pref_group_mapping.collect_schema()}"
+        )
     except Exception as e:
         logger.error(f"Failed to cast join keys: {e}")
         raise
 
     # --- Left join avepref with the group mapping ---
-    logger.debug("Attempting left join: renamed_avepref with pref_group_mapping on 'j' == 'region_code'.")
+    logger.debug(
+        "Attempting left join: renamed_avepref with pref_group_mapping on 'j' == 'region_code'."
+    )
     joined_pref_mapping = renamed_avepref.join(
         pref_group_mapping,
         left_on="j",  # Partner code (can be group or individual)
@@ -148,30 +150,43 @@ def expand_preferential_tariffs(
         how="left",
     )
     logger.debug("Join completed.")
-    logger.debug(f"Schema after joining avepref with group mapping: {joined_pref_mapping.collect_schema()}")
+    logger.debug(
+        f"Schema after joining avepref with group mapping: {joined_pref_mapping.collect_schema()}"
+    )
     if logger.isEnabledFor(logging.DEBUG):
         try:
-            logger.debug(f"Head(1) after joining avepref with group mapping:\n{joined_pref_mapping.fetch(1)}")
+            logger.debug(
+                f"Head(1) after joining avepref with group mapping:\n{joined_pref_mapping.fetch(1)}"
+            )
         except Exception as e:
             logger.warning(f"Could not fetch(1) from joined_pref_mapping: {e}")
-
 
     # --- Create the final partner list ---
     logger.debug("Creating final partner list using coalesce logic.")
     expanded_pref_pre_explode = joined_pref_mapping.with_columns(
-            pl.when(pl.col("partner_list").is_not_null() & (pl.col("partner_list").list.len() > 0)) # Check list not null AND not empty
-            .then(pl.col("partner_list"))  # Use the list from mapping
-            .otherwise(pl.concat_list(pl.col("j"))) # Use original 'j' as a single-item list if no match or empty list
-            .alias("final_partner_list")
-        )
+        pl.when(
+            pl.col("partner_list").is_not_null() & (pl.col("partner_list").list.len() > 0)
+        )  # Check list not null AND not empty
+        .then(pl.col("partner_list"))  # Use the list from mapping
+        .otherwise(
+            pl.concat_list(pl.col("j"))
+        )  # Use original 'j' as a single-item list if no match or empty list
+        .alias("final_partner_list")
+    ).drop("partner_list")  # Redundant now
+
     logger.debug("Final partner list column created ('final_partner_list').")
     logger.debug(f"Schema before explode: {expanded_pref_pre_explode.collect_schema()}")
     if logger.isEnabledFor(logging.DEBUG):
         try:
-            logger.debug(f"Head(1) before explode (showing 'final_partner_list'):\n{expanded_pref_pre_explode.select(['t', 'i', 'j', 'k', 'partner_list', 'final_partner_list']).fetch(1)}")
+            logger.debug(
+                f"Head(1) before explode (showing 'final_partner_list'):\n{
+                    expanded_pref_pre_explode.select(
+                        ['t', 'i', 'j', 'k', 'final_partner_list']
+                    ).fetch(1)
+                }"
+            )
         except Exception as e:
             logger.warning(f"Could not fetch(1) before explode: {e}")
-
 
     # --- Explode the final partner list ---
     logger.debug("Attempting to explode 'final_partner_list'.")
@@ -194,7 +209,9 @@ def expand_preferential_tariffs(
                 # Add other columns from renamed_avepref if needed
             )
         )
-        logger.debug("Explode operation defined in lazy frame.") # Note: Actual execution happens later
+        logger.debug(
+            "Explode operation defined in lazy frame."
+        )  # Note: Actual execution happens later
         logger.info("Preferential tariffs expansion plan created.")
         logger.debug(f"Schema AFTER defining explode: {expanded_pref.collect_schema()}")
         if logger.isEnabledFor(logging.DEBUG):
@@ -205,12 +222,21 @@ def expand_preferential_tariffs(
                 logger.debug(f"Successfully fetched 1 row AFTER explode:\n{fetched_row}")
             except Exception as e:
                 # If this fails, it's likely a memory issue or internal Polars error during execution
-                logger.error(f"CRITICAL: Failed to fetch(1) AFTER explode definition. Potential OOM or internal error: {e}", exc_info=True)
+                logger.error(
+                    f"""
+                        CRITICAL: Failed to fetch(1) AFTER explode definition. 
+                        Potential OOM or internal error: \n {e}
+                    """,
+                    exc_info=True,
+                )
                 # Optionally re-raise or handle differently depending on desired behavior
                 raise
         return expanded_pref
     except Exception as e:
-        logger.error(f"Error occurred during the definition or initial fetch of the explode operation: {e}", exc_info=True)
+        logger.error(
+            f"Error occurred during the definition or initial fetch of the explode operation: {e}",
+            exc_info=True,
+        )
         raise
 
 
@@ -231,7 +257,9 @@ def join_datasets(
     logger.info("Joining BACI, MFN, and Preferential datasets.")
     logger.debug(f"Input BACI schema: {baci.collect_schema()}")
     logger.debug(f"Input renamed_avemfn schema: {renamed_avemfn.collect_schema()}")
-    logger.debug(f"Input expanded_pref schema: {expanded_pref.collect_schema()}") # Schema is known even if fetch failed
+    logger.debug(
+        f"Input expanded_pref schema: {expanded_pref.collect_schema()}"
+    )  # Schema is known even if fetch failed
 
     # Define join keys
     mfn_join_keys = ["t", "i", "k"]
@@ -242,27 +270,32 @@ def join_datasets(
     # Example: Cast all keys to common types (e.g., Int64 for t, i, j; Utf8 for k)
     logger.debug("Casting join key types for final joins (adjust types as needed).")
     try:
-        baci = baci.with_columns([
-            pl.col("t").cast(pl.Int64), pl.col("i").cast(pl.Utf8), # Assuming country codes are strings now
-            pl.col("j").cast(pl.Utf8), pl.col("k").cast(pl.Utf8)
-        ])
-        renamed_avemfn = renamed_avemfn.with_columns([
-            pl.col("t").cast(pl.Int64), pl.col("i").cast(pl.Utf8),
-            pl.col("k").cast(pl.Utf8)
-        ])
+        baci = baci.with_columns(
+            [
+                pl.col("t").cast(pl.Int64),
+                pl.col("i").cast(pl.Utf8),  # Assuming country codes are strings now
+                pl.col("j").cast(pl.Utf8),
+                pl.col("k").cast(pl.Utf8),
+            ]
+        )
+        renamed_avemfn = renamed_avemfn.with_columns(
+            [pl.col("t").cast(pl.Int64), pl.col("i").cast(pl.Utf8), pl.col("k").cast(pl.Utf8)]
+        )
         # expanded_pref 'j' should already be Utf8 from the explode step if casting was done there
-        expanded_pref = expanded_pref.with_columns([
-            pl.col("t").cast(pl.Int64), pl.col("i").cast(pl.Utf8),
-            pl.col("j").cast(pl.Utf8), # Ensure j is Utf8
-            pl.col("k").cast(pl.Utf8)
-        ])
+        expanded_pref = expanded_pref.with_columns(
+            [
+                pl.col("t").cast(pl.Int64),
+                pl.col("i").cast(pl.Utf8),
+                pl.col("j").cast(pl.Utf8),  # Ensure j is Utf8
+                pl.col("k").cast(pl.Utf8),
+            ]
+        )
         logger.debug(f"Schema after casting - BACI: {baci.collect_schema()}")
         logger.debug(f"Schema after casting - MFN: {renamed_avemfn.collect_schema()}")
         logger.debug(f"Schema after casting - Pref: {expanded_pref.collect_schema()}")
     except Exception as e:
         logger.error(f"Failed to cast join keys for final joins: {e}")
         raise
-
 
     # 1. Left join BACI with MFN tariffs
     logger.debug(f"Joining BACI with MFN tariffs on {mfn_join_keys}.")
@@ -274,9 +307,10 @@ def join_datasets(
         except Exception as e:
             logger.warning(f"Could not fetch(1) from joined_mfn: {e}")
 
-
     # 2. Left join the result with Expanded Preferential tariffs
-    logger.debug(f"Joining intermediate result with expanded Preferential tariffs on {pref_join_keys}.")
+    logger.debug(
+        f"Joining intermediate result with expanded Preferential tariffs on {pref_join_keys}."
+    )
     joined_all = joined_mfn.join(expanded_pref, on=pref_join_keys, how="left")
     logger.debug(f"Schema after joining with Pref tariffs: {joined_all.collect_schema()}")
     if logger.isEnabledFor(logging.DEBUG):
@@ -285,9 +319,10 @@ def join_datasets(
         except Exception as e:
             logger.warning(f"Could not fetch(1) from joined_all: {e}")
 
-
     # 3. Calculate the final effective tariff
-    logger.debug("Calculating effective tariff rate using coalesce(pref_tariff_rate, mfn_tariff_rate).")
+    logger.debug(
+        "Calculating effective tariff rate using coalesce(pref_tariff_rate, mfn_tariff_rate)."
+    )
     final_table = joined_all.with_columns(
         pl.coalesce(pl.col("pref_tariff_rate"), pl.col("mfn_tariff_rate")).alias(
             "effective_tariff_rate"
@@ -315,7 +350,7 @@ def create_final_table(joined_data: pl.LazyFrame) -> pl.LazyFrame:
     """
     logger.info("Selecting and renaming columns for the final output table.")
     logger.debug(f"Input schema for final selection: {joined_data.collect_schema()}")
-    # !! ADJUST column names 'v' and 'q' based on your actual BACI schema !!
+
     # Ensure the columns exist before selecting
     available_cols = joined_data.columns
     select_cols = [
@@ -325,30 +360,37 @@ def create_final_table(joined_data: pl.LazyFrame) -> pl.LazyFrame:
         pl.col("k").alias("HS_Code"),  # Product code (HS92)
     ]
     if "q" in available_cols:
-        select_cols.append(pl.col("q").alias("Quantity")) # Assuming 'q' is Quantity in BACI
+        select_cols.append(pl.col("q").alias("Quantity"))  # Assuming 'q' is Quantity in BACI
     else:
         logger.warning("Column 'q' (Quantity) not found in joined data. Skipping.")
     if "v" in available_cols:
-         select_cols.append(pl.col("v").alias("Value")) # Assuming 'v' is Value in BACI
+        select_cols.append(pl.col("v").alias("Value"))  # Assuming 'v' is Value in BACI
     else:
         logger.warning("Column 'v' (Value) not found in joined data. Skipping.")
 
-    select_cols.extend([
-        pl.col("mfn_tariff_rate"),
-        pl.col("pref_tariff_rate"),
-        pl.col("effective_tariff_rate"),  # The coalesced rate
-    ])
-
-    # Optionally add min/max rates if needed and available
-    # if "mfn_min_tariff_rate" in available_cols: select_cols.append(pl.col("mfn_min_tariff_rate"))
-    # if "mfn_max_tariff_rate" in available_cols: select_cols.append(pl.col("mfn_max_tariff_rate"))
-    # if "pref_min_tariff_rate" in available_cols: select_cols.append(pl.col("pref_min_tariff_rate"))
-    # if "pref_max_tariff_rate" in available_cols: select_cols.append(pl.col("pref_max_tariff_rate"))
-    # if "tariff_type" in available_cols: select_cols.append(pl.col("tariff_type")) # Optionally add tariff type
+    select_cols.extend(
+        [
+            pl.col("mfn_tariff_rate"),
+            pl.col("pref_tariff_rate"),
+            pl.col("effective_tariff_rate"),  # The coalesced rate
+        ]
+    )
+    if "mfn_min_tariff_rate" in available_cols:
+        select_cols.append(pl.col("mfn_min_tariff_rate"))
+    if "mfn_max_tariff_rate" in available_cols:
+        select_cols.append(pl.col("mfn_max_tariff_rate"))
+    if "pref_min_tariff_rate" in available_cols:
+        select_cols.append(pl.col("pref_min_tariff_rate"))
+    if "pref_max_tariff_rate" in available_cols:
+        select_cols.append(pl.col("pref_max_tariff_rate"))
+    if "tariff_type" in available_cols:
+        select_cols.append(pl.col("tariff_type"))  # Optionally add tariff type
 
     final_unified_table = joined_data.select(select_cols)
 
-    logger.debug(f"Final table schema after selection/renaming: {final_unified_table.collect_schema()}")
+    logger.debug(
+        f"Final table schema after selection/renaming: {final_unified_table.collect_schema()}"
+    )
     if logger.isEnabledFor(logging.DEBUG):
         try:
             logger.debug(f"Final table head(1):\n{final_unified_table.fetch(1)}")
@@ -366,7 +408,7 @@ def run_matching_pipeline(
     wits_pref_path: str | Path = DEFAULT_WITS_PREF_PATH,
     pref_groups_path: str | Path = DEFAULT_PREF_GROUPS_PATH,
     output_path: str | Path = DEFAULT_OUTPUT_PATH,
-    lazy: bool = True, # Note: Debug logging now uses fetch(1) which triggers some computation
+    lazy: bool = True,  # Note: Debug logging now uses fetch(1) which triggers some computation
 ):
     """
     Runs the full data matching pipeline.
@@ -396,27 +438,31 @@ def run_matching_pipeline(
     avepref = pl.scan_parquet(wits_pref_path)
     logger.debug(f"Initial WITS Pref schema: {avepref.collect_schema()}")
 
-    pref_group_mapping = load_pref_group_mapping(pref_groups_path) # Logging inside
+    pref_group_mapping = load_pref_group_mapping(pref_groups_path)  # Logging inside
 
     # Rename columns
-    renamed_avemfn = rename_wits_mfn(avemfn) # Logging inside
-    renamed_avepref = rename_wits_pref(avepref) # Logging inside
+    renamed_avemfn = rename_wits_mfn(avemfn)  # Logging inside
+    renamed_avepref = rename_wits_pref(avepref)  # Logging inside
 
     # Expand preferential tariffs
     # This is the function with enhanced debugging
-    expanded_pref = expand_preferential_tariffs(renamed_avepref, pref_group_mapping) # Logging inside
+    expanded_pref = expand_preferential_tariffs(
+        renamed_avepref, pref_group_mapping
+    )  # Logging inside
 
     # Join datasets
-    joined_data = join_datasets(baci, renamed_avemfn, expanded_pref) # Logging inside
+    joined_data = join_datasets(baci, renamed_avemfn, expanded_pref)  # Logging inside
 
     # Create final table structure
-    final_unified_table = create_final_table(joined_data) # Logging inside
+    final_unified_table = create_final_table(joined_data)  # Logging inside
 
     # Execute and save
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)  # Ensure output directory exists
 
     logger.info(f"Saving final unified table to: {output_path}")
+    logger.debug(f"Planned query is \n {final_unified_table.explain(engine='streaming')}")
+
     try:
         if lazy:
             logger.info("Executing final plan lazily and sinking to parquet...")
@@ -425,45 +471,32 @@ def run_matching_pipeline(
         else:
             # Collect the result before writing (uses more memory)
             logger.info("Collecting final result eagerly...")
-            result_df = final_unified_table.collect()
-            logger.info(f"Eager collection complete. Shape: {result_df.shape}. Writing to parquet...")
+            result_df = final_unified_table.collect(engine="streaming")
+            logger.info(
+                f"Eager collection complete. Shape: {result_df.shape}. Writing to parquet..."
+            )
             result_df.write_parquet(output_path)
             logger.info("Eager execution complete. Data saved.")
     except Exception as e:
         logger.critical(f"Pipeline failed during final save/collect operation: {e}", exc_info=True)
-        raise # Re-raise after logging
+        raise  # Re-raise after logging
 
     logger.info("Data matching pipeline finished successfully.")
 
 
 if __name__ == "__main__":
-    # This block allows running the script directly
-    # You might want to add argument parsing (e.g., using argparse)
-    # to specify input/output paths from the command line.
-
-    # --- IMPORTANT: Setup logging BEFORE running the pipeline ---
-    # Ensure logging is configured to capture DEBUG messages if needed
     import logging
+
     from mpil_tariff_trade_analysis.utils.logging_config import setup_logging
-    # Set the desired level, e.g., "DEBUG" for detailed output
-    # Make sure your setup_logging function configures handlers appropriately
-    log_level_to_set = "DEBUG"
-    print(f"Attempting to set up logging with level: {log_level_to_set}")
-    setup_logging(log_level=log_level_to_set)
+
+    setup_logging(log_level=logging.DEBUG)
     # Re-get the logger instance AFTER setup_logging has run, just in case
     logger = get_logger(__name__)
-    logger.info(f"Logging setup complete. Running matching script directly with level {log_level_to_set}.")
-    # --- End of logging setup ---
 
     try:
-        # Consider running with lazy=False initially for debugging, if memory allows
-        # run_matching_pipeline(lazy=False)
-        run_matching_pipeline(lazy=True) # Or keep lazy=True
+        run_matching_pipeline(lazy=True)
     except Exception as e:
-        # Logger should have already caught this in run_matching_pipeline or sub-functions
-        # but we log again here just in case the exception occurred outside that function
         logger.critical(f"Pipeline execution failed in __main__: {e}", exc_info=True)
-        # Exit with a non-zero status code to indicate failure
         import sys
-        sys.exit(1)
 
+        sys.exit(1)

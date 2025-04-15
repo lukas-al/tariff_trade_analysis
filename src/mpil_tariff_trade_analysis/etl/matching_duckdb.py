@@ -1,7 +1,6 @@
 # src/mpil_tariff_trade_analysis/etl/matching_duckdb.py
 
 import logging
-import os
 from pathlib import Path
 
 import duckdb
@@ -17,11 +16,12 @@ DEFAULT_BACI_PATH = "data/final/BACI_HS92_V202501"
 DEFAULT_WITS_MFN_PATH = "data/final/WITS_AVEMFN.parquet"
 DEFAULT_WITS_PREF_PATH = "data/final/WITS_AVEPref.parquet"
 DEFAULT_PREF_GROUPS_PATH = "data/raw/WITS_pref_groups/WITS_pref_groups.csv"
-DEFAULT_OUTPUT_PATH = "data/final/unified_trade_tariff_duckdb.parquet" # Changed output name
-DEFAULT_DUCKDB_TEMP_DIR = "data/intermediate/duckdb_temp" # Directory for temp DB file
+DEFAULT_OUTPUT_PATH = "data/final/unified_trade_tariff_duckdb.parquet"  # Changed output name
+DEFAULT_DUCKDB_TEMP_DIR = "data/intermediate/duckdb_temp"  # Directory for temp DB file
 
 
 # --- Main Execution (DuckDB) ---
+
 
 def run_matching_pipeline_duckdb(
     baci_path: str | Path = DEFAULT_BACI_PATH,
@@ -72,7 +72,7 @@ def run_matching_pipeline_duckdb(
             raise
 
     logger.info(f"Using temporary DuckDB database file: {db_file}")
-    con = None # Initialize connection variable
+    con = None  # Initialize connection variable
     try:
         # Connect to DuckDB, creating or opening the file
         con = duckdb.connect(database=str(db_file), read_only=False)
@@ -87,7 +87,7 @@ def run_matching_pipeline_duckdb(
         SELECT
             "RegionCode" AS region_code,
             list(CAST("Partner" AS VARCHAR)) FILTER (WHERE "Partner" IS NOT NULL) AS partner_list
-        FROM read_csv_auto('{pref_groups_path}', ENCODING='iso-8859-1', header=true)
+        FROM read_csv_auto('{pref_groups_path}', ENCODING='utf-8', header=true)
         GROUP BY region_code;
         """
         con.sql(sql_load_groups)
@@ -95,7 +95,9 @@ def run_matching_pipeline_duckdb(
         if logger.isEnabledFor(logging.DEBUG):
             count = con.sql("SELECT COUNT(*) FROM pref_group_mapping").fetchone()[0]
             logger.debug(f"Pref group mapping view count: {count}")
-            logger.debug(f"Pref group mapping schema:\n{con.sql('DESCRIBE pref_group_mapping').df()}")
+            logger.debug(
+                f"Pref group mapping schema:\n{con.sql('DESCRIBE pref_group_mapping').df()}"
+            )
 
         # 2. Load main data sources as views
         logger.info(f"Creating TEMP VIEW for BACI data: {baci_path}")
@@ -110,9 +112,10 @@ def run_matching_pipeline_duckdb(
         logger.info("TEMP VIEW 'avemfn_raw' created.")
 
         logger.info(f"Creating TEMP VIEW for WITS Preferential data: {wits_pref_path}")
-        con.sql(f"CREATE OR REPLACE TEMP VIEW avepref_raw AS FROM read_parquet('{wits_pref_path}');")
+        con.sql(
+            f"CREATE OR REPLACE TEMP VIEW avepref_raw AS FROM read_parquet('{wits_pref_path}');"
+        )
         logger.info("TEMP VIEW 'avepref_raw' created.")
-
 
         # 3. Rename columns (create new views)
         logger.info("Creating TEMP VIEW 'renamed_avemfn'.")
@@ -146,7 +149,6 @@ def run_matching_pipeline_duckdb(
         """
         con.sql(sql_rename_pref)
         logger.info("TEMP VIEW 'renamed_avepref' created.")
-
 
         # 4. Expand Preferential Tariffs
         logger.info("Expanding preferential tariffs...")
@@ -199,11 +201,13 @@ def run_matching_pipeline_duckdb(
             logger.info("TEMP VIEW 'expanded_pref' created successfully.")
             if logger.isEnabledFor(logging.DEBUG):
                 count = con.sql("SELECT COUNT(*) FROM expanded_pref").fetchone()[0]
-                logger.debug(f"Expanded pref view count: {count}") # This forces computation
+                logger.debug(f"Expanded pref view count: {count}")  # This forces computation
         except Exception as e:
-            logger.error(f"CRITICAL: Failed to create 'expanded_pref' view (UNNEST step). Error: {e}", exc_info=True)
+            logger.error(
+                f"CRITICAL: Failed to create 'expanded_pref' view (UNNEST step). Error: {e}",
+                exc_info=True,
+            )
             raise
-
 
         # 5. Join Datasets
         logger.info("Joining BACI, MFN, and expanded Preferential datasets...")
@@ -252,7 +256,6 @@ def run_matching_pipeline_duckdb(
         con.sql(sql_join_all)
         logger.debug("TEMP VIEW 'joined_all' created.")
 
-
         # 6. Calculate Effective Tariff Rate
         logger.info("Calculating effective tariff rate.")
         sql_effective_tariff = """
@@ -264,7 +267,6 @@ def run_matching_pipeline_duckdb(
         """
         con.sql(sql_effective_tariff)
         logger.info("TEMP VIEW 'effective_tariff_calc' created.")
-
 
         # 7. Create Final Table Structure (View)
         logger.info("Creating final table structure view 'final_unified_table'.")
@@ -292,9 +294,10 @@ def run_matching_pipeline_duckdb(
         logger.info("TEMP VIEW 'final_unified_table' created.")
         if logger.isEnabledFor(logging.DEBUG):
             count = con.sql("SELECT COUNT(*) FROM final_unified_table").fetchone()[0]
-            logger.debug(f"Final unified table view count: {count}") # Forces computation
-            logger.debug(f"Final unified table schema:\n{con.sql('DESCRIBE final_unified_table').df()}")
-
+            logger.debug(f"Final unified table view count: {count}")  # Forces computation
+            logger.debug(
+                f"Final unified table schema:\n{con.sql('DESCRIBE final_unified_table').df()}"
+            )
 
         # 8. Save Result to Parquet
         logger.info(f"Saving final result to: {output_path}")
@@ -330,17 +333,19 @@ def run_matching_pipeline_duckdb(
 if __name__ == "__main__":
     # Setup logging
     import logging
+
     from mpil_tariff_trade_analysis.utils.logging_config import setup_logging
 
     # Set log level via setup_logging
-    setup_logging(log_level=logging.DEBUG) # Use DEBUG for detailed logs
-    logger = get_logger(__name__) # Re-get logger after setup
+    setup_logging(log_level=logging.DEBUG)  # Use DEBUG for detailed logs
+    logger = get_logger(__name__)  # Re-get logger after setup
 
     logger.info("Running matching_duckdb.py script directly.")
     try:
         run_matching_pipeline_duckdb()
-    except Exception as e:
+    except Exception:
         # Error should already be logged by the pipeline function
         logger.error("DuckDB pipeline execution failed in __main__.")
         import sys
+
         sys.exit(1)
