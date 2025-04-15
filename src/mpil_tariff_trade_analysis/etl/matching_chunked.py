@@ -4,8 +4,6 @@ from pathlib import Path
 
 import polars as pl
 import pyarrow.parquet as pq
-from tqdm.auto import tqdm
-from tqdm.contrib.logging import logging_redirect_tqdm
 
 # Import the core logic functions and constants from matching.py
 from mpil_tariff_trade_analysis.etl.matching_logic import (  # DEFAULT_OUTPUT_PATH # We'll define a new output dir
@@ -204,7 +202,7 @@ def run_chunked_matching_pipeline(
     # --- Process each chunk ---
     output_schema = None  # Initialize schema variable outside the loop
 
-    for i, chunk_value in enumerate(tqdm(chunk_values)):
+    for i, chunk_value in enumerate(chunk_values):
         logger.info(
             f"--- Processing Chunk {i + 1}/{len(chunk_values)}: {chunk_column} = {chunk_value} ---"
         )
@@ -336,14 +334,13 @@ if __name__ == "__main__":
     logger.info("Running matching_chunked.py script...")
     output_directory = DEFAULT_CHUNKED_OUTPUT_DIR
 
-    with logging_redirect_tqdm():
-        try:
-            run_chunked_matching_pipeline(
-                output_dir=output_directory,
-            )
-            logger.info("Script finished successfully.")
-        except Exception as e:
-            logger.critical(f"Chunked pipeline execution failed in __main__: {e}", exc_info=True)
-            import sys
+    try:
+        run_chunked_matching_pipeline(
+            output_dir=output_directory,
+        )
+        logger.info("Script finished successfully.")
+    except Exception as e:
+        logger.critical(f"Chunked pipeline execution failed in __main__: {e}", exc_info=True)
+        import sys
 
-            sys.exit(1)
+        sys.exit(1)
