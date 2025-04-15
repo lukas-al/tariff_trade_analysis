@@ -19,11 +19,8 @@ from mpil_tariff_trade_analysis.utils.logging_config import get_logger
 # Get logger for this module
 logger = get_logger(__name__)
 
-## WITS is structured oddly. We're looking for the following table:
-# | Year | Source | Target | HS Code | Effective Tariff (AVE) |
-# We need to calculate Effective Tariff from the combination of Pref and MFN tariffs between countries.
 
-## First of all - can we load WITS in memory? Given its super odd structure.
+OUTPUT_DIR = "data/intermediate"
 
 
 def load_wits_tariff_data(tariff_type="AVEMFN", base_dir="data/raw/WITS_tariff"):
@@ -215,7 +212,7 @@ def load_wits_tariff_data(tariff_type="AVEMFN", base_dir="data/raw/WITS_tariff")
     return combined_df
 
 
-def process_and_save_wits_data(tariff_type="AVEMFN", output_dir="data/final"):
+def process_and_save_wits_data(tariff_type="AVEMFN", output_dir=OUTPUT_DIR):
     """
     Process all WITS tariff data for a specific tariff type and save as a parquet file.
 
