@@ -87,7 +87,7 @@ def run_matching_pipeline_duckdb(
         SELECT
             "RegionCode" AS region_code,
             list(CAST("Partner" AS VARCHAR)) FILTER (WHERE "Partner" IS NOT NULL) AS partner_list
-        FROM read_csv_auto('{pref_groups_path}', ENCODING='utf-8', header=true)
+        FROM read_csv_auto('{pref_groups_path}', ENCODING='utf-8', header=true, ignore_errors=true)
         GROUP BY region_code;
         """
         con.sql(sql_load_groups)
@@ -101,7 +101,10 @@ def run_matching_pipeline_duckdb(
 
         # 2. Load main data sources as views
         logger.info(f"Creating TEMP VIEW for BACI data: {baci_path}")
-        con.sql(f"CREATE OR REPLACE TEMP VIEW baci_raw AS FROM read_parquet('{baci_path}');")
+        con.sql(f"""
+            CREATE OR REPLACE TEMP VIEW baci_raw AS 
+            SELECT * FROM read_parquet('{baci_path}/*/*.parquet', hive_partitioning=true)
+        """)
         logger.info("TEMP VIEW 'baci_raw' created.")
         if logger.isEnabledFor(logging.DEBUG):
             count = con.sql("SELECT COUNT(*) FROM baci_raw").fetchone()[0]
