@@ -11,9 +11,9 @@ logger = get_logger(__name__)
 
 # --- Configuration ---
 # Define default paths (consider making these configurable, e.g., via arguments)
-DEFAULT_BACI_PATH = "data/final/BACI_HS92_V202501"
-DEFAULT_WITS_MFN_PATH = "data/final/WITS_AVEMFN.parquet"
-DEFAULT_WITS_PREF_PATH = "data/final/WITS_AVEPref.parquet"
+DEFAULT_BACI_PATH = "data/intermediate/BACI_HS92_V202501"
+DEFAULT_WITS_MFN_PATH = "data/intermediate/WITS_AVEMFN.parquet"
+DEFAULT_WITS_PREF_PATH = "data/intermediate/WITS_AVEPref.parquet"
 DEFAULT_PREF_GROUPS_PATH = "data/raw/WITS_pref_groups/WITS_pref_groups.csv"
 DEFAULT_OUTPUT_PATH = "data/final/unified_trade_tariff.parquet"
 

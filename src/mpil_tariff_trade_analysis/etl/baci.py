@@ -10,7 +10,7 @@ from mpil_tariff_trade_analysis.utils.logging_config import get_logger
 LOGGER = get_logger(__name__)
 
 
-def baci_to_parquet(hs, release, input_folder="raw", output_folder="final"):
+def baci_to_parquet(hs, release, input_folder="raw", output_folder="intermediate"):
     # Determine input path
     baci_folder = f"BACI_{hs}_V{release}"
 
