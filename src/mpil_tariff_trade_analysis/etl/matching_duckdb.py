@@ -78,6 +78,28 @@ def run_matching_pipeline_duckdb(
         con = duckdb.connect(database=str(db_file), read_only=False)
         logger.info("DuckDB connection established.")
 
+        # --- Configure DuckDB ---
+        # Increase memory limit - adjust '40GB' based on your system RAM
+        # See: https://duckdb.org/docs/sql/pragmas.html#memory_limit
+        memory_limit_gb = 14
+        con.sql(f"PRAGMA memory_limit='{memory_limit_gb}GB';")
+
+        # Explicitly set temp directory (good practice, though often implicit with file DB)
+        # See: https://duckdb.org/docs/sql/pragmas.html#temp_directory
+        con.sql(
+            f"PRAGMA temp_directory='{duckdb_temp_dir.resolve() / 'duckdb_intermediate_spill'}';"
+        )
+
+        # Set max temp directory size - adjust '50GB' based on available disk space
+        # See: https://github.com/duckdb/duckdb/pull/11410 (or relevant docs if updated)
+        # Note: This might require a recent DuckDB version. Default is often memory_limit * 5.
+        # Increase significantly for large UNNEST operations.
+        max_temp_size_gb = 65  # Set max temp directory size - adjust based on available disk space
+        con.sql(f"PRAGMA max_temp_directory_size='{max_temp_size_gb}GB';")
+        logger.info(f"DuckDB memory limit set to '{memory_limit_gb}GB'.")
+        logger.info("DuckDB temp directory set explicitly.")
+        logger.info(f"DuckDB max temp directory size set to '{max_temp_size_gb}GB'.")
+
         # 1. Load Preferential Group Mapping (CSV -> Aggregate -> View)
         logger.info(f"Loading and processing preferential group mapping: {pref_groups_path}")
         # Use read_csv_auto for simplicity, specify encoding.
@@ -131,15 +153,13 @@ def run_matching_pipeline_duckdb(
             tariff_rate AS mfn_tariff_rate,
             min_rate AS mfn_min_tariff_rate,
             max_rate AS mfn_max_tariff_rate,
-            tariff_type -- Keep for potential debugging
+            tariff_type AS mfn_tariff_type -- Explicitly alias for clarity
         FROM avemfn_raw;
         """
         con.sql(sql_rename_mfn)
         logger.info("TEMP VIEW 'renamed_avemfn' created.")
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug(
-                f"Renamed MFN schema:\n{con.sql('DESCRIBE renamed_avemfn').df()}"
-            )
+            logger.debug(f"Renamed MFN schema:\n{con.sql('DESCRIBE renamed_avemfn').df()}")
 
         logger.info("Creating TEMP VIEW 'renamed_avepref'.")
         sql_rename_pref = """
@@ -157,9 +177,7 @@ def run_matching_pipeline_duckdb(
         con.sql(sql_rename_pref)
         logger.info("TEMP VIEW 'renamed_avepref' created.")
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug(
-                f"Renamed Pref schema:\n{con.sql('DESCRIBE renamed_avepref').df()}"
-            )
+            logger.debug(f"Renamed Pref schema:\n{con.sql('DESCRIBE renamed_avepref').df()}")
 
         # 4. Expand Preferential Tariffs
         logger.info("Expanding preferential tariffs...")
@@ -246,7 +264,7 @@ def run_matching_pipeline_duckdb(
             mfn.mfn_tariff_rate,
             mfn.mfn_min_tariff_rate,
             mfn.mfn_max_tariff_rate,
-            mfn.tariff_type
+            mfn.mfn_tariff_type -- Use the aliased column name
         FROM baci_raw b
         LEFT JOIN renamed_avemfn mfn
             ON b.t = mfn.t
@@ -256,9 +274,7 @@ def run_matching_pipeline_duckdb(
         con.sql(sql_join_baci_mfn)
         logger.debug("TEMP VIEW 'joined_mfn' created.")
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug(
-                f"Joined MFN schema:\n{con.sql('DESCRIBE joined_mfn').df()}"
-            )
+            logger.debug(f"Joined MFN schema:\n{con.sql('DESCRIBE joined_mfn').df()}")
 
         # 5b. Join result with Expanded Preferential
         logger.debug("Creating TEMP VIEW 'joined_all'.")
@@ -279,9 +295,7 @@ def run_matching_pipeline_duckdb(
         con.sql(sql_join_all)
         logger.debug("TEMP VIEW 'joined_all' created.")
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug(
-                f"Joined All schema:\n{con.sql('DESCRIBE joined_all').df()}"
-            )
+            logger.debug(f"Joined All schema:\n{con.sql('DESCRIBE joined_all').df()}")
 
         # 6. Calculate Effective Tariff Rate
         logger.info("Calculating effective tariff rate.")
@@ -309,8 +323,8 @@ def run_matching_pipeline_duckdb(
             i AS "Source",
             j AS "Target",
             k AS "HS_Code",
-            q AS "Quantity", -- Assuming 'q' exists
-            v AS "Value",    -- Assuming 'v' exists
+            q AS "Quantity",
+            v AS "Value",
             mfn_tariff_rate,
             pref_tariff_rate,
             effective_tariff_rate,
@@ -318,7 +332,7 @@ def run_matching_pipeline_duckdb(
             mfn_max_tariff_rate, -- Optional
             pref_min_tariff_rate, -- Optional
             pref_max_tariff_rate, -- Optional
-            tariff_type          -- Optional
+            mfn_tariff_type AS "tariff_type" -- Select the aliased column and rename back for output
         FROM effective_tariff_calc;
         """
         con.sql(sql_final_select)
@@ -355,10 +369,11 @@ def run_matching_pipeline_duckdb(
             logger.info("Closing DuckDB connection.")
             con.close()
             logger.info("DuckDB connection closed.")
-        # Optionally delete the temp file after closing connection
-        # if db_file.exists():
-        #     logger.info(f"Deleting temporary DuckDB file: {db_file}")
-        #     db_file.unlink()
+
+        # Delete the temp file
+        if db_file.exists():
+            logger.info(f"Deleting temporary DuckDB file: {db_file}")
+            db_file.unlink()
 
 
 if __name__ == "__main__":
