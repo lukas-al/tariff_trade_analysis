@@ -136,6 +136,10 @@ def run_matching_pipeline_duckdb(
         """
         con.sql(sql_rename_mfn)
         logger.info("TEMP VIEW 'renamed_avemfn' created.")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                f"Renamed MFN schema:\n{con.sql('DESCRIBE renamed_avemfn').df()}"
+            )
 
         logger.info("Creating TEMP VIEW 'renamed_avepref'.")
         sql_rename_pref = """
@@ -152,6 +156,10 @@ def run_matching_pipeline_duckdb(
         """
         con.sql(sql_rename_pref)
         logger.info("TEMP VIEW 'renamed_avepref' created.")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                f"Renamed Pref schema:\n{con.sql('DESCRIBE renamed_avepref').df()}"
+            )
 
         # 4. Expand Preferential Tariffs
         logger.info("Expanding preferential tariffs...")
@@ -168,6 +176,10 @@ def run_matching_pipeline_duckdb(
         """
         con.sql(sql_join_pref_map)
         logger.debug("TEMP VIEW 'joined_pref_mapping' created.")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                f"Joined Pref Mapping schema:\n{con.sql('DESCRIBE joined_pref_mapping').df()}"
+            )
 
         # 4b. Create the final partner list (use mapping list or original 'j')
         logger.debug("Creating TEMP VIEW 'pref_with_final_list'.")
@@ -183,6 +195,10 @@ def run_matching_pipeline_duckdb(
         """
         con.sql(sql_final_list)
         logger.debug("TEMP VIEW 'pref_with_final_list' created.")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                f"Pref with Final List schema:\n{con.sql('DESCRIBE pref_with_final_list').df()}"
+            )
 
         # 4c. Explode (UNNEST) the final partner list
         logger.info("Creating TEMP VIEW 'expanded_pref' using UNNEST.")
@@ -239,6 +255,10 @@ def run_matching_pipeline_duckdb(
         """
         con.sql(sql_join_baci_mfn)
         logger.debug("TEMP VIEW 'joined_mfn' created.")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                f"Joined MFN schema:\n{con.sql('DESCRIBE joined_mfn').df()}"
+            )
 
         # 5b. Join result with Expanded Preferential
         logger.debug("Creating TEMP VIEW 'joined_all'.")
@@ -258,6 +278,10 @@ def run_matching_pipeline_duckdb(
         """
         con.sql(sql_join_all)
         logger.debug("TEMP VIEW 'joined_all' created.")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                f"Joined All schema:\n{con.sql('DESCRIBE joined_all').df()}"
+            )
 
         # 6. Calculate Effective Tariff Rate
         logger.info("Calculating effective tariff rate.")
@@ -270,6 +294,10 @@ def run_matching_pipeline_duckdb(
         """
         con.sql(sql_effective_tariff)
         logger.info("TEMP VIEW 'effective_tariff_calc' created.")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                f"Effective Tariff Calc schema:\n{con.sql('DESCRIBE effective_tariff_calc').df()}"
+            )
 
         # 7. Create Final Table Structure (View)
         logger.info("Creating final table structure view 'final_unified_table'.")
