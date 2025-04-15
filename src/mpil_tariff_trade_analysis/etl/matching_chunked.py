@@ -1,7 +1,9 @@
-import gc  # Garbage collector
+import gc
 import logging
 from pathlib import Path
 
+import pyarrow as pa
+import pyarrow.parquet as pq
 import polars as pl
 
 # Assuming your logging setup is accessible
@@ -24,23 +26,29 @@ from .matching import (  # DEFAULT_OUTPUT_PATH # We'll define a new output dir
 logger = get_logger(__name__)
 
 # --- Configuration for Chunking ---
-# Define the column name used for chunking IN THE SOURCE PARQUET FILES
-SOURCE_CHUNK_COLUMN = "year"
+# Define the column name used for chunking AFTER initial renaming
+# This will be the consistent name across all base frames.
+CHUNK_COLUMN_NAME = "t"
 # Define the column name for partitioning IN THE FINAL OUTPUT
-PARTITION_COLUMN = "Year"
+PARTITION_COLUMN = "Year" # This comes from create_final_table
 
 # Define a new default output DIRECTORY for the partitioned dataset
 DEFAULT_CHUNKED_OUTPUT_DIR = "data/final/unified_trade_tariff_partitioned"
 
 
-def get_unique_years(paths: list[str | Path], column_name: str) -> list:
+def get_unique_chunk_values(paths: list[str | Path], column_name: str) -> list:
     """
     Scans multiple Parquet files or directories to find unique values
     in the specified column without loading full data.
 
     Args:
-        paths: A list of paths to Parquet files or directories.
-        column_name: The name of the column to find unique values for (e.g., 'year').
+        paths: A list of paths to Parquet files or directories containing the data
+               *before* any renaming relevant to this function.
+        column_name: The name of the column to find unique values for (e.g., 't' AFTER renaming).
+                     This function assumes the column exists with this name in the scanned files,
+                     or that the scan operation itself includes the necessary renaming if done lazily.
+                     *** IMPORTANT: For this strategy, we assume the renaming to 't' happens *before*
+                     this function is effectively called on the data source. ***
 
     Returns:
         A sorted list of unique values found in the column across all files.
@@ -48,15 +56,25 @@ def get_unique_years(paths: list[str | Path], column_name: str) -> list:
     unique_values = set()
     logger.info(f"Scanning for unique values in column '{column_name}' across paths: {paths}")
 
+    # This function now expects the column 't' to exist in the sources
+    # because we perform the renaming on the base LazyFrames beforehand.
     for data_path in paths:
         try:
-            # Scan the dataset, select only the unique values of the chunk column
-            # Use low_memory=True for potentially very wide files, though less critical here
-            lf = pl.scan_parquet(data_path)  # Scans all files if it's a directory
-            if column_name in lf.columns:
+            lf = pl.scan_parquet(data_path)
+            # Check if the *original* year column likely exists before attempting rename/scan
+            # This is a bit indirect, we rely on the calling context having done the rename
+            # A more robust check might involve reading schema first if paths are complex.
+            if "year" in lf.columns: # Check if original 'year' exists for potential rename
+                 # Assume the rename to 'column_name' (e.g., 't') happens before collect
+                 lf_renamed_scan = lf.rename({"year": column_name}) # Apply rename for this scan
+            else:
+                 # If 'year' isn't there, assume 'column_name' might already exist
+                 lf_renamed_scan = lf
+
+            if column_name in lf_renamed_scan.columns:
                 values = (
-                    lf.select(pl.col(column_name).unique())
-                    .collect(engine="streaming")
+                    lf_renamed_scan.select(pl.col(column_name).unique())
+                    .collect(streaming=True) # Use streaming engine
                     .get_column(column_name)
                     .to_list()
                 )
@@ -64,11 +82,11 @@ def get_unique_years(paths: list[str | Path], column_name: str) -> list:
                 logger.debug(f"Found {len(values)} unique '{column_name}' values in {data_path}.")
             else:
                 logger.warning(
-                    f"Chunk column '{column_name}' not found in schema for path: {data_path}"
+                    f"Chunk column '{column_name}' (or original 'year') not found in schema for path: {data_path}"
                 )
         except Exception as e:
             logger.warning(
-                f"Could not read column '{column_name}' from {data_path}: {e}. Skipping this source for year detection."
+                f"Could not read column '{column_name}' from {data_path}: {e}. Skipping this source for chunk value detection."
             )
 
     if not unique_values:
@@ -77,7 +95,6 @@ def get_unique_years(paths: list[str | Path], column_name: str) -> list:
         )
 
     # Convert to appropriate type if needed (e.g., int) and sort
-    # Assuming years are integers here
     try:
         sorted_values = sorted([int(v) for v in unique_values if v is not None])
     except ValueError:
@@ -98,12 +115,13 @@ def run_chunked_matching_pipeline(
     wits_pref_path: str | Path = DEFAULT_WITS_PREF_PATH,
     pref_groups_path: str | Path = DEFAULT_PREF_GROUPS_PATH,
     output_dir: str | Path = DEFAULT_CHUNKED_OUTPUT_DIR,
-    source_chunk_column: str = SOURCE_CHUNK_COLUMN,
-    partition_column: str = PARTITION_COLUMN,
+    chunk_column: str = CHUNK_COLUMN_NAME, # Use 't'
+    partition_column: str = PARTITION_COLUMN, # Use 'Year'
 ):
     """
-    Processes the matching pipeline by chunking data based on a column (e.g., year)
-    and writing to a Hive-partitioned Parquet dataset.
+    Processes the matching pipeline by chunking data based on a column (e.g., 't')
+    and writing to a Hive-partitioned Parquet dataset using PyArrow.
+    Initial renaming of year columns to 't' is done upfront.
 
     Args:
         baci_path: Path to the BACI data (file or directory).
@@ -111,8 +129,8 @@ def run_chunked_matching_pipeline(
         wits_pref_path: Path to the WITS Preferential tariff data (file or directory).
         pref_groups_path: Path to the WITS preferential groups mapping CSV.
         output_dir: The root directory to save the partitioned Parquet dataset.
-        source_chunk_column: The column name in the source files used for filtering chunks.
-        partition_column: The column name to use for partitioning the output dataset.
+        chunk_column: The unified column name ('t') used for filtering chunks after initial rename.
+        partition_column: The column name ('Year') to use for partitioning the output dataset.
     """
     baci_path = Path(baci_path)
     wits_mfn_path = Path(wits_mfn_path)
@@ -126,7 +144,7 @@ def run_chunked_matching_pipeline(
         f"Source data paths: BACI='{baci_path}', MFN='{wits_mfn_path}', PREF='{wits_pref_path}'"
     )
     logger.info(f"Output directory (partitioned by '{partition_column}'): {output_dir}")
-    logger.info(f"Chunking based on source column: '{source_chunk_column}'")
+    logger.info(f"Chunking based on unified column: '{chunk_column}'") # Should log 't'
 
     # --- Load non-chunked data once ---
     # Pref group mapping is small, load it into memory for potentially faster access
