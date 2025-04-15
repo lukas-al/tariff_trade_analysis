@@ -21,10 +21,12 @@ logger = get_logger(__name__)
 
 
 OUTPUT_DIR = "data/intermediate"
-DEFAULT_WITS_BASE_DIR = "data/raw/WITS_tariff" # Add a default
+DEFAULT_WITS_BASE_DIR = "data/raw/WITS_tariff"  # Add a default
 
 
-def load_wits_tariff_data(tariff_type="AVEMFN", base_dir=DEFAULT_WITS_BASE_DIR): # Use default here too
+def load_wits_tariff_data(
+    tariff_type="AVEMFN", base_dir=DEFAULT_WITS_BASE_DIR
+):  # Use default here too
     """
     Load all WITS tariff data for a specific tariff type into a single Polars DataFrame.
 
@@ -62,7 +64,7 @@ def load_wits_tariff_data(tariff_type="AVEMFN", base_dir=DEFAULT_WITS_BASE_DIR):
             # Note: case-sensitive .CSV extension
             csv_files = glob.glob(os.path.join(csv_path, "*.CSV"))
 
-            logger.debug(f"Found {len(csv_files)} CSV files in {subdir}")
+            # logger.debug(f"Found {len(csv_files)} CSV files in {subdir}")
 
             for file in csv_files:
                 if "JobID" in file:  # Only include the actual data files
@@ -216,7 +218,7 @@ def load_wits_tariff_data(tariff_type="AVEMFN", base_dir=DEFAULT_WITS_BASE_DIR):
 def process_and_save_wits_data(
     tariff_type="AVEMFN",
     output_dir=OUTPUT_DIR,
-    base_dir=DEFAULT_WITS_BASE_DIR # Add base_dir argument here
+    base_dir=DEFAULT_WITS_BASE_DIR,  # Add base_dir argument here
 ):
     """
     Process all WITS tariff data for a specific tariff type and save as a parquet file.
@@ -230,7 +232,7 @@ def process_and_save_wits_data(
         str: Path to the saved parquet file or None on failure
     """
     logger.info(f"Starting processing of {tariff_type} tariff data")
-    logger.info(f"Using base directory for raw data: {base_dir}") # Log the base dir being used
+    logger.info(f"Using base directory for raw data: {base_dir}")  # Log the base dir being used
 
     # Create output directory if it doesn't exist
     try:
@@ -358,7 +360,7 @@ if __name__ == "__main__":
     # Example: Explicitly pass base_dir if not using default, otherwise it uses the default
     # base_directory = "path/to/your/raw/data"
     # result = process_and_save_wits_data(tariff_type="AVEMFN", base_dir=base_directory)
-    result = process_and_save_wits_data(tariff_type="AVEMFN") # Uses default base_dir
+    result = process_and_save_wits_data(tariff_type="AVEMFN")  # Uses default base_dir
 
     if result:
         logger.info(f"Successfully processed and saved WITS AVEMFN tariff data to {result}")
@@ -368,7 +370,7 @@ if __name__ == "__main__":
     # Optionally process AVEPref data too
     logger.info("Starting processing of AVEPref tariff data")
     # result = process_and_save_wits_data(tariff_type="AVEPref", base_dir=base_directory)
-    result = process_and_save_wits_data(tariff_type="AVEPref") # Uses default base_dir
+    result = process_and_save_wits_data(tariff_type="AVEPref")  # Uses default base_dir
 
     if result:
         logger.info(f"Successfully processed and saved WITS AVEPref tariff data to {result}")
