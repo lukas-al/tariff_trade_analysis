@@ -2,15 +2,13 @@ import gc
 import logging
 from pathlib import Path
 
-import pyarrow as pa
-import pyarrow.parquet as pq
 import polars as pl
-
-# Assuming your logging setup is accessible
-from ..utils.logging_config import get_logger, setup_logging
+import pyarrow.parquet as pq
+from tqdm.auto import tqdm
+from tqdm.contrib.logging import logging_redirect_tqdm
 
 # Import the core logic functions and constants from matching.py
-from .matching import (  # DEFAULT_OUTPUT_PATH # We'll define a new output dir
+from mpil_tariff_trade_analysis.etl.matching_logic import (  # DEFAULT_OUTPUT_PATH # We'll define a new output dir
     DEFAULT_BACI_PATH,
     DEFAULT_PREF_GROUPS_PATH,
     DEFAULT_WITS_MFN_PATH,
@@ -23,14 +21,18 @@ from .matching import (  # DEFAULT_OUTPUT_PATH # We'll define a new output dir
     rename_wits_pref,
 )
 
+# Assuming your logging setup is accessible
+from mpil_tariff_trade_analysis.utils.logging_config import get_logger, setup_logging
+
 logger = get_logger(__name__)
 
 # --- Configuration for Chunking ---
 # Define the column name used for chunking AFTER initial renaming
 # This will be the consistent name across all base frames.
 CHUNK_COLUMN_NAME = "t"
+
 # Define the column name for partitioning IN THE FINAL OUTPUT
-PARTITION_COLUMN = "Year" # This comes from create_final_table
+PARTITION_COLUMN = "Year"  # This comes from create_final_table
 
 # Define a new default output DIRECTORY for the partitioned dataset
 DEFAULT_CHUNKED_OUTPUT_DIR = "data/final/unified_trade_tariff_partitioned"
@@ -64,17 +66,17 @@ def get_unique_chunk_values(paths: list[str | Path], column_name: str) -> list:
             # Check if the *original* year column likely exists before attempting rename/scan
             # This is a bit indirect, we rely on the calling context having done the rename
             # A more robust check might involve reading schema first if paths are complex.
-            if "year" in lf.columns: # Check if original 'year' exists for potential rename
-                 # Assume the rename to 'column_name' (e.g., 't') happens before collect
-                 lf_renamed_scan = lf.rename({"year": column_name}) # Apply rename for this scan
+            if "year" in lf.columns:  # Check if original 'year' exists for potential rename
+                # Assume the rename to 'column_name' (e.g., 't') happens before collect
+                lf_renamed_scan = lf.rename({"year": column_name})  # Apply rename for this scan
             else:
-                 # If 'year' isn't there, assume 'column_name' might already exist
-                 lf_renamed_scan = lf
+                # If 'year' isn't there, assume 'column_name' already exists
+                lf_renamed_scan = lf
 
             if column_name in lf_renamed_scan.columns:
                 values = (
                     lf_renamed_scan.select(pl.col(column_name).unique())
-                    .collect(streaming=True) # Use streaming engine
+                    .collect(engine="streaming")  # Use streaming engine
                     .get_column(column_name)
                     .to_list()
                 )
@@ -115,8 +117,8 @@ def run_chunked_matching_pipeline(
     wits_pref_path: str | Path = DEFAULT_WITS_PREF_PATH,
     pref_groups_path: str | Path = DEFAULT_PREF_GROUPS_PATH,
     output_dir: str | Path = DEFAULT_CHUNKED_OUTPUT_DIR,
-    chunk_column: str = CHUNK_COLUMN_NAME, # Use 't'
-    partition_column: str = PARTITION_COLUMN, # Use 'Year'
+    chunk_column: str = CHUNK_COLUMN_NAME,  # Use 't'
+    partition_column: str = PARTITION_COLUMN,  # Use 'Year'
 ):
     """
     Processes the matching pipeline by chunking data based on a column (e.g., 't')
@@ -144,7 +146,7 @@ def run_chunked_matching_pipeline(
         f"Source data paths: BACI='{baci_path}', MFN='{wits_mfn_path}', PREF='{wits_pref_path}'"
     )
     logger.info(f"Output directory (partitioned by '{partition_column}'): {output_dir}")
-    logger.info(f"Chunking based on unified column: '{chunk_column}'") # Should log 't'
+    logger.info(f"Chunking based on unified column: '{chunk_column}'")  # Should log 't'
 
     # --- Load non-chunked data once ---
     # Pref group mapping is small, load it into memory for potentially faster access
@@ -164,38 +166,45 @@ def run_chunked_matching_pipeline(
     logger.info("Defining base LazyFrames and applying initial renames...")
     try:
         # Scan and immediately rename 'year' (or equivalent) to 't'
-        baci_lazy_base = pl.scan_parquet(baci_path).rename({"year": chunk_column}) # Assuming BACI uses 'year'
-        wits_mfn_lazy_base_renamed = rename_wits_mfn(pl.scan_parquet(wits_mfn_path)) # Uses 't' internally
-        wits_pref_lazy_base_renamed = rename_wits_pref(pl.scan_parquet(wits_pref_path)) # Uses 't' internally
+        baci_lazy_base = pl.scan_parquet(baci_path)  # .rename({"t": chunk_column})
+        wits_mfn_lazy_base_renamed = rename_wits_mfn(pl.scan_parquet(wits_mfn_path))
+        wits_pref_lazy_base_renamed = rename_wits_pref(pl.scan_parquet(wits_pref_path))
 
         # Verify 't' exists in all base frames after renaming
         if chunk_column not in baci_lazy_base.columns:
-             raise ValueError(f"Chunk column '{chunk_column}' missing in BACI after rename attempt.")
+            raise ValueError(f"Chunk column '{chunk_column}' missing in BACI after rename attempt.")
         if chunk_column not in wits_mfn_lazy_base_renamed.columns:
-             raise ValueError(f"Chunk column '{chunk_column}' missing in WITS MFN after rename.")
+            raise ValueError(f"Chunk column '{chunk_column}' missing in WITS MFN after rename.")
         if chunk_column not in wits_pref_lazy_base_renamed.columns:
-             raise ValueError(f"Chunk column '{chunk_column}' missing in WITS Pref after rename.")
+            raise ValueError(f"Chunk column '{chunk_column}' missing in WITS Pref after rename.")
 
         logger.info("Base LazyFrames defined with consistent chunk column name 't'.")
         logger.debug(f"BACI base schema (post-rename): {baci_lazy_base.collect_schema()}")
-        logger.debug(f"MFN base schema (post-rename): {wits_mfn_lazy_base_renamed.collect_schema()}")
-        logger.debug(f"Pref base schema (post-rename): {wits_pref_lazy_base_renamed.collect_schema()}")
+        logger.debug(
+            f"MFN base schema (post-rename): {wits_mfn_lazy_base_renamed.collect_schema()}"
+        )
+        logger.debug(
+            f"Pref base schema (post-rename): {wits_pref_lazy_base_renamed.collect_schema()}"
+        )
 
     except Exception as e:
-        logger.error(f"Failed during base LazyFrame definition or initial renaming: {e}", exc_info=True)
+        logger.error(
+            f"Failed during base LazyFrame definition or initial renaming: {e}", exc_info=True
+        )
         raise
 
     # --- Determine chunks (e.g., years using 't') ---
     # Now call get_unique_chunk_values looking for 't' in the original paths.
     # The function internally handles the logic assuming 't' should exist post-rename.
     chunk_values = get_unique_chunk_values(
-        [baci_path, wits_mfn_path, wits_pref_path], chunk_column # Pass 't' as the column name
+        [baci_path, wits_mfn_path, wits_pref_path],
+        chunk_column,  # Pass 't' as the column name
     )
 
     # --- Process each chunk ---
     output_schema = None  # Initialize schema variable outside the loop
 
-    for i, chunk_value in enumerate(chunk_values):
+    for i, chunk_value in enumerate(tqdm(chunk_values)):
         logger.info(
             f"--- Processing Chunk {i + 1}/{len(chunk_values)}: {chunk_column} = {chunk_value} ---"
         )
@@ -229,7 +238,7 @@ def run_chunked_matching_pipeline(
             # --- Execute Plan, Convert to Arrow, and Write using PyArrow ---
             # (This part remains the same as the previous PyArrow implementation)
             logger.info(f"Executing Polars plan for chunk {chunk_value}...")
-            chunk_df = final_table_lazy.collect(streaming=True)
+            chunk_df = final_table_lazy.collect(engine="streaming")
             logger.info(f"Collected chunk {chunk_value}. Shape: {chunk_df.shape}")
 
             if chunk_df.is_empty():
@@ -242,21 +251,29 @@ def run_chunked_matching_pipeline(
             try:
                 table = chunk_df.to_arrow()
             except Exception as e:
-                logger.error(f"Failed to convert Polars DataFrame to Arrow Table for chunk {chunk_value}: {e}", exc_info=True)
+                logger.error(
+                    f"Failed to convert Polars DataFrame to Arrow Table for chunk {chunk_value}: {e}",
+                    exc_info=True,
+                )
                 continue
 
             if output_schema is None:
                 output_schema = table.schema
-                logger.info(f"Established dataset schema from first non-empty chunk ({chunk_value}):\n{output_schema}")
+                logger.info(
+                    f"Established dataset schema from first non-empty chunk ({chunk_value}):\n{output_schema}"
+                )
             else:
                 try:
                     if table.schema != output_schema:
                         logger.warning(f"Schema for chunk {chunk_value} differs. Casting...")
                         table = table.cast(output_schema, safe=False)
                     else:
-                         logger.debug(f"Schema for chunk {chunk_value} matches.")
+                        logger.debug(f"Schema for chunk {chunk_value} matches.")
                 except Exception as e:
-                    logger.error(f"Failed to cast chunk {chunk_value} to established schema: {e}", exc_info=True)
+                    logger.error(
+                        f"Failed to cast chunk {chunk_value} to established schema: {e}",
+                        exc_info=True,
+                    )
                     continue
 
             logger.info(f"Writing chunk {chunk_value} to partitioned dataset at: {output_dir}")
@@ -264,37 +281,45 @@ def run_chunked_matching_pipeline(
                 pq.write_to_dataset(
                     table=table,
                     root_path=output_dir,
-                    partition_cols=[partition_column], # Use 'Year'
+                    partition_cols=[partition_column],  # Use 'Year'
                     schema=output_schema,
-                    existing_data_behavior='overwrite_or_ignore',
+                    existing_data_behavior="overwrite_or_ignore",
                     # write_statistics=True, # Default usually True
                     # compression='zstd',
                 )
-                logger.info(f"Successfully wrote chunk for {partition_column}={chunk_value} using PyArrow.")
+                logger.info(
+                    f"Successfully wrote chunk for {partition_column}={chunk_value} using PyArrow."
+                )
             except Exception as e:
-                 logger.error(f"PyArrow failed to write partition for {partition_column}={chunk_value}: {e}", exc_info=True)
+                logger.error(
+                    f"PyArrow failed to write partition for {partition_column}={chunk_value}: {e}",
+                    exc_info=True,
+                )
 
         # ... (rest of the try/except/finally block for the loop iteration) ...
         except pl.exceptions.ComputeError as e:
-             logger.error(f"Polars compute error processing chunk {chunk_value}: {e}", exc_info=True)
-             # Explain might fail if the lazy frame itself is problematic after error
-             try:
-                 logger.error(f"Query plan that failed:\n{final_table_lazy.explain(streaming=True)}")
-             except Exception as explain_e:
-                 logger.error(f"Could not explain query plan after error: {explain_e}")
+            logger.error(f"Polars compute error processing chunk {chunk_value}: {e}", exc_info=True)
+            # Explain might fail if the lazy frame itself is problematic after error
+            try:
+                logger.error(f"Query plan that failed:\n{final_table_lazy.explain(streaming=True)}")
+            except Exception as explain_e:
+                logger.error(f"Could not explain query plan after error: {explain_e}")
         except Exception as e:
-            logger.error(f"Failed to process or write chunk for {chunk_column}={chunk_value}: {e}", exc_info=True)
+            logger.error(
+                f"Failed to process or write chunk for {chunk_column}={chunk_value}: {e}",
+                exc_info=True,
+            )
         finally:
             # Explicitly trigger garbage collection after each chunk
             # May help release memory, especially if complex objects were created
             try:
-                del chunk_df # Explicit deletion hint
+                del chunk_df  # Explicit deletion hint
             except NameError:
-                pass # Ignore if chunk_df wasn't assigned due to error
+                pass  # Ignore if chunk_df wasn't assigned due to error
             try:
-                del table # Explicit deletion hint
+                del table  # Explicit deletion hint
             except NameError:
-                pass # Ignore if table wasn't assigned due to error
+                pass  # Ignore if table wasn't assigned due to error
             gc.collect()
             logger.debug("Garbage collection triggered after chunk processing.")
 
@@ -305,18 +330,20 @@ def run_chunked_matching_pipeline(
 
 # --- Main Execution Example ---
 if __name__ == "__main__":
-    setup_logging(log_level=logging.INFO)
-    logger = get_logger(__name__) # Re-get logger after setup
+    setup_logging(log_level=logging.DEBUG)
+    logger = get_logger(__name__)  # Re-get logger after setup
 
     logger.info("Running matching_chunked.py script...")
     output_directory = DEFAULT_CHUNKED_OUTPUT_DIR
 
-    try:
-        run_chunked_matching_pipeline(
-            output_dir=output_directory,
-        )
-        logger.info("Script finished successfully.")
-    except Exception as e:
-        logger.critical(f"Chunked pipeline execution failed in __main__: {e}", exc_info=True)
-        import sys
-        sys.exit(1)
+    with logging_redirect_tqdm():
+        try:
+            run_chunked_matching_pipeline(
+                output_dir=output_directory,
+            )
+            logger.info("Script finished successfully.")
+        except Exception as e:
+            logger.critical(f"Chunked pipeline execution failed in __main__: {e}", exc_info=True)
+            import sys
+
+            sys.exit(1)
