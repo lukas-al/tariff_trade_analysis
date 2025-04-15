@@ -4,13 +4,14 @@ name = "mpil_tariff_trade_analysis"
 requires-python = ">=3.12"
 version = "0.1.0"
 dependencies = [
-    "duckdb>=1.2.2",
+    "duckdb>=1.2.2", # Added duckdb
     "marimo>=0.12.6",
     "polars>=1.27.0",
     "pyarrow>=19.0.1",
     "tqdm>=4.67.1",
     "watchdog>=6.0.0",
     "world-trade-data>=0.1.1",
+    "pandas>=2.0.0", # Added pandas explicitly as it's used in helpers
 ]
 
 [build-system]
