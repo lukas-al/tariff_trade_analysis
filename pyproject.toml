@@ -12,6 +12,9 @@ dependencies = [
     "watchdog>=6.0.0",
     "world-trade-data>=0.1.1",
     "pandas>=2.0.0", # Added pandas explicitly as it's used in helpers
+    "altair>=5.5.0",
+    "networkx>=3.4.2",
+    "plotly>=6.0.1",
 ]
 
 [build-system]
