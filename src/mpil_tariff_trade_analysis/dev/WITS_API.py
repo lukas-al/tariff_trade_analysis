@@ -1,13 +1,12 @@
 import marimo
 
-__generated_with = "0.12.6"
+__generated_with = "0.12.8"
 app = marimo.App(width="medium")
 
 
 @app.cell
 def _():
     import marimo as mo
-
     return (mo,)
 
 
@@ -30,7 +29,6 @@ def _():
         get_tariff_estimated,
         get_tariff_reported,
     )
-
     return get_indicator, get_tariff_estimated, get_tariff_reported, mtta
 
 
@@ -179,7 +177,6 @@ def _(mo):
         # Nope - the downloadable research DB is NTMs only...
 
         Am creating a WITS account to download the data in a 'bulk' manner. May have to automate it using playwright etc.
-
         """
     )
     return
@@ -218,7 +215,7 @@ def _(mo):
         # BULK DOWNLOAD
         I've managed to find a bulk download option for the files. 
 
-        Need to pattern match and combine the seperate datasets into a single file like parquet. 
+        Need to pattern match and combine the seperate datasets into a single file like parquet.
         """
     )
     return
