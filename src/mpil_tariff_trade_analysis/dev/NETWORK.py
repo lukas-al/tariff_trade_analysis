@@ -26,7 +26,10 @@ def _(pl):
 def _(mo):
     mo.md(
         r"""
-        # Validate the dataset
+        # Initial exploration
+
+
+        Validate the dataset
 
         Baseline: we should have no null values for effective tariff and source, target, value, volume, and HS code.
 
@@ -35,6 +38,7 @@ def _(mo):
         - Can we fill them in by looking back over the dataset?
         - Is there an error in the merge logic?
 
+        > The code below does some initial exploration used to determine issues with the data as constructed
         """
     )
     return
@@ -109,8 +113,6 @@ def _(mo):
         This chart provides evidence that the nulls are broadly distributed across time. This points towards a more pervasive issue.
 
         Next step: validate that the matching code is actually identifying the right data and merging it correctly.
-
-
         """
     )
     return
@@ -119,7 +121,6 @@ def _(mo):
 @app.cell
 def _(null_sample_pd):
     null_sample_pd.sample(10, random_state=42)[["Source", "Target", "HS_Code", "Quantity", "Value", "Year"]]
-
     return
 
 
@@ -146,7 +147,7 @@ def _(mo):
         ### Row 4684
         Germany to Sri Lanka
 
-        - [ ] I've found the value and volume. Sri Lanka has a 2.5% MFN on this line, and yet it hasn't been picked up in the merge. We have conclusive evidence of either of the following: A) Data is missing in the WITS database and/or B) the matching logic is flawed. 
+        - [ ] I've found the value and volume. Sri Lanka has a 2.5% MFN on this line, and yet it hasn't been picked up in the merge. We have conclusive evidence of either of the following: A) Data is missing in the WITS database and/or B) the matching logic is flawed.
         """
     )
     return
@@ -163,7 +164,7 @@ def _(lf, pl):
         (pl.col("HS_Code") == "310520")
     ).collect()
 
-    # The data point exists, but 
+    # The data point exists, but
     return
 
 
@@ -216,6 +217,168 @@ def _(mo):
         We will need to construct further test cases to validate the integrity of the dataset.
         """
     )
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(
+        r"""
+        # Things to fix 1: Reconciling BACI country coding
+
+        The BACI Dataset provides 'country_codes.csv' file which contains the mapping between the 3-digit ISO numeric code used by CEPII to more standard names (e.g. '251' maps to 'France').
+
+        I had assumed that since this is an ISO standard, it would be the same between BACI and WITS. This is unfortunately not the case. For example, WITS codes France as 250 (according to the ISO standard I found online) whereas CEPII-BACI uses 251. This is an issue.
+
+        I therefore need to write a script to reconcile between the two sets of ISO country codes
+
+        To note: BACI codes TAIWAN as 490 (Asia, O.N.I). The ISO standard (and WITS) code it using 158
+        """
+    )
+    return
+
+
+@app.cell
+def _(lf, pl):
+    # WITS unique country codes
+    baci_cc = set(
+        lf.select(pl.col('Target')).unique().collect().to_series().to_list()
+    ) | set(
+        lf.select(pl.col('Source')).unique().collect().to_series().to_list()
+    )
+
+    print(f"Number of unique countries in BACI: {len(baci_cc)}")
+    print(baci_cc)
+    return (baci_cc,)
+
+
+@app.cell
+def _(pl, wits_mfn_lf):
+    # Wits data
+    mfn_cc = set(wits_mfn_lf.select(pl.col("reporter_country")).unique().collect().to_series().to_list())
+
+    print(f"Number of unique countries in WITS MFN: {len(mfn_cc)}")
+    print(mfn_cc)
+    return (mfn_cc,)
+
+
+@app.cell
+def _(pl):
+    # Wits data
+    wits_pref_lf = pl.scan_parquet("data/intermediate/WITS_AVEPref.parquet")
+    wits_pref_lf.collect_schema()
+
+
+    pref_cc = set(
+        wits_pref_lf.select(pl.col('reporter_country')).unique().collect().to_series().to_list()
+    ) | set(
+        wits_pref_lf.select(pl.col('partner_country')).unique().collect().to_series().to_list()
+    )
+
+    print(f"Number of unique countries in WITS Pref: {len(pref_cc)}")
+    print(pref_cc)
+    return pref_cc, wits_pref_lf
+
+
+@app.cell
+def _(lf, pl):
+    # Create a test dataset for the main BACI join
+    test_h = lf.select(pl.len()).collect().item()
+    test_ssz = 10000
+    test_lf = lf.gather_every(test_h // test_ssz).collect().to_pandas()
+
+    test_lf
+    return test_h, test_lf, test_ssz
+
+
+@app.cell
+def _():
+    # Now I need to map between the wits codes and the BACI codes to a common layer.
+    import pandas as pd
+    # First load the reference for BACI
+    baci_country_ref = pd.read_csv(
+        "data/raw/BACI_HS92_V202501/country_codes_V202501.csv"
+    )
+
+    # Load reference for wits
+    wits_country_ref = pd.read_csv(
+        "data/raw/wits_country_codes.csv"
+    )
+
+    # Load the pref groups for wits
+    pref_groups_ref = pd.read_csv(
+        "data/raw/WITS_pref_groups/WITS_pref_groups.csv",
+        encoding="ISO-8859-1"
+    )
+    return baci_country_ref, pd, pref_groups_ref, wits_country_ref
+
+
+@app.cell
+def _(baci_country_ref, pref_groups_ref, wits_country_ref):
+    print(baci_country_ref.head())
+    print("----")
+    print(wits_country_ref.head())
+    print("----")
+    print(pref_groups_ref.head())
+    return
+
+
+@app.cell
+def _(baci_country_ref, wits_country_ref):
+    # I need to map between all of these. I'd like to use the WITS codes, since they adhere to ISO more effectively (I think?)
+
+    # First, are there any country codes which aren't in both? If so I'll need to fuzzy match. 
+
+    print(
+        f"Num of non-intersecting country names: {len(set(baci_country_ref['country_name']) ^ set(wits_country_ref['Country Name']))}"
+    )
+    print(
+        f"Num of non-intersecting iso3 codes: {len(set(baci_country_ref['country_iso3']) ^ set(wits_country_ref['ISO3']))}"
+    )
+
+    return
+
+
+@app.cell
+def _():
+
+
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(
+        r"""
+        # Things to fix 2: EU and other trade blocks. 
+
+        While countries within the EU report their bilateral trade volumes and values, they report tariffs at the block level. Meaning I can't see MFN etc tariffs for someone like Germany to the US right now!
+
+        So this needs to get fixed. I think the pref tariffs might also suffer from the same, given the EU is a trading block. I also need to check whether the EU is the only block that does this.
+
+        **There is a chance that fixing problem 1 will solve this, if we have a bunch of coding issues.**
+        """
+    )
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(
+        r"""
+        # Things to fix 3: Validate joining over export/import duties
+
+        I'm not certain I'm joining import duties (which is what WITS reports) with the BACI dataset (which reports exports) correctly. In fact, I need to validate that this is the case.
+
+        This could be fixed by both of the above, or not done.
+        """
+    )
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(r""" """)
     return
 
 
