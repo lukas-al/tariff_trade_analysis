@@ -98,7 +98,7 @@ def _(null_sample_pd):
         x=alt.X('Year:N', title='Category'),  # Nominal type for categorical data
         y=alt.Y('count()', title='Frequency')       # Count the occurrences
     ).properties(
-        title='Distribution of Categorical Values'
+        title='Distribution of Null Values'
     ).interactive()
 
     # Display the chart (In a Jupyter Notebook, simply placing "chart" on a line will render it)
@@ -324,6 +324,38 @@ def _(baci_country_ref, pref_groups_ref, wits_country_ref):
 
 
 @app.cell
+def _():
+    # Use py country to standardise, using the country name and fuzzy matching
+
+    import pycountry
+
+    # When cleaning the input datasets. We run a fuzzy match over the country name, and create a standardised ISO code.
+
+
+    # pycountry.countries.search_fuzzy("asdaf")[0].numeric
+    # print(pycountry.countries.get(numeric='250'))
+    return (pycountry,)
+
+
+@app.cell
+def _(baci_cc, pycountry):
+    # Get the unique list of countries from each dataset, then 
+    empty_counter = 0
+    for country_code in baci_cc:
+        id_country = pycountry.countries.get(numeric=country_code)
+
+        print(f"Baci CC: {country_code}. ID'd country: {id_country}")
+
+        if not id_country:
+            empty_counter += 1
+
+    print(f"Num Empties: {empty_counter}. This is {empty_counter/len(baci_cc)*100}%")
+
+    # This validates that we need to go all the way back and use the actual country names
+    return country_code, empty_counter, id_country
+
+
+@app.cell
 def _(baci_country_ref, wits_country_ref):
     # I need to map between all of these. I'd like to use the WITS codes, since they adhere to ISO more effectively (I think?)
 
@@ -335,14 +367,11 @@ def _(baci_country_ref, wits_country_ref):
     print(
         f"Num of non-intersecting iso3 codes: {len(set(baci_country_ref['country_iso3']) ^ set(wits_country_ref['ISO3']))}"
     )
-
     return
 
 
 @app.cell
 def _():
-
-
     return
 
 

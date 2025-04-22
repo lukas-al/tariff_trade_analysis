@@ -7,11 +7,14 @@ import glob
 import os
 import re
 from pathlib import Path
+from typing import List, Optional
 
 import pandas as pd
 
 # Third-party imports
 import polars as pl
+import pycountry
+import pycountry.db
 
 # Local/application imports
 from mpil_tariff_trade_analysis.utils.logging_config import get_logger
@@ -211,6 +214,8 @@ def load_wits_tariff_data(
         logger.info("Translating HS codes...")
         combined_df = vectorized_hs_translation(combined_df)
 
+    logger.info("Re-mapping inconsistent ISO codes to shared space")
+
     logger.info("Finished loading and processing WITS tariff data")
     return combined_df
 
@@ -309,9 +314,7 @@ def vectorized_hs_translation(
             raise ValueError(f"Error loading mapping file for {hs_version}: \n {e}") from e
 
         mapping_pl = pl.from_pandas(mapping_pd)
-        # Add the hs_revision column to indicate which mapping this is for.
         mapping_pl = mapping_pl.with_columns(pl.lit(hs_version).alias("hs_revision"))
-        # Ensure source_code is consistently formatted (6-digit padding)
         mapping_pl = mapping_pl.with_columns(pl.col("source_code").str.zfill(6))
         mapping_dfs.append(mapping_pl)
 
@@ -351,6 +354,81 @@ def vectorized_hs_translation(
     df_final = pl.concat([df_h0, df_non_h0])
 
     return df_final
+
+
+def map_and_translate_countries(
+    lf: pl.LazyFrame,
+    input_col_name: str,
+    output_col_name: str,
+) -> pl.LazyFrame:
+    """Using a fuzzy match over the country names, create a new column which uses pycountry
+    to standardise to ISO 3166-1 numeric country codes (as strings).
+
+    Handles cases where no match is found by assigning None.
+
+    Args:
+        lf (pl.LazyFrame): The input LazyFrame containing the country names.
+        input_col_name (str): The name of the column with the original country names.
+        output_col_name (str): The desired name for the new column containing ISO numeric codes.
+
+    Returns:
+        pl.LazyFrame: The input LazyFrame with the new standardized numeric code column added.
+    """
+
+    unique_countries_df = lf.select(pl.col(input_col_name).unique()).collect()
+    # Filter out None values and ensure we have strings before processing
+    country_names = [
+        name
+        for name in unique_countries_df[input_col_name].to_list()
+        if name is not None and isinstance(name, str)
+    ]
+
+    # Use pycountry's fuzzy search to find the best match for each unique name
+    # Store results in a dictionary mapping original name -> list of pycountry matches
+    mapping_results = {}
+    for cn in country_names:
+        try:
+            matches: List[pycountry.db.Country] = pycountry.countries.search_fuzzy(cn)
+            mapping_results[cn] = matches
+        except LookupError:
+            mapping_results[cn] = []
+
+    # Create lists to build the mapping DataFrame
+    original_names_list = []
+    numeric_codes_list = []
+
+    # Process the fuzzy match results to get the numeric code for the first match (if any)
+    for cn, matches in mapping_results.items():
+        original_names_list.append(cn)
+        if matches:  # Check if the list of matches is not empty
+            try:
+                # Take the first match (usually the best according to pycountry's logic)
+                # The 'numeric' attribute is the ISO 3166-1 numeric code, returned as a string.
+                numeric_code: Optional[str] = matches[0].numeric
+                numeric_codes_list.append(numeric_code)
+            except AttributeError:
+                numeric_codes_list.append(None)
+            except IndexError:
+                numeric_codes_list.append(None)
+        else:
+            # No match was found by search_fuzzy or a LookupError occurred
+            numeric_codes_list.append(None)
+
+    # Apply to the entire dataset, using an optimised join rather than row_iter with a lambda.
+    mapping_lf = pl.LazyFrame(
+        {
+            input_col_name: original_names_list,
+            output_col_name: numeric_codes_list,
+        }
+    ).with_columns(pl.col(output_col_name).cast(pl.Utf8))
+
+    lf = lf.join(
+        mapping_lf,
+        on=input_col_name,  # Join condition: match the input country name columns
+        how="left",  # Keep all rows from the original frame (lf)
+    )
+
+    return lf
 
 
 # Modify the __main__ block to pass the base_dir if needed, or rely on default

@@ -9,7 +9,6 @@ def _():
     import marimo as mo
     import pandas as pd
     import polars as pl
-
     return mo, pd, pl
 
 
@@ -51,7 +50,7 @@ def _(mo):
 def _(pl):
     # Load BACI dataset
     # Using scan for lazy execution until .collect() or .fetch()
-    baci = pl.scan_parquet("data/final/BACI_HS92_V202501")
+    baci = pl.scan_csv("data/raw/BACI_HS92_V202501/BACI*.csv")
 
     print("BACI Schema:")
     print(baci.collect_schema())
@@ -65,7 +64,7 @@ def _(pl):
     # Load WITS MFN dataset
     # !! IMPORTANT: Check the actual column names in your file !!
     # Assuming: year, reporter_country, product_code, tariff_rate, etc.
-    avemfn = pl.scan_parquet("data/final/WITS_AVEMFN.parquet")
+    avemfn = pl.scan_csv("data/raw/WITS_tariff/AVEMFN/*/*.CSV")
 
     print("WITS MFN Schema:")
     print(avemfn.collect_schema())

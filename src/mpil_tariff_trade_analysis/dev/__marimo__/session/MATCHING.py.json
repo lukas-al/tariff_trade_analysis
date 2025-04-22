@@ -6,7 +6,7 @@
   "cells": [
     {
       "id": "Hbol",
-      "code_hash": "7438dc5f74839b2cf583836b31d7d778",
+      "code_hash": "8832d58660cf19139dc40ee8ab2684a6",
       "outputs": [
         {
           "type": "data",
@@ -20,37 +20,23 @@
     {
       "id": "MJUe",
       "code_hash": "7ab4fd72227265a4861d27969283f26e",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"match-data-across-wits-baci\">MATCH DATA ACROSS WITS &amp; BACI</h1>\n<span class=\"paragraph\">Combine into a single unified table</span>\n<span class=\"paragraph\">Table structure:</span>\n<table>\n<thead>\n<tr>\n<th>Date</th>\n<th>Source</th>\n<th>Target</th>\n<th>HS Code</th>\n<th>Quantity</th>\n<th>Value</th>\n<th>Effective Tariff (AVE)</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>X</td>\n<td>X</td>\n<td>X</td>\n<td>X</td>\n<td>X</td>\n<td>X</td>\n<td>X</td>\n</tr>\n</tbody>\n</table>\n<h2 id=\"how\">How?</h2>\n<ol>\n<li>Load BACI and WITS (MFN, Pref) datasets.</li>\n<li>Load WITS preferential group mapping.</li>\n<li>Convert group mapping to Polars and prepare for expansion.</li>\n<li>Rename WITS columns for clarity and consistency before joining.</li>\n<li>Expand preferential tariff data from partner groups to individual countries.</li>\n<li>Left join BACI with MFN tariffs on year, reporter, product.</li>\n<li>Left join the result with <em>expanded</em> Preferential tariffs on year, reporter, partner, product.</li>\n<li>Calculate the final 'effective_tariff_rate' using <code>coalesce</code>, prioritizing preferential tariffs.</li>\n<li>Select and rename columns for the final output.</li>\n</ol></span>"
-          }
-        }
-      ],
+      "outputs": [],
       "console": []
     },
     {
       "id": "vblA",
       "code_hash": "9a295f959db28c97bbaabd763637ffac",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"preparation-load-data\">Preparation: Load Data</h1></span>"
-          }
-        }
-      ],
+      "outputs": [],
       "console": []
     },
     {
       "id": "bkHC",
-      "code_hash": "818f0e5b58af286253de32b898224c22",
+      "code_hash": "88f81b25bc9f3663b020ba2e21bc3e8b",
       "outputs": [
         {
           "type": "data",
           "data": {
-            "text/html": "<marimo-ui-element object-id='bkHC-0' random-id='7d608674-c69c-97cf-7eb0-10a9b6bb716a'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/375-8505353-z5Zk5Vec.json&quot;' data-total-rows='5' data-total-columns='7' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;t&quot;, [&quot;integer&quot;, &quot;i64&quot;]], [&quot;i&quot;, [&quot;integer&quot;, &quot;i64&quot;]], [&quot;j&quot;, [&quot;integer&quot;, &quot;i64&quot;]], [&quot;k&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;v&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;q&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;partition_col&quot;, [&quot;integer&quot;, &quot;i64&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+            "text/html": "<marimo-ui-element object-id='bkHC-0' random-id='46922eae-760b-203e-ebd9-ff2303d71eeb'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/277-10676295-K6nmD1Qy.json&quot;' data-total-rows='5' data-total-columns='6' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;t&quot;, [&quot;integer&quot;, &quot;i64&quot;]], [&quot;i&quot;, [&quot;integer&quot;, &quot;i64&quot;]], [&quot;j&quot;, [&quot;integer&quot;, &quot;i64&quot;]], [&quot;k&quot;, [&quot;integer&quot;, &quot;i64&quot;]], [&quot;v&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;q&quot;, [&quot;number&quot;, &quot;f64&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
           }
         }
       ],
@@ -58,23 +44,18 @@
         {
           "type": "stream",
           "name": "stdout",
-          "text": "BACI Schema:\n"
-        },
-        {
-          "type": "stream",
-          "name": "stdout",
-          "text": "Schema({'t': Int64, 'i': Int64, 'j': Int64, 'k': String, 'v': Float64, 'q': Float64, 'partition_col': Int64})\n\nBACI Head:\n"
+          "text": "BACI Schema:\nSchema({'t': Int64, 'i': Int64, 'j': Int64, 'k': Int64, 'v': Float64, 'q': Float64})\n\nBACI Head:\n"
         }
       ]
     },
     {
       "id": "lEQa",
-      "code_hash": "b193242f852f13a32b2e0a2ab5f14a48",
+      "code_hash": "e6ff4535a62fd0cfe1f7ca0a97b2c69d",
       "outputs": [
         {
           "type": "data",
           "data": {
-            "text/html": "<marimo-ui-element object-id='lEQa-0' random-id='743fe7d2-9fbc-5d7e-83ba-480b428d5953'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/901-8505353-WiZ1rq95.json&quot;' data-total-rows='5' data-total-columns='8' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;year&quot;, [&quot;integer&quot;, &quot;i32&quot;]], [&quot;reporter_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;hs_revision&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;tariff_rate&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;min_rate&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;max_rate&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;tariff_type&quot;, [&quot;string&quot;, &quot;str&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+            "text/html": "<marimo-ui-element object-id='lEQa-0' random-id='15bfcf70-525f-62ac-b8a6-b5b41d2db23f'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/1561-10676295-L0Nmj0TW.json&quot;' data-total-rows='5' data-total-columns='15' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;NomenCode&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;Reporter_ISO_N&quot;, [&quot;integer&quot;, &quot;i64&quot;]], [&quot;Year&quot;, [&quot;integer&quot;, &quot;i64&quot;]], [&quot;ProductCode&quot;, [&quot;integer&quot;, &quot;i64&quot;]], [&quot;Sum_Of_Rates&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;Min_Rate&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;Max_Rate&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;SimpleAverage&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;Nbr_NA_Lines&quot;, [&quot;integer&quot;, &quot;i64&quot;]], [&quot;Nbr_Free_Lines&quot;, [&quot;integer&quot;, &quot;i64&quot;]], [&quot;Nbr_AVE_Lines&quot;, [&quot;integer&quot;, &quot;i64&quot;]], [&quot;Nbr_Dutiable_Lines&quot;, [&quot;integer&quot;, &quot;i64&quot;]], [&quot;TotalNoOfValidLines&quot;, [&quot;integer&quot;, &quot;i64&quot;]], [&quot;TotalNoOfLines&quot;, [&quot;integer&quot;, &quot;i64&quot;]], [&quot;EstCode&quot;, [&quot;string&quot;, &quot;str&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
           }
         }
       ],
@@ -82,205 +63,97 @@
         {
           "type": "stream",
           "name": "stdout",
-          "text": "WITS MFN Schema:\nSchema({'year': Int32, 'reporter_country': String, 'product_code': String, 'hs_revision': String, 'tariff_rate': String, 'min_rate': String, 'max_rate': String, 'tariff_type': String})\n\nWITS MFN Head:\n"
+          "text": "WITS MFN Schema:\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Schema({'NomenCode': String, 'Reporter_ISO_N': Int64, 'Year': Int64, 'ProductCode': Int64, 'Sum_Of_Rates': String, 'Min_Rate': String, 'Max_Rate': String, 'SimpleAverage': String, 'Nbr_NA_Lines': Int64, 'Nbr_Free_Lines': Int64, 'Nbr_AVE_Lines': Int64, 'Nbr_Dutiable_Lines': Int64, 'TotalNoOfValidLines': Int64, 'TotalNoOfLines': Int64, 'EstCode': String})\n\nWITS MFN Head:\n"
         }
       ]
     },
     {
       "id": "PKri",
       "code_hash": "0d112e6f220d3c855854e9527789cc79",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/html": "<marimo-ui-element object-id='PKri-0' random-id='bb99670a-8737-f2cd-d337-354b5a570b52'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/1026-8505353-KMQaOmDD.json&quot;' data-total-rows='5' data-total-columns='9' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;year&quot;, [&quot;integer&quot;, &quot;i32&quot;]], [&quot;reporter_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;partner_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;hs_revision&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;tariff_rate&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;tariff_type&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;min_rate&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;max_rate&quot;, [&quot;string&quot;, &quot;str&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
-          }
-        }
-      ],
-      "console": [
-        {
-          "type": "stream",
-          "name": "stdout",
-          "text": "WITS Pref Schema:\nSchema({'year': Int32, 'reporter_country': String, 'partner_country': String, 'product_code': String, 'hs_revision': String, 'tariff_rate': String, 'tariff_type': String, 'min_rate': String, 'max_rate': String})\n\nWITS Pref Head:\n"
-        }
-      ]
+      "outputs": [],
+      "console": []
     },
     {
       "id": "Xref",
-      "code_hash": "fd2258ae5b8c857929c61b02c38edbd9",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"preparation\">Preparation:</h1></span>"
-          }
-        }
-      ],
+      "code_hash": "c092059d4acd9a391901d8b177bc342b",
+      "outputs": [],
       "console": []
     },
     {
       "id": "SFPL",
-      "code_hash": "fe8cbde723e4886b0785a52cb94ff62b",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/plain": ""
-          }
-        }
-      ],
+      "code_hash": "ddc7a4c1930c40b7b995f12e419c888a",
+      "outputs": [],
       "console": []
     },
     {
       "id": "BYtC",
-      "code_hash": "a06813bf04e37b2b6540f9ad14d5c0de",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/plain": ""
-          }
-        }
-      ],
-      "console": [
-        {
-          "type": "stream",
-          "name": "stdout",
-          "text": "Preferential Group Mapping (Polars):\nSchema({'region_code': String, 'partner_list': List(Int64)})\nshape: (5, 2)\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502 region_code \u2506 partner_list      \u2502\n\u2502 ---         \u2506 ---               \u2502\n\u2502 str         \u2506 list[i64]         \u2502\n\u255e\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2561\n\u2502 00A         \u2506 [768, 4, \u2026 894]   \u2502\n\u2502 00B         \u2506 [768, 258, \u2026 894] \u2502\n\u2502 00C         \u2506 [512, 8, \u2026 504]   \u2502\n\u2502 00D         \u2506 [96, 608, \u2026 702]  \u2502\n\u2502 00E         \u2506 [480, 450, \u2026 894] \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n"
-        }
-      ]
+      "code_hash": "146c770d30db269b6377119b15829d31",
+      "outputs": [],
+      "console": []
     },
     {
       "id": "RGSE",
-      "code_hash": "8e18321ea15c2f72bcdc25884ba0efde",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h2 id=\"rename-columns\">Rename Columns</h2></span>"
-          }
-        }
-      ],
+      "code_hash": "325104cf2ea55a38004981d5415c2077",
+      "outputs": [],
       "console": []
     },
     {
       "id": "Kclp",
-      "code_hash": "9d8a43698b8e7dd1dd7db14e28ccf0cc",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/html": "<marimo-ui-element object-id='Kclp-0' random-id='7ebbfe42-81d8-d94d-b4ae-30a78d9ed7f8'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/791-8505353-CMXWZeb1.json&quot;' data-total-rows='5' data-total-columns='7' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;t&quot;, [&quot;integer&quot;, &quot;i32&quot;]], [&quot;i&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;k&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;mfn_tariff_rate&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;mfn_min_tariff_rate&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;mfn_max_tariff_rate&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;tariff_type&quot;, [&quot;string&quot;, &quot;str&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
-          }
-        }
-      ],
-      "console": [
-        {
-          "type": "stream",
-          "name": "stdout",
-          "text": "Renamed MFN Schema:\nSchema({'t': Int32, 'i': String, 'k': String, 'mfn_tariff_rate': String, 'mfn_min_tariff_rate': String, 'mfn_max_tariff_rate': String, 'tariff_type': String})\n\nRenamed MFN Head:\n"
-        }
-      ]
+      "code_hash": "8e18321ea15c2f72bcdc25884ba0efde",
+      "outputs": [],
+      "console": []
     },
     {
       "id": "emfo",
-      "code_hash": "c914f2ecab2f41192cb663b52b026560",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/html": "<marimo-ui-element object-id='emfo-0' random-id='d18d6ab0-3c86-020a-475b-1d2455408eb5'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/741-8505353-3cwQSQjg.json&quot;' data-total-rows='5' data-total-columns='7' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;t&quot;, [&quot;integer&quot;, &quot;i32&quot;]], [&quot;i&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;j&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;k&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;pref_tariff_rate&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;pref_min_tariff_rate&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;pref_max_tariff_rate&quot;, [&quot;string&quot;, &quot;str&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
-          }
-        }
-      ],
-      "console": [
-        {
-          "type": "stream",
-          "name": "stdout",
-          "text": "Renamed Pref Schema (Before Expansion):\nSchema({'t': Int32, 'i': String, 'j': String, 'k': String, 'pref_tariff_rate': String, 'pref_min_tariff_rate': String, 'pref_max_tariff_rate': String})\n\nRenamed Pref Head (Before Expansion):\n"
-        }
-      ]
+      "code_hash": "9935e8a41d03f3d37c60d086347e614b",
+      "outputs": [],
+      "console": []
     },
     {
       "id": "Hstk",
-      "code_hash": "9a75de5db16888dea93774e2232d2b29",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h2 id=\"expand-preferential-tariff-partner-groups\">Expand Preferential Tariff Partner Groups</h2></span>"
-          }
-        }
-      ],
+      "code_hash": "49221b1c3496c3370093507461d4f05e",
+      "outputs": [],
       "console": []
     },
     {
       "id": "nWHF",
-      "code_hash": "9c8b04f383dda6ef9e9dcc299affb2ea",
-      "outputs": [
-        {
-          "type": "error",
-          "ename": "exception",
-          "evalue": "'Expr' object has no attribute 'apply'",
-          "traceback": []
-        }
-      ],
-      "console": [
-        {
-          "type": "stream",
-          "name": "stdout",
-          "text": "Expanded Preferential Tariff Schema:\nSchema({'t': Int32, 'i': String, 'j': String, 'k': String, 'pref_tariff_rate': String, 'pref_min_tariff_rate': String, 'pref_max_tariff_rate': String})\n\nExpanded Preferential Tariff Head:\n"
-        }
-      ]
+      "code_hash": "9a75de5db16888dea93774e2232d2b29",
+      "outputs": [],
+      "console": []
     },
     {
       "id": "iLit",
-      "code_hash": "a69eea7bfcdd62271b3db280f2378618",
+      "code_hash": "9ff518ba9e4e8655f1d05ee451d836a0",
       "outputs": [],
       "console": []
     },
     {
       "id": "ZHCJ",
-      "code_hash": "8d02b08f20d8a8688287b945e0976cfa",
+      "code_hash": "a69eea7bfcdd62271b3db280f2378618",
       "outputs": [],
       "console": []
     },
     {
       "id": "ROlb",
-      "code_hash": "af0707c5f6f6b87edff170bb17b8061d",
+      "code_hash": "1b8731efc91f5d2d6ef732feb343c06d",
       "outputs": [],
       "console": []
     },
     {
       "id": "qnkX",
-      "code_hash": "c3ab97f77c70fd2674df92953ec7bdf7",
+      "code_hash": "af0707c5f6f6b87edff170bb17b8061d",
       "outputs": [],
       "console": []
     },
     {
-      "id": "Iasp",
-      "code_hash": "ddc7a4c1930c40b7b995f12e419c888a",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h2 id=\"pref-groups-to-individual-countries\">Pref groups to individual countries</h2>\n<span class=\"paragraph\">Load and process the mapping file for preferential trading groups.</span></span>"
-          }
-        }
-      ],
-      "console": []
-    },
-    {
-      "id": "fWTx",
-      "code_hash": "939b107b98e84081dea0e37513067ce1",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/html": "<marimo-ui-element object-id='fWTx-0' random-id='238f0fc8-2907-cd96-75aa-080f8bdf655e'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/1599-8505353-WAjWVLiX.json&quot;' data-total-rows='100' data-total-columns='7' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;t&quot;, [&quot;integer&quot;, &quot;int32&quot;]], [&quot;i&quot;, [&quot;string&quot;, &quot;object&quot;]], [&quot;j&quot;, [&quot;string&quot;, &quot;object&quot;]], [&quot;k&quot;, [&quot;string&quot;, &quot;object&quot;]], [&quot;pref_tariff_rate&quot;, [&quot;string&quot;, &quot;object&quot;]], [&quot;pref_min_tariff_rate&quot;, [&quot;string&quot;, &quot;object&quot;]], [&quot;pref_max_tariff_rate&quot;, [&quot;string&quot;, &quot;object&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='true' data-row-headers='[&quot;&quot;]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
-          }
-        }
-      ],
+      "id": "TqIu",
+      "code_hash": "9c62281c448eb19980431d9e76e1ffcb",
+      "outputs": [],
       "console": []
     }
   ]

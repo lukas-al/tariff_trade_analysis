@@ -147,8 +147,6 @@ def run_chunked_matching_pipeline(
     logger.info(f"Chunking based on unified column: '{chunk_column}'")  # Should log 't'
 
     # --- Load non-chunked data once ---
-    # Pref group mapping is small, load it into memory for potentially faster access
-    # during the expand step within the loop. Keep lazy if it's surprisingly large.
     logger.info(f"Loading preferential groups mapping from: {pref_groups_path}")
     try:
         # Using .collect() as it's likely small and used repeatedly
@@ -282,7 +280,6 @@ def run_chunked_matching_pipeline(
                     partition_cols=[partition_column],  # Use 'Year'
                     schema=output_schema,
                     existing_data_behavior="overwrite_or_ignore",
-                    # write_statistics=True, # Default usually True
                     # compression='zstd',
                 )
                 logger.info(
@@ -309,15 +306,14 @@ def run_chunked_matching_pipeline(
             )
         finally:
             # Explicitly trigger garbage collection after each chunk
-            # May help release memory, especially if complex objects were created
             try:
-                del chunk_df  # Explicit deletion hint
+                del chunk_df
             except NameError:
-                pass  # Ignore if chunk_df wasn't assigned due to error
+                pass
             try:
-                del table  # Explicit deletion hint
+                del table
             except NameError:
-                pass  # Ignore if table wasn't assigned due to error
+                pass
             gc.collect()
             logger.debug("Garbage collection triggered after chunk processing.")
 
