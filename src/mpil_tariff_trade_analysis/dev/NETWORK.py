@@ -9,6 +9,7 @@ def _():
     import marimo as mo
     import networkx as nx
     import polars as pl
+
     return mo, nx, pl
 
 
@@ -52,7 +53,7 @@ def _(lf, pl):
 
 @app.cell
 def _():
-    print(f"{(305506345-157709739)/305506345 * 100}% of rows are empty")
+    print(f"{(305506345 - 157709739) / 305506345 * 100}% of rows are empty")
     return
 
 
@@ -94,12 +95,16 @@ def _(null_sample_pd):
     alt.theme.enable("carbong100")
 
     # Create a bar chart that shows the count of each unique category
-    chart = alt.Chart(null_sample_pd).mark_bar().encode(
-        x=alt.X('Year:N', title='Category'),  # Nominal type for categorical data
-        y=alt.Y('count()', title='Frequency')       # Count the occurrences
-    ).properties(
-        title='Distribution of Null Values'
-    ).interactive()
+    chart = (
+        alt.Chart(null_sample_pd)
+        .mark_bar()
+        .encode(
+            x=alt.X("Year:N", title="Category"),  # Nominal type for categorical data
+            y=alt.Y("count()", title="Frequency"),  # Count the occurrences
+        )
+        .properties(title="Distribution of Null Values")
+        .interactive()
+    )
 
     # Display the chart (In a Jupyter Notebook, simply placing "chart" on a line will render it)
     chart
@@ -120,7 +125,9 @@ def _(mo):
 
 @app.cell
 def _(null_sample_pd):
-    null_sample_pd.sample(10, random_state=42)[["Source", "Target", "HS_Code", "Quantity", "Value", "Year"]]
+    null_sample_pd.sample(10, random_state=42)[
+        ["Source", "Target", "HS_Code", "Quantity", "Value", "Year"]
+    ]
     return
 
 
@@ -155,13 +162,13 @@ def _(mo):
 
 @app.cell
 def _(lf, pl):
-    # Validating 
+    # Validating
 
     lf.filter(
-        (pl.col("Source") == "276") &
-        (pl.col("Target") == "144") &
-        (pl.col("Year") == 2008) &
-        (pl.col("HS_Code") == "310520")
+        (pl.col("Source") == "276")
+        & (pl.col("Target") == "144")
+        & (pl.col("Year") == 2008)
+        & (pl.col("HS_Code") == "310520")
     ).collect()
 
     # The data point exists, but
@@ -195,9 +202,9 @@ def _(pl):
 @app.cell
 def _(pl, wits_mfn_lf):
     wits_mfn_lf.filter(
-        (pl.col("reporter_country") == "144") &
-        (pl.col("product_code") == "310520") &
-        (pl.col("year") == 2008)
+        (pl.col("reporter_country") == "144")
+        & (pl.col("product_code") == "310520")
+        & (pl.col("year") == 2008)
     ).collect()
     return
 
@@ -241,10 +248,8 @@ def _(mo):
 @app.cell
 def _(lf, pl):
     # WITS unique country codes
-    baci_cc = set(
-        lf.select(pl.col('Target')).unique().collect().to_series().to_list()
-    ) | set(
-        lf.select(pl.col('Source')).unique().collect().to_series().to_list()
+    baci_cc = set(lf.select(pl.col("Target")).unique().collect().to_series().to_list()) | set(
+        lf.select(pl.col("Source")).unique().collect().to_series().to_list()
     )
 
     print(f"Number of unique countries in BACI: {len(baci_cc)}")
@@ -255,7 +260,9 @@ def _(lf, pl):
 @app.cell
 def _(pl, wits_mfn_lf):
     # Wits data
-    mfn_cc = set(wits_mfn_lf.select(pl.col("reporter_country")).unique().collect().to_series().to_list())
+    mfn_cc = set(
+        wits_mfn_lf.select(pl.col("reporter_country")).unique().collect().to_series().to_list()
+    )
 
     print(f"Number of unique countries in WITS MFN: {len(mfn_cc)}")
     print(mfn_cc)
@@ -268,12 +275,9 @@ def _(pl):
     wits_pref_lf = pl.scan_parquet("data/intermediate/WITS_AVEPref.parquet")
     wits_pref_lf.collect_schema()
 
-
     pref_cc = set(
-        wits_pref_lf.select(pl.col('reporter_country')).unique().collect().to_series().to_list()
-    ) | set(
-        wits_pref_lf.select(pl.col('partner_country')).unique().collect().to_series().to_list()
-    )
+        wits_pref_lf.select(pl.col("reporter_country")).unique().collect().to_series().to_list()
+    ) | set(wits_pref_lf.select(pl.col("partner_country")).unique().collect().to_series().to_list())
 
     print(f"Number of unique countries in WITS Pref: {len(pref_cc)}")
     print(pref_cc)
@@ -295,23 +299,18 @@ def _(lf, pl):
 def _():
     # Now I need to map between the wits codes and the BACI codes to a common layer.
     import pandas as pd
+
     # First load the reference for BACI
-    baci_country_ref = pd.read_csv(
-        "data/raw/BACI_HS92_V202501/country_codes_V202501.csv"
-    )
-    baci_country_ref['country_code'] = baci_country_ref['country_code'].astype("str")
+    baci_country_ref = pd.read_csv("data/raw/BACI_HS92_V202501/country_codes_V202501.csv")
+    baci_country_ref["country_code"] = baci_country_ref["country_code"].astype("str")
 
     # Load reference for wits
-    wits_country_ref = pd.read_csv(
-        "data/raw/wits_country_codes.csv"
-    )
-    wits_country_ref['Numeric Code'] = wits_country_ref['Numeric Code'].astype("str")
-
+    wits_country_ref = pd.read_csv("data/raw/wits_country_codes.csv")
+    wits_country_ref["Numeric Code"] = wits_country_ref["Numeric Code"].astype("str")
 
     # Load the pref groups for wits
     pref_groups_ref = pd.read_csv(
-        "data/raw/WITS_pref_groups/WITS_pref_groups.csv",
-        encoding="ISO-8859-1"
+        "data/raw/WITS_pref_groups/WITS_pref_groups.csv", encoding="ISO-8859-1"
     )
     return baci_country_ref, pd, pref_groups_ref, wits_country_ref
 
@@ -339,7 +338,6 @@ def _():
 
     # When cleaning the input datasets. We run a fuzzy match over the country name, and create a standardised ISO code.
 
-
     # pycountry.countries.search_fuzzy("asdaf")[0].numeric
     # print(pycountry.countries.get(numeric='250'))
 
@@ -352,7 +350,7 @@ def _():
 
 @app.cell
 def _(baci_country_ref, pref_cc, pycountry, wits_country_ref):
-    # Get the unique list of countries from each dataset, then 
+    # Get the unique list of countries from each dataset, then
 
     empty_counter = 0
 
@@ -363,40 +361,40 @@ def _(baci_country_ref, pref_cc, pycountry, wits_country_ref):
 
         # 1. Use pycountry and the various mapping dictionaries to return
         detected_country = pycountry.countries.get(numeric=cc)
-        if detected_country:  
+        if detected_country:
             return detected_country.numeric
 
         else:
             # Check the BACI codes first -> get the name and fuzzy match in reverse
-            baci_country = baci_country_ref.loc[baci_country_ref['country_code']==cc]['country_name']
+            baci_country = baci_country_ref.loc[baci_country_ref["country_code"] == cc][
+                "country_name"
+            ]
             if not baci_country.empty:
                 try:
-                    pycountry_list = pycountry.countries.search_fuzzy(baci_country.values[0])    
+                    pycountry_list = pycountry.countries.search_fuzzy(baci_country.values[0])
                     return pycountry_list[0].numeric
-                except LookupError as e:
+                except LookupError:
                     pass
 
             # Check the WITS codes
-            wits_country = wits_country_ref.loc[wits_country_ref['Numeric Code']==cc]['Country Name']
+            wits_country = wits_country_ref.loc[wits_country_ref["Numeric Code"] == cc][
+                "Country Name"
+            ]
             if not wits_country.empty:
                 try:
                     pycountry_list = pycountry.countries.search_fuzzy(wits_country.values[0])
                     return pycountry_list[0].numeric
-                except LookupError as e:
+                except LookupError:
                     pass
-
 
         return None
 
+        # Check the pref codes
 
-            # Check the pref codes
+        # try:
 
-
-            # try: 
-
-            # except Error as e:
-            #     print(e)
-
+        # except Error as e:
+        #     print(e)
 
     for cc in pref_cc:
         print(f"Input code is: {cc} | Detected CC is:", remap_country_code(cc))
@@ -419,7 +417,7 @@ def _(pycountry):
 def _(baci_country_ref, wits_country_ref):
     # I need to map between all of these. I'd like to use the WITS codes, since they adhere to ISO more effectively (I think?)
 
-    # First, are there any country codes which aren't in both? If so I'll need to fuzzy match. 
+    # First, are there any country codes which aren't in both? If so I'll need to fuzzy match.
 
     print(
         f"Num of non-intersecting country names: {len(set(baci_country_ref['country_name']) ^ set(wits_country_ref['Country Name']))}"

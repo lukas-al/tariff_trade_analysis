@@ -168,13 +168,9 @@ def assert_row_exists(
 @pytest.mark.parametrize(
     "reporter, product, year, expected_tariff",
     [
-        # --- Example Case from NETWORK.py ---
-        # Sri Lanka (144), HS 310520, 2008 -> Expected MFN Tariff (e.g., 2.5)
-        # ** Use string codes consistent with your data **
-        # !!! IMPORTANT: Replace 2.5 with the actual validated tariff rate !!!
-        ("144", "310520", 2008, 2.5),
-        # --- Add more validated cases ---
         # Format: ("COUNTRY_CODE_STR", "HS_CODE_STR", YEAR_INT, EXPECTED_MFN_TARIFF_FLOAT),
+        # Sri Lanka (144), HS 310520, 2008 -> Expected MFN Tariff (e.g., 2.5)
+        ("144", "310520", 2008, 2.5),
         # ("490", "851210", 2000, ), # This X post shows that ISO country 490 is "Other Asia, not elsewhere specified - TAIWAN"
         ("268", "300450", 2011, 0.0),  # Georgia medicaments in 2011
         ("188", "321490", 2008, 5.0),  # Costa Rica Non-refractory surface preparactants
@@ -217,7 +213,7 @@ def test_wits_pref_values(wits_pref_df, reporter, partner, product, year, expect
     assert_row_exists(wits_pref_df, criteria, expected, tolerance=0.01)
 
 
-# --- Final Merged Output Validation ---
+# --- Merged Output Validation ---
 @pytest.mark.parametrize(
     "source, target, hs_code, year, expected_value, expected_qty, expected_tariff",
     [

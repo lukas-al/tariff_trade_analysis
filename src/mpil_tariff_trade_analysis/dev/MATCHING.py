@@ -9,6 +9,7 @@ def _():
     import marimo as mo
     import pandas as pd
     import polars as pl
+
     return mo, pd, pl
 
 

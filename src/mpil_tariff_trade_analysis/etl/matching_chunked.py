@@ -279,7 +279,7 @@ def run_chunked_matching_pipeline(
                     root_path=output_dir,
                     partition_cols=[partition_column],  # Use 'Year'
                     schema=output_schema,
-                    existing_data_behavior="overwrite_or_ignore",
+                    existing_data_behavior="delete_matching",
                     # compression='zstd',
                 )
                 logger.info(

@@ -340,25 +340,27 @@ def apply_country_code_mapping(
     # Create the final target column using coalesce
     lf = lf.with_columns(
         pl.coalesce(
-            pl.col(temp_mapped_col),      # Use the mapped code if available (not null)
-            pl.col(original_col_name)     # Otherwise, use the original code
-        ).alias(target_col_name)          # Name the resulting column
+            pl.col(temp_mapped_col),  # Use the mapped code if available (not null)
+            pl.col(original_col_name),  # Otherwise, use the original code
+        ).alias(target_col_name)  # Name the resulting column
     )
 
     # Drop the temporary mapped column as it's now incorporated into target_col_name
     lf = lf.drop(temp_mapped_col)
     logger.debug(f"Schema after coalesce and drop temp: {lf.collect_schema()}")
 
-
     # Drop the original column if requested AND if the target name is different
     if drop_original and original_col_name != target_col_name:
         # Check if original column still exists before dropping
         if original_col_name in lf.columns:
-             logger.debug(f"Dropping original column '{original_col_name}'")
-             lf = lf.drop(original_col_name)
+            logger.debug(f"Dropping original column '{original_col_name}'")
+            lf = lf.drop(original_col_name)
         else:
-             logger.warning(f"Requested to drop original column '{original_col_name}', but it was not found (possibly same as target).")
+            logger.warning(
+                f"Requested to drop original column '{original_col_name}', but it was not found (possibly same as target)."
+            )
 
-
-    logger.info(f"Finished applying mapping for column '{original_col_name}'. Final schema: {lf.collect_schema()}")
+    logger.info(
+        f"Finished applying mapping for column '{original_col_name}'. Final schema: {lf.collect_schema()}"
+    )
     return lf

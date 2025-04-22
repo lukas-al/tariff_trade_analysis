@@ -7,6 +7,7 @@ app = marimo.App(width="medium")
 @app.cell
 def _():
     import marimo as mo
+
     return (mo,)
 
 
@@ -29,6 +30,7 @@ def _():
         get_tariff_estimated,
         get_tariff_reported,
     )
+
     return get_indicator, get_tariff_estimated, get_tariff_reported, mtta
 
 
