@@ -299,11 +299,14 @@ def _():
     baci_country_ref = pd.read_csv(
         "data/raw/BACI_HS92_V202501/country_codes_V202501.csv"
     )
+    baci_country_ref['country_code'] = baci_country_ref['country_code'].astype("str")
 
     # Load reference for wits
     wits_country_ref = pd.read_csv(
         "data/raw/wits_country_codes.csv"
     )
+    wits_country_ref['Numeric Code'] = wits_country_ref['Numeric Code'].astype("str")
+
 
     # Load the pref groups for wits
     pref_groups_ref = pd.read_csv(
@@ -314,12 +317,17 @@ def _():
 
 
 @app.cell
-def _(baci_country_ref, pref_groups_ref, wits_country_ref):
-    print(baci_country_ref.head())
+def _(pref_groups_ref, wits_country_ref):
     print("----")
     print(wits_country_ref.head())
     print("----")
     print(pref_groups_ref.head())
+    return
+
+
+@app.cell
+def _(baci_country_ref):
+    baci_country_ref
     return
 
 
@@ -334,25 +342,77 @@ def _():
 
     # pycountry.countries.search_fuzzy("asdaf")[0].numeric
     # print(pycountry.countries.get(numeric='250'))
+
+    pycountry.countries.search_fuzzy(
+        # baci_country_ref.loc[baci_country_ref['country_code']=='8']['country_name'].values[0]
+        "Belgium-Luxembourg (...1998)"
+    )
     return (pycountry,)
 
 
 @app.cell
-def _(baci_cc, pycountry):
+def _(baci_country_ref, pref_cc, pycountry, wits_country_ref):
     # Get the unique list of countries from each dataset, then 
+
     empty_counter = 0
-    for country_code in baci_cc:
-        id_country = pycountry.countries.get(numeric=country_code)
 
-        print(f"Baci CC: {country_code}. ID'd country: {id_country}")
+    def remap_country_code(cc):
+        # print(f"Processing country code: {cc}")
+        # Coerce to str
+        cc = str(cc)
 
-        if not id_country:
-            empty_counter += 1
+        # 1. Use pycountry and the various mapping dictionaries to return
+        detected_country = pycountry.countries.get(numeric=cc)
+        if detected_country:  
+            return detected_country.numeric
 
-    print(f"Num Empties: {empty_counter}. This is {empty_counter/len(baci_cc)*100}%")
+        else:
+            # Check the BACI codes first -> get the name and fuzzy match in reverse
+            baci_country = baci_country_ref.loc[baci_country_ref['country_code']==cc]['country_name']
+            if not baci_country.empty:
+                try:
+                    pycountry_list = pycountry.countries.search_fuzzy(baci_country.values[0])    
+                    return pycountry_list[0].numeric
+                except LookupError as e:
+                    pass
+
+            # Check the WITS codes
+            wits_country = wits_country_ref.loc[wits_country_ref['Numeric Code']==cc]['Country Name']
+            if not wits_country.empty:
+                try:
+                    pycountry_list = pycountry.countries.search_fuzzy(wits_country.values[0])
+                    return pycountry_list[0].numeric
+                except LookupError as e:
+                    pass
+
+
+        return None
+
+
+            # Check the pref codes
+
+
+            # try: 
+
+            # except Error as e:
+            #     print(e)
+
+
+    for cc in pref_cc:
+        print(f"Input code is: {cc} | Detected CC is:", remap_country_code(cc))
+
+    # print(remap_country_code("251"))
+
+    # print(f"Num Empties: {empty_counter}. This is {empty_counter/len(pref_cc)*100}%")
 
     # This validates that we need to go all the way back and use the actual country names
-    return country_code, empty_counter, id_country
+    return cc, empty_counter, remap_country_code
+
+
+@app.cell
+def _(pycountry):
+    pycountry.countries.get(numeric="251")
+    return
 
 
 @app.cell

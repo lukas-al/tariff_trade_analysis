@@ -7,18 +7,16 @@ import glob
 import os
 import re
 from pathlib import Path
-from typing import List, Optional
 
 import pandas as pd
 
 # Third-party imports
 import polars as pl
+
 # Local/application imports
 from mpil_tariff_trade_analysis.utils.iso_remapping import (
     apply_country_code_mapping,
     create_country_code_mapping_df,
-    DEFAULT_BACI_COUNTRY_CODES_PATH, # Import defaults if needed elsewhere
-    DEFAULT_WITS_COUNTRY_CODES_PATH, # Import defaults if needed elsewhere
 )
 from mpil_tariff_trade_analysis.utils.logging_config import get_logger
 
@@ -225,18 +223,16 @@ def load_wits_tariff_data(
         country_cols_to_map.append("partner_country")
 
     logger.info(f"Starting country code remapping for columns: {country_cols_to_map}")
-    # Assuming reference files are in default locations specified in iso_remapping.py
-    # You can override paths here if needed, e.g.:
-    # country_mapping_df = create_country_code_mapping_df(
-    #     combined_df,
-    #     country_cols_to_map,
-    #     baci_codes_path="/custom/path/baci_codes.csv",
-    #     wits_codes_path="/custom/path/wits_codes.csv"
-    # )
+
     country_mapping_df = create_country_code_mapping_df(combined_df, country_cols_to_map)
 
-    if country_mapping_df.height == 0 and country_mapping_df.select(pl.col("original_code")).is_empty().all():
-         logger.error("Country mapping DataFrame is empty, likely due to reference file loading errors. Skipping remapping.")
+    if (
+        country_mapping_df.height == 0
+        and country_mapping_df.select(pl.col("original_code")).is_empty()
+    ):
+        logger.error(
+            "Country mapping DataFrame is empty, likely due to reference file loading errors. Skipping remapping."
+        )
     else:
         logger.info("Applying country code mapping...")
         for col in country_cols_to_map:
@@ -245,8 +241,8 @@ def load_wits_tariff_data(
                 lf=combined_df,
                 mapping_df=country_mapping_df,
                 original_col_name=col,
-                new_col_name=col, # Overwrite original column
-                drop_original=True # Drop original after join/rename
+                new_col_name=col,  # Overwrite original column
+                drop_original=True,  # Drop original after join/rename
             )
 
     logger.info("Finished loading and processing WITS tariff data with country remapping.")
@@ -389,19 +385,11 @@ def vectorized_hs_translation(
     return df_final
 
 
-# The old map_and_translate_countries function is removed as its functionality
-# is now replaced by the vectorized approach using create_country_code_mapping_df
-# and apply_country_code_mapping from utils.iso_remapping, called within
-# load_wits_tariff_data.
-
-
 # Modify the __main__ block to pass the base_dir if needed, or rely on default
 if __name__ == "__main__":
     # Process and save AVEMFN tariff data
     logger.info("Starting WITS tariff data processing script")
-    # Example: Explicitly pass base_dir if not using default, otherwise it uses the default
-    # base_directory = "path/to/your/raw/data"
-    # result = process_and_save_wits_data(tariff_type="AVEMFN", base_dir=base_directory)
+
     result = process_and_save_wits_data(tariff_type="AVEMFN")  # Uses default base_dir
 
     if result:
@@ -411,7 +399,6 @@ if __name__ == "__main__":
 
     # Optionally process AVEPref data too
     logger.info("Starting processing of AVEPref tariff data")
-    # result = process_and_save_wits_data(tariff_type="AVEPref", base_dir=base_directory)
     result = process_and_save_wits_data(tariff_type="AVEPref")  # Uses default base_dir
 
     if result:

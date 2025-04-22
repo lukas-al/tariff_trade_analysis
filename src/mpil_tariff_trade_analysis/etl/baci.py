@@ -1,18 +1,19 @@
 import glob
 import os
+import shutil
 from pathlib import Path  # Add Path
-from typing import Optional # Add Optional
+from typing import Optional  # Add Optional
 
 import duckdb
-import polars as pl      # Add polars
+import polars as pl  # Add polars
 from tqdm.auto import tqdm
 
 # Local imports
 from mpil_tariff_trade_analysis.utils.iso_remapping import (
-    apply_country_code_mapping,
-    create_country_code_mapping_df,
     DEFAULT_BACI_COUNTRY_CODES_PATH,
     DEFAULT_WITS_COUNTRY_CODES_PATH,
+    apply_country_code_mapping,
+    create_country_code_mapping_df,
 )
 from mpil_tariff_trade_analysis.utils.logging_config import get_logger
 
@@ -61,7 +62,8 @@ def baci_to_parquet_incremental(hs, release, input_folder="raw", output_folder="
     # Remove existing Parquet file if present.
     if os.path.exists(output_file):
         logger.warning(f"Removing existing output file: {output_file}")
-        os.remove(output_file)
+        shutil.rmtree(output_file)
+        # os.remove(output_file)
 
     logger.info("Running incremental conversion...")
 
@@ -165,18 +167,16 @@ def remap_baci_country_codes(
 
     try:
         # Ensure output directory exists if saving to a directory
-        if output_path.suffix == "" or "/" in str(output_path.name): # Heuristic for directory path
-             output_path.mkdir(parents=True, exist_ok=True)
-             logger.debug(f"Ensured output directory exists: {output_path}")
+        if output_path.suffix == "" or "/" in str(output_path.name):  # Heuristic for directory path
+            output_path.mkdir(parents=True, exist_ok=True)
+            logger.debug(f"Ensured output directory exists: {output_path}")
         else:
-             output_path.parent.mkdir(parents=True, exist_ok=True)
-             logger.debug(f"Ensured parent directory exists for output file: {output_path.parent}")
-
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            logger.debug(f"Ensured parent directory exists for output file: {output_path.parent}")
 
         # Load the dataset as a LazyFrame
-        # Use scan_parquet which handles directories, single files, and globs
         logger.info(f"Scanning input BACI dataset at: {input_path}...")
-        lf = pl.scan_parquet(input_path) # Polars handles partitioning automatically if present
+        lf = pl.scan_parquet(input_path)
 
         # Define country code columns
         country_cols = ["i", "j"]
@@ -186,15 +186,14 @@ def remap_baci_country_codes(
         logger.info("Generating country code mapping...")
         # Pass reference paths explicitly
         mapping_df = create_country_code_mapping_df(
-            lf,
-            country_cols,
-            baci_codes_path=baci_codes_path,
-            wits_codes_path=wits_codes_path
+            lf, country_cols, baci_codes_path=baci_codes_path, wits_codes_path=wits_codes_path
         )
 
-        if mapping_df.height == 0 and mapping_df.select(pl.col("original_code")).is_empty().all():
-             logger.error("Country mapping DataFrame is empty, likely due to reference file loading errors. Skipping remapping.")
-             return None
+        if mapping_df.height == 0 and mapping_df.select(pl.col("original_code")).is_empty():
+            logger.error(
+                "Country mapping DataFrame is empty, likely due to reference file loading errors. Skipping remapping."
+            )
+            return None
 
         # Apply the mapping to 'i' and 'j' columns
         logger.info("Applying mapping to 'i' (exporter) column...")
@@ -202,7 +201,7 @@ def remap_baci_country_codes(
             lf=lf,
             mapping_df=mapping_df,
             original_col_name="i",
-            new_col_name="i", # Overwrite original column
+            new_col_name="i",  # Overwrite original column
             drop_original=True,
         )
 
@@ -211,30 +210,29 @@ def remap_baci_country_codes(
             lf=lf,
             mapping_df=mapping_df,
             original_col_name="j",
-            new_col_name="j", # Overwrite original column
+            new_col_name="j",  # Overwrite original column
             drop_original=True,
         )
 
         # Save the result
         # Decide whether to save as a single file or partitioned based on output_path
         logger.info(f"Saving remapped data to: {output_path}...")
-        # Use sink_parquet for lazy operations, especially for large data
-        # This requires deciding on partitioning strategy if output is a directory
         if output_path.is_dir():
-             logger.warning(f"Output path {output_path} is a directory. Saving potentially large dataset without partitioning. Consider using sink_parquet with partitioning if needed.")
-             # For simplicity, collect and write if it's a directory, but warn.
-             # For very large data, sink_parquet with partition_by is better.
-             lf.collect().write_parquet(output_path / "remapped_baci_data.parquet") # Example filename
+            logger.warning(
+                f"Output path {output_path} is a directory. Consider using sink_parquet with partitioning if needed."
+            )
+            # For simplicity, collect and write if it's a directory, but warn.
+            # For very large data, sink_parquet with partition_by is better.
+            lf.collect().write_parquet(output_path / "remapped_baci_data.parquet")
         else:
-             # If output_path is a file, collect and write.
-             lf.collect().write_parquet(output_path)
+            lf.collect().write_parquet(output_path)
 
         logger.info("BACI country code remapping completed successfully.")
         return output_path
 
     except pl.exceptions.ComputeError as e:
-         logger.exception(f"Polars ComputeError during BACI remapping (check paths/data): {e}")
-         return None
+        logger.exception(f"Polars ComputeError during BACI remapping (check paths/data): {e}")
+        return None
     except Exception as e:
         logger.exception(f"Unexpected error during BACI country code remapping: {e}")
         return None
