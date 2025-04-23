@@ -24,7 +24,6 @@ HARDCODED_CODE_MAP = {
         "756",
     ],  # Europe EFTA, nes -> Iceland, Liechtenstein, Norway, Switzerland
     "490": ["158"],  # Other Asia, nes -> Taiwan (ISO 3166-1 numeric is 158)
-    # Add any other required mappings here, e.g., "CODE": ["ISO_NUMERIC"]
 }
 
 
@@ -38,7 +37,7 @@ def load_reference_map(file_path: str | Path, code_col: str, name_col: str) -> D
             return {}
 
         # Read all as strings initially to avoid type inference issues
-        df = pl.read_csv(file_path, dtypes={code_col: pl.Utf8, name_col: pl.Utf8})
+        df = pl.read_csv(file_path, infer_schema=False)
         df_clean = df.select([code_col, name_col]).drop_nulls()
         # Ensure keys are strings after cleaning potential numeric interpretations
         mapping = dict(zip(df_clean[code_col], df_clean[name_col], strict=False))
@@ -157,7 +156,7 @@ def remap_country_code_improved(
         except LookupError:
             # 5b. Try fuzzy search if direct lookup fails
             try:
-                fuzzy_matches: List[pycountry.db.Country] = pycountry.countries.search_fuzzy(name)
+                fuzzy_matches: List[pycountry.db.Country] = pycountry.countries.search_fuzzy(name)  # type: ignore
                 valid_matches = [m for m in fuzzy_matches if hasattr(m, "numeric") and m.numeric]
                 if valid_matches:
                     best_match = valid_matches[0]
@@ -228,11 +227,9 @@ def create_country_code_mapping_df(
     baci_map = load_reference_map(baci_codes_path, baci_code_col, baci_name_col)
     wits_map = load_reference_map(wits_codes_path, wits_code_col, wits_name_col)
 
-    if not baci_map and not wits_map:
-        logger.warning(
-            "Both BACI and WITS reference maps failed to load. Remapping might be incomplete."
-        )
-        # Proceed, but rely solely on hardcoded map and direct pycountry lookup
+    if not baci_map or not wits_map:
+        logger.error("Either BACI and WITS reference maps failed to load.")
+        raise
 
     original_cols = lf.columns
     lf_processed = lf
@@ -261,15 +258,9 @@ def create_country_code_mapping_df(
         )
 
         # Filter out rows where mapping failed (returned None) before exploding
-        # Collect count is slow in lazy mode, consider alternative or only log if eager
-        # rows_before_filter = lf_processed.select(pl.count()).collect().item()
         lf_processed = lf_processed.filter(pl.col(temp_list_col).is_not_null())
-        # rows_after_filter = lf_processed.select(pl.count()).collect().item()
-        # if rows_before_filter > rows_after_filter:
-        #      logger.warning(f"Dropped {rows_before_filter - rows_after_filter} rows for column '{col_name}' due to failed country code mapping.")
 
         # Explode the list column to handle multi-country groups (like EFTA)
-        # This duplicates rows for lists with >1 element and keeps single rows for lists with 1 element.
         lf_processed = lf_processed.explode(temp_list_col)
 
         # Rename the exploded column (which now contains single ISO codes)

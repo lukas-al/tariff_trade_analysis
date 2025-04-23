@@ -195,8 +195,8 @@ def remap_baci_country_codes(
         remapped_lf = create_country_code_mapping_df(
             lf=lf,
             code_columns=country_cols_to_remap,
-            baci_codes_path=baci_codes_path,
-            wits_codes_path=wits_codes_path,
+            # baci_codes_path=baci_codes_path,
+            # wits_codes_path=wits_codes_path,
             # Assuming default column names in reference files are correct
             # baci_code_col="country_code", baci_name_col="country_name",
             # wits_code_col="ISO3", wits_name_col="Country Name",
