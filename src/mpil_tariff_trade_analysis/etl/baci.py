@@ -12,8 +12,7 @@ from tqdm.auto import tqdm
 from mpil_tariff_trade_analysis.utils.iso_remapping import (
     DEFAULT_BACI_COUNTRY_CODES_PATH,
     DEFAULT_WITS_COUNTRY_CODES_PATH,
-    apply_iso_mapping,  # <-- New function
-    create_iso_mapping_table,  # <-- New function
+    remap_codes_and_explode,  # <-- Import the new generic function
 )
 from mpil_tariff_trade_analysis.utils.logging_config import get_logger
 
@@ -145,148 +144,35 @@ def remap_baci_country_codes(
     wits_codes_path: str | Path = DEFAULT_WITS_COUNTRY_CODES_PATH,
 ) -> Optional[Path]:
     """
-    Loads processed BACI data, remaps exporter ('i') and importer ('j') country codes
-    to ISO 3166-1 numeric using a vectorized join approach, handles group expansions
-    (like EFTA) by exploding the resulting lists, and saves the final result.
+    Wrapper function to remap BACI exporter ('i') and importer ('j') country codes
+    to ISO 3166-1 numeric using the generic `remap_codes_and_explode` function.
 
     Args:
-        input_path: Path to the directory containing the input BACI parquet files
-                    (e.g., output of baci_to_parquet_incremental or aggregate_baci).
-                    Assumes hive partitioning if applicable.
-        output_path: Path to save the final remapped data as a single Parquet file.
-                     The output will contain columns 'i_iso_numeric' and 'j_iso_numeric'.
+        input_path: Path to the input BACI parquet dataset (directory or file).
+        output_path: Path to save the final remapped data (single Parquet file).
         baci_codes_path: Optional path to BACI country code reference CSV.
         wits_codes_path: Optional path to WITS country code reference CSV.
 
     Returns:
         Path object to the output location if successful, otherwise None.
     """
-    input_path = Path(input_path)
-    output_path = Path(output_path)
-    input_path = Path(input_path)
-    output_path = Path(output_path)
-    logger.info(
-        f"Starting vectorized country code remapping for BACI data from: {input_path}"
+    logger.info(f"Initiating BACI-specific country code remapping via generic function.")
+    logger.info(f"Input: {input_path}, Output: {output_path}")
+
+    return remap_codes_and_explode(
+        input_path=input_path,
+        output_path=output_path,
+        code_columns_to_remap=["i", "j"],
+        output_column_names=["i_iso_numeric", "j_iso_numeric"],
+        year_column_name="t",  # BACI uses 't' for year
+        use_hive_partitioning=True,  # BACI often uses hive partitioning
+        baci_codes_path=baci_codes_path,
+        wits_codes_path=wits_codes_path,
+        # Assuming default reference column names are suitable
+        # baci_ref_code_col="country_code",
+        # baci_ref_name_col="country_name",
+        # wits_ref_code_col="ISO3",
+        # wits_ref_name_col="Country Name",
+        drop_original_code_columns=True,
+        filter_failed_mappings=True, # Standard behavior for BACI pipeline
     )
-    logger.info(f"Output will be saved to: {output_path}")
-
-    try:
-        # --- 1. Setup Output Path ---
-        output_file = output_path
-        output_file.parent.mkdir(parents=True, exist_ok=True)
-        logger.debug(f"Ensured parent directory exists for output file: {output_file.parent}")
-
-        # --- 2. Load Input Data ---
-        logger.info(f"Scanning input BACI dataset at: {input_path}...")
-        # Use hive partitioning if the input is structured like output_folder/partition_col=val/*.parquet
-        # Adjust source path pattern if necessary
-        try:
-            lf = pl.scan_parquet(input_path / "*/*.parquet", hive_partitioning=True)
-            logger.info("Detected hive partitioning structure.")
-        except Exception:  # Fallback if hive partitioning fails or not present
-            logger.warning(
-                "Could not detect hive partitioning, attempting to scan directory directly. "
-                "Ensure input path points to the directory containing Parquet files."
-            )
-            lf = pl.scan_parquet(input_path)
-
-        # --- 3. Get Unique Codes ---
-        logger.info("Extracting unique country codes from 'i' and 'j' columns...")
-        unique_i_codes = lf.select("i").unique().collect().get_column("i")
-        unique_j_codes = lf.select("j").unique().collect().get_column("j")
-        # Combine unique codes from both columns, ensuring final uniqueness
-        all_unique_codes = pl.concat([unique_i_codes, unique_j_codes]).unique()
-        logger.info(f"Found {len(all_unique_codes)} unique codes across 'i' and 'j'.")
-
-        # --- 4. Create Mapping Table ---
-        logger.info("Creating ISO mapping table...")
-        mapping_df = create_iso_mapping_table(
-            unique_codes=all_unique_codes,
-            baci_codes_path=baci_codes_path,
-            wits_codes_path=wits_codes_path,
-            # Assuming default column names in reference files are correct
-            # baci_code_col="country_code", baci_name_col="country_name",
-            # wits_code_col="ISO3", wits_name_col="Country Name",
-        )
-
-        if mapping_df.is_empty():
-            logger.error("ISO mapping table creation failed or resulted in an empty table.")
-            return None
-
-        # --- 5. Apply Mapping via Joins ---
-        logger.info("Applying mapping to 'i' (exporter) column...")
-        lf_mapped_i = apply_iso_mapping(
-            lf=lf,
-            code_column_name="i",
-            mapping_df=mapping_df,
-            output_list_col_name="i_iso_list",
-            drop_original=True,
-        )
-
-        logger.info("Applying mapping to 'j' (importer) column...")
-        lf_mapped_ij = apply_iso_mapping(
-            lf=lf_mapped_i,
-            code_column_name="j",
-            mapping_df=mapping_df,
-            output_list_col_name="j_iso_list",
-            drop_original=True,
-        )
-
-        # --- 6. Handle Rows with Failed Mappings (Optional Filter) ---
-        # Decide how to handle rows where either 'i' or 'j' failed to map
-        # Option 1: Filter them out
-        original_row_count = lf.select(pl.count()).collect()[0, 0]
-        lf_filtered = lf_mapped_ij.filter(
-            pl.col("i_iso_list").is_not_null() & pl.col("j_iso_list").is_not_null()
-        )
-        filtered_row_count = lf_filtered.select(pl.count()).collect()[0, 0]
-        if original_row_count > filtered_row_count:
-            logger.warning(
-                f"Filtered out {original_row_count - filtered_row_count} rows due to failed country code mapping in 'i' or 'j'."
-            )
-        # Option 2: Keep them (they will have null in the list columns) - lf_filtered = lf_mapped_ij
-
-        # --- 7. Explode Lists for Group Expansion ---
-        logger.info("Exploding 'i_iso_list' for group expansion...")
-        lf_exploded_i = lf_filtered.explode("i_iso_list")
-
-        logger.info("Exploding 'j_iso_list' for group expansion...")
-        lf_exploded_ij = lf_exploded_i.explode("j_iso_list")
-
-        # --- 8. Rename Final Columns ---
-        logger.info("Renaming final ISO numeric columns...")
-        lf_renamed = lf_exploded_ij.rename(
-            {"i_iso_list": "i_iso_numeric", "j_iso_list": "j_iso_numeric"}
-        )
-
-        # --- 9. Cast 't' (Year) Column ---
-        # Cast 't' (year) column to String/Utf8 before saving if it exists
-        if "t" in lf_renamed.columns:
-            logger.info("Casting 't' (year) column to String/Utf8...")
-            lf_final = lf_renamed.with_columns(pl.col("t").cast(pl.Utf8))
-        else:
-            logger.warning("Column 't' not found in the remapped DataFrame. Skipping cast.")
-            lf_final = lf_renamed
-
-        # --- 10. Save Result ---
-        logger.info(f"Saving remapped and exploded data to: {output_file}...")
-        # Collect the final LazyFrame and write to the output file path
-        lf_final.collect().write_parquet(output_file)
-
-        logger.info("BACI country code remapping completed successfully.")
-        return output_file  # Return the path to the saved file
-
-    except (
-        pl.exceptions.ComputeError,
-        pl.exceptions.PolarsError,
-    ) as e:  # Catch broader Polars errors
-        logger.exception(f"Polars error during BACI remapping (check paths/data/schema): {e}")
-        return None
-    except FileNotFoundError as e:
-        logger.exception(
-            f"File not found during BACI remapping (check input path '{input_path}'): {e}"
-        )
-        return None
-    except Exception as e:
-        logger.exception(f"Unexpected error during BACI country code remapping: {e}")
-        return None

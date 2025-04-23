@@ -370,3 +370,202 @@ def apply_iso_mapping(
     )
 
     return lf_final
+
+
+# --- Generic Workflow Function ---
+
+def remap_codes_and_explode(
+    input_path: str | Path,
+    output_path: str | Path,
+    code_columns_to_remap: List[str],
+    output_column_names: List[str],
+    year_column_name: Optional[str] = "t",
+    use_hive_partitioning: bool = True,
+    baci_codes_path: str | Path = DEFAULT_BACI_COUNTRY_CODES_PATH,
+    wits_codes_path: str | Path = DEFAULT_WITS_COUNTRY_CODES_PATH,
+    baci_ref_code_col: str = "country_code",
+    baci_ref_name_col: str = "country_name",
+    wits_ref_code_col: str = "ISO3",
+    wits_ref_name_col: str = "Country Name",
+    drop_original_code_columns: bool = True,
+    filter_failed_mappings: bool = True,
+) -> Optional[Path]:
+    """
+    Loads data, remaps specified country codes using vectorized joins,
+    explodes results for group expansions, and saves the output.
+
+    Args:
+        input_path: Path to the input Parquet dataset (directory or file).
+        output_path: Path to save the final remapped data (single Parquet file).
+        code_columns_to_remap: List of column names containing codes to remap.
+        output_column_names: List of desired names for the final remapped/exploded columns.
+                             Must match the order and length of `code_columns_to_remap`.
+        year_column_name: Name of the year column to cast to Utf8 (if exists). Default 't'.
+        use_hive_partitioning: Whether to attempt scanning with hive partitioning.
+        baci_codes_path: Path to BACI country code reference CSV.
+        wits_codes_path: Path to WITS country code reference CSV.
+        baci_ref_code_col: Code column name in BACI reference.
+        baci_ref_name_col: Name column name in BACI reference.
+        wits_ref_code_col: Code column name in WITS reference.
+        wits_ref_name_col: Name column name in WITS reference.
+        drop_original_code_columns: Whether to drop the original code columns.
+        filter_failed_mappings: If True, rows where any code failed to map are removed.
+                                If False, they are kept with nulls in the mapped columns.
+
+    Returns:
+        Path object to the output file if successful, otherwise None.
+    """
+    input_path = Path(input_path)
+    output_path = Path(output_path)
+
+    if len(code_columns_to_remap) != len(output_column_names):
+        logger.error(
+            "Mismatch between number of code columns to remap "
+            f"({len(code_columns_to_remap)}) and output column names "
+            f"({len(output_column_names)})."
+        )
+        return None
+
+    logger.info(
+        f"Starting vectorized code remapping for columns {code_columns_to_remap} "
+        f"from: {input_path}"
+    )
+    logger.info(f"Output will be saved to: {output_path}")
+
+    try:
+        # --- 1. Setup Output Path ---
+        output_file = output_path
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        logger.debug(f"Ensured parent directory exists for output file: {output_file.parent}")
+
+        # --- 2. Load Input Data ---
+        logger.info(f"Scanning input dataset at: {input_path}...")
+        lf = None
+        if use_hive_partitioning:
+            try:
+                # Try scanning assuming hive partitioning structure first
+                lf = pl.scan_parquet(input_path / "*/*.parquet", hive_partitioning=True)
+                logger.info("Successfully scanned using hive partitioning.")
+            except Exception as e:
+                logger.warning(
+                    f"Hive partitioning scan failed ({e}). Attempting direct scan of path: {input_path}"
+                )
+                # Fallback to direct scan if hive fails or path isn't structured that way
+                try:
+                    lf = pl.scan_parquet(input_path)
+                    logger.info("Successfully scanned path directly.")
+                except Exception as direct_scan_e:
+                    logger.error(f"Direct scan also failed: {direct_scan_e}")
+                    raise  # Re-raise the error if both fail
+        else:
+            lf = pl.scan_parquet(input_path)
+            logger.info("Scanned path directly (hive partitioning disabled).")
+
+        # --- 3. Get Unique Codes ---
+        logger.info(f"Extracting unique codes from columns: {code_columns_to_remap}...")
+        all_unique_codes_list = []
+        for col_name in code_columns_to_remap:
+            if col_name in lf.columns:
+                unique_codes = lf.select(col_name).unique().collect().get_column(col_name)
+                all_unique_codes_list.append(unique_codes)
+            else:
+                logger.warning(f"Column '{col_name}' not found in input data. Skipping.")
+
+        if not all_unique_codes_list:
+            logger.error("None of the specified code columns were found in the input data.")
+            return None
+
+        # Combine unique codes from all columns, ensuring final uniqueness
+        all_unique_codes = pl.concat(all_unique_codes_list).unique()
+        logger.info(f"Found {len(all_unique_codes)} unique codes across specified columns.")
+
+        # --- 4. Create Mapping Table ---
+        logger.info("Creating ISO mapping table...")
+        mapping_df = create_iso_mapping_table(
+            unique_codes=all_unique_codes,
+            baci_codes_path=baci_codes_path,
+            wits_codes_path=wits_codes_path,
+            baci_code_col=baci_ref_code_col,
+            baci_name_col=baci_ref_name_col,
+            wits_code_col=wits_ref_code_col,
+            wits_name_col=wits_ref_name_col,
+        )
+
+        if mapping_df.is_empty():
+            logger.error("ISO mapping table creation failed or resulted in an empty table.")
+            return None
+
+        # --- 5. Apply Mapping via Joins ---
+        lf_mapped = lf
+        temp_list_col_names = []
+        for col_name in code_columns_to_remap:
+            if col_name not in lf.columns:
+                continue # Skip if column wasn't found initially
+            temp_list_col = f"__{col_name}_iso_list__"
+            temp_list_col_names.append(temp_list_col)
+            logger.info(f"Applying mapping to '{col_name}' column...")
+            lf_mapped = apply_iso_mapping(
+                lf=lf_mapped,
+                code_column_name=col_name,
+                mapping_df=mapping_df,
+                output_list_col_name=temp_list_col,
+                drop_original=drop_original_code_columns,
+            )
+
+        # --- 6. Handle Rows with Failed Mappings ---
+        if filter_failed_mappings:
+            filter_expr = pl.all_horizontal(
+                pl.col(c).is_not_null() for c in temp_list_col_names
+            )
+            lf_processed = lf_mapped.filter(filter_expr)
+            # Optional: Log count difference
+            # original_count = lf.select(pl.count()).collect()[0, 0]
+            # filtered_count = lf_processed.select(pl.count()).collect()[0, 0]
+            # if original_count > filtered_count:
+            #     logger.warning(f"Filtered {original_count - filtered_count} rows due to failed mappings.")
+            logger.info("Filtered rows with failed mappings.")
+        else:
+            lf_processed = lf_mapped
+            logger.info("Keeping rows with failed mappings (will have nulls).")
+
+
+        # --- 7. Explode Lists for Group Expansion ---
+        lf_exploded = lf_processed
+        final_col_rename_map = {}
+        for i, temp_list_col in enumerate(temp_list_col_names):
+            final_col_name = output_column_names[i]
+            logger.info(f"Exploding '{temp_list_col}' -> '{final_col_name}'...")
+            lf_exploded = lf_exploded.explode(temp_list_col)
+            # We rename *after* all explosions are done to avoid conflicts
+            final_col_rename_map[temp_list_col] = final_col_name
+
+        # --- 8. Rename Final Columns ---
+        logger.info(f"Renaming final columns: {final_col_rename_map}")
+        lf_renamed = lf_exploded.rename(final_col_rename_map)
+
+        # --- 9. Cast Year Column ---
+        lf_final = lf_renamed
+        if year_column_name and year_column_name in lf_renamed.columns:
+            logger.info(f"Casting '{year_column_name}' column to String/Utf8...")
+            lf_final = lf_renamed.with_columns(pl.col(year_column_name).cast(pl.Utf8))
+        elif year_column_name:
+            logger.warning(
+                f"Year column '{year_column_name}' not found in the remapped DataFrame. Skipping cast."
+            )
+
+        # --- 10. Save Result ---
+        logger.info(f"Saving remapped and exploded data to: {output_file}...")
+        lf_final.collect().write_parquet(output_file)
+
+        logger.info("Code remapping and explosion completed successfully.")
+        return output_file
+
+    except (pl.exceptions.ComputeError, pl.exceptions.PolarsError) as e:
+        logger.exception(f"Polars error during code remapping: {e}")
+        return None
+    except FileNotFoundError as e:
+        logger.exception(f"File not found during code remapping (check path '{input_path}'): {e}")
+        return None
+    except Exception as e:
+        logger.exception(f"Unexpected error during code remapping: {e}")
+        return None
