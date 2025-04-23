@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set # Added List, Set
 
 import polars as pl
 import pycountry
@@ -14,22 +14,29 @@ logger = get_logger(__name__)
 DEFAULT_BACI_COUNTRY_CODES_PATH = Path("data/raw/BACI_HS92_V202501/country_codes_V202501.csv")
 DEFAULT_WITS_COUNTRY_CODES_PATH = Path("data/raw/WITS_country_codes.csv")
 
+# --- Hardcoded Mappings ---
+# Map specific input codes directly to lists of ISO numeric codes
+HARDCODED_CODE_MAP = {
+    "697": ["352", "438", "578", "756"], # Europe EFTA, nes -> Iceland, Liechtenstein, Norway, Switzerland
+    "490": ["158"]                       # Other Asia, nes -> Taiwan (ISO 3166-1 numeric is 158)
+    # Add any other required mappings here, e.g., "CODE": ["ISO_NUMERIC"]
+}
+
 
 def load_reference_map(file_path: str | Path, code_col: str, name_col: str) -> Dict[str, str]:
     """Loads a CSV file into a dictionary mapping codes to names."""
     file_path = Path(file_path)  # Ensure it's a Path object
     logger.info(f"Attempting to load reference map from: {file_path}")
     try:
-        # Ensure file exists before attempting to read
         if not file_path.is_file():
             logger.error(f"Reference map file not found: {file_path}")
             return {}
 
-        df = pl.read_csv(file_path, infer_schema=False)  # Read all as strings
-        # Ensure codes are treated as strings for consistent dictionary keys
-        # Drop nulls to avoid issues with dict creation
+        # Read all as strings initially to avoid type inference issues
+        df = pl.read_csv(file_path, dtypes={code_col: pl.Utf8, name_col: pl.Utf8})
         df_clean = df.select([code_col, name_col]).drop_nulls()
-        mapping = dict(zip(df_clean[code_col].cast(pl.Utf8), df_clean[name_col], strict=False))
+        # Ensure keys are strings after cleaning potential numeric interpretations
+        mapping = dict(zip(df_clean[code_col], df_clean[name_col], strict=False))
         logger.info(f"Successfully loaded {len(mapping)} entries from {file_path}")
         return mapping
     except pl.exceptions.ComputeError as e:
@@ -43,141 +50,120 @@ def load_reference_map(file_path: str | Path, code_col: str, name_col: str) -> D
 
 def remap_country_code_improved(
     code: Any, baci_map: Dict[str, str], wits_map: Dict[str, str]
-) -> Optional[str]:
+) -> Optional[List[str]]: # <--- Changed return type annotation
     """
-    Remaps a given country code to the standard ISO 3166-1 numeric code.
+    Remaps a given country code to a list of standard ISO 3166-1 numeric codes.
 
-    Uses pycountry for direct lookup first (after normalizing the code to a
-    3-digit string). If not found, it attempts to find the code in the
-    provided BACI and WITS mapping dictionaries, retrieves the country name,
-    and uses pycountry's lookup or fuzzy search to find a match.
+    Checks a hardcoded map first. If not found, uses pycountry for direct
+    lookup (after normalizing the code). If still not found, it attempts
+    to find the code in the provided BACI and WITS mapping dictionaries,
+    retrieves the country name, and uses pycountry's lookup or fuzzy search.
 
     Args:
-        code: The input country code (expected to be numeric-like).
-        baci_map: Dictionary mapping BACI numeric codes (str) to country names (str).
-        wits_map: Dictionary mapping WITS numeric codes (str) to country names (str).
+        code: The input country code (expected to be numeric-like or string).
+        baci_map: Dictionary mapping BACI codes (str) to country names (str).
+        wits_map: Dictionary mapping WITS codes (str) to country names (str).
 
     Returns:
-        The 3-digit ISO 3166-1 numeric code as a string (e.g., '840'),
+        A list of 3-digit ISO 3166-1 numeric code strings (e.g., ['840']),
         or None if no mapping could be confidently established.
+        The list will contain multiple codes for specific group mappings (e.g., EFTA).
     """
     if code is None:
         return None
 
-    code_str_orig = str(code)
-    if not code_str_orig:
-        return None
-
-    # 1. Normalize input code to 3-digit string
-    cc_str = None
-    is_numeric_like = False
+    # --- 1. Normalize Input Code ---
+    normalized_code_str = None
     try:
-        # Handle potential float inputs like '840.0' by converting to int first
-        if isinstance(code, float):
-            cc_str = str(int(code)).zfill(3)
-            is_numeric_like = True
-        else:
-            # Handle potential non-numeric strings if possible, or just use original
-            try:
-                # Try converting to int first to handle "1", "01", etc. consistently
-                cc_str = str(int(code_str_orig)).zfill(3)
-                is_numeric_like = True
-            except ValueError:
-                # If it's not directly convertible to int (e.g., 'USA'), keep original for name lookup
-                # We won't zfill non-numeric codes here as it might obscure them
-                cc_str = code_str_orig
-                logger.debug(
-                    f"Code '{code_str_orig}' not directly numeric, attempting name lookup."
-                )
+        # Attempt conversion for numeric-like codes first (e.g., 840.0, 490)
+        # Convert to float then int handles cases like '840.0' -> 840
+        normalized_code_str = str(int(float(str(code))))
+    except (ValueError, TypeError):
+        # Handle non-numeric codes or codes that fail conversion (e.g., 'USA', '697')
+        normalized_code_str = str(code).strip()
 
-    except ValueError:
-        # This might catch errors if float conversion to int fails unexpectedly
-        logger.warning(f"Input code '{code}' could not be normalized. Skipping.")
-        return code
+    if not normalized_code_str:
+         logger.debug(f"Skipping empty or None code after normalization: original='{code}'")
+         return None # Cannot process empty string
 
-    # If normalization failed somehow, exit
-    if cc_str is None:
-        logger.warning(f"Normalization resulted in None for code '{code}'. Skipping.")
-        return None
+    # --- 2. Check Hardcoded Map ---
+    if normalized_code_str in HARDCODED_CODE_MAP:
+        iso_codes = HARDCODED_CODE_MAP[normalized_code_str]
+        logger.debug(f"Code '{code}' (normalized: '{normalized_code_str}') mapped via hardcoded rule to {iso_codes}")
+        # Ensure codes are 3 digits if they came from the hardcoded map
+        return [c.zfill(3) for c in iso_codes]
 
-    # 2. Direct pycountry numeric lookup (Only if normalized code is 3-digit numeric)
-    if is_numeric_like and len(cc_str) == 3:
-        try:
-            detected_country = pycountry.countries.get(numeric=cc_str)
-            # Ensure the result has a numeric attribute before returning
-            if (
-                detected_country
-                and hasattr(detected_country, "numeric")
-                and detected_country.numeric
-            ):
-                logger.debug(f"Direct numeric match for '{code}' -> '{detected_country.numeric}'")
-                return detected_country.numeric
-        except LookupError:
-            logger.debug(f"No direct pycountry numeric match for code '{cc_str}'.")
-            pass
-        except Exception as e:
-            logger.error(f"Unexpected error during pycountry numeric lookup for '{cc_str}': {e}")
-            pass
-    elif is_numeric_like:
-        logger.debug(
-            f"Normalized code '{cc_str}' is numeric-like but not 3 digits, skipping direct numeric lookup."
-        )
-    # else: # Non-numeric code, handled below by name lookup
+    # --- 3. Direct Pycountry Lookup (on normalized code) ---
+    try:
+        country = None
+        # Try common lookups based on typical code formats
+        if len(normalized_code_str) == 2 and normalized_code_str.isalpha():
+             country = pycountry.countries.get(alpha_2=normalized_code_str.upper())
+        elif len(normalized_code_str) == 3 and normalized_code_str.isalpha():
+             country = pycountry.countries.get(alpha_3=normalized_code_str.upper())
+        elif normalized_code_str.isdigit():
+             # Pad with leading zeros if needed for numeric lookup
+             padded_code = normalized_code_str.zfill(3)
+             country = pycountry.countries.get(numeric=padded_code)
+        # Add other direct lookups if needed (e.g., official_name)
 
-    # 3. Fallback Function (Helper for DRY principle)
+        if country and hasattr(country, "numeric") and country.numeric:
+             iso_numeric = country.numeric.zfill(3)
+             logger.debug(f"Code '{code}' (normalized: '{normalized_code_str}') mapped via direct pycountry lookup to {iso_numeric}")
+             return [iso_numeric] # Return as list
+    except LookupError:
+        logger.debug(f"Direct pycountry lookup for normalized code '{normalized_code_str}' failed. Trying name lookup.")
+    except Exception as e:
+         logger.warning(f"Unexpected error during direct pycountry lookup for code '{code}' (normalized: '{normalized_code_str}'): {e}")
+
+    # --- 4. Find Name using Reference Maps ---
+    # Use the *normalized* code string as the key for the maps
+    country_name = baci_map.get(normalized_code_str) or wits_map.get(normalized_code_str)
+
+    if not country_name:
+        logger.warning(f"Code '{code}' (normalized: '{normalized_code_str}') not found in BACI or WITS reference maps. Cannot map via name.")
+        # Return the original normalized code as a list if no mapping found? Or None?
+        # Returning None indicates failure to map to ISO standard.
+        return None # Indicate failure
+
+    # --- 5. Pycountry Lookup/Search via Name ---
     def _find_via_name(name: Optional[str]) -> Optional[str]:
-        """Tries direct lookup then fuzzy search on a name."""
+        """Tries direct lookup then fuzzy search on a name. Returns 3-digit numeric string."""
         if not name:
             return None
         try:
-            # 3a. Try direct lookup first (faster, more accurate)
+            # 5a. Try direct lookup by name (more reliable)
             direct_match = pycountry.countries.lookup(name)
             if direct_match and hasattr(direct_match, "numeric") and direct_match.numeric:
-                logger.debug(f"Direct name lookup match for '{name}' -> '{direct_match.numeric}'")
-                return direct_match.numeric
+                logger.debug(f"Direct name lookup match for '{name}' -> '{direct_match.numeric.zfill(3)}'")
+                return direct_match.numeric.zfill(3)
         except LookupError:
-            # 3b. Try fuzzy search if direct lookup fails
+            # 5b. Try fuzzy search if direct lookup fails
             try:
                 fuzzy_matches: List[pycountry.db.Country] = pycountry.countries.search_fuzzy(name)
-                # Filter out results without a numeric code before accessing index 0
                 valid_matches = [m for m in fuzzy_matches if hasattr(m, "numeric") and m.numeric]
                 if valid_matches:
                     best_match = valid_matches[0]
+                    # Maybe add logging here if multiple fuzzy results? Could indicate ambiguity.
                     logger.debug(
-                        f"Used fuzzy match on name '{name}'. Best guess: {best_match.name} -> '{best_match.numeric}'"
+                        f"Used fuzzy match on name '{name}'. Best guess: {best_match.name} -> '{best_match.numeric.zfill(3)}'"
                     )
-                    return best_match.numeric
+                    return best_match.numeric.zfill(3)
                 else:
-                    logger.debug(
-                        f"Fuzzy search for '{name}' yielded no matches with numeric codes."
-                    )
-            except Exception as e:
+                    logger.debug(f"Fuzzy search for '{name}' yielded no matches with numeric codes.")
+            except Exception as e: # Catch potential errors during fuzzy search itself
                 logger.warning(f"Error during pycountry fuzzy search for name '{name}': {e}")
         return None
 
-    # 4. Attempt fallback using BACI name -> lookup/fuzzy search
-    # Use the normalized cc_str as the key for the map
-    baci_name = baci_map.get(cc_str)
-    if baci_name:
-        logger.debug(f"Found BACI name '{baci_name}' for code '{cc_str}'. Trying lookup.")
-        baci_result = _find_via_name(baci_name)
-        if baci_result:
-            return baci_result
-
-    # 5. Attempt fallback using WITS name -> lookup/fuzzy search
-    # Use the normalized cc_str as the key for the map
-    wits_name = wits_map.get(cc_str)
-    if wits_name:
-        logger.debug(f"Found WITS name '{wits_name}' for code '{cc_str}'. Trying lookup.")
-        wits_result = _find_via_name(wits_name)
-        if wits_result:
-            return wits_result
-
-    # 6. No match found
-    logger.warning(
-        f"Could not map country code '{code}' (normalized: '{cc_str}') using available methods."
-    )
-    return cc_str
+    iso_code = _find_via_name(country_name)
+    if iso_code:
+        logger.debug(f"Code '{code}' (Name: '{country_name}') mapped via pycountry name lookup/fuzzy search to {iso_code}")
+        return [iso_code] # Return as list
+    else:
+        logger.warning(f"Could not remap code '{code}' (Name: '{country_name}') to ISO numeric via pycountry name lookup.")
+        # Return the original normalized code as a list if no mapping found? Or None?
+        # Returning None indicates failure to map to ISO standard.
+        return None # Indicate failure
 
 
 def create_country_code_mapping_df(
@@ -185,14 +171,18 @@ def create_country_code_mapping_df(
     code_columns: List[str],
     baci_codes_path: str | Path = DEFAULT_BACI_COUNTRY_CODES_PATH,
     wits_codes_path: str | Path = DEFAULT_WITS_COUNTRY_CODES_PATH,
-    baci_code_col: str = "country_code",  # Column name in BACI ref file
-    baci_name_col: str = "country_name",  # Column name in BACI ref file
-    wits_code_col: str = "ISO3",  # Assumed column name in WITS ref file !! VERIFY !!
-    wits_name_col: str = "Country Name",  # Assumed column name in WITS ref file !! VERIFY !!
-) -> pl.DataFrame:
+    baci_code_col: str = "country_code",
+    baci_name_col: str = "country_name",
+    wits_code_col: str = "ISO3", # Assumed column name in WITS ref file !! VERIFY !!
+    wits_name_col: str = "Country Name", # Assumed column name in WITS ref file !! VERIFY !!
+    drop_original: bool = True, # Option to keep original columns
+) -> pl.LazyFrame:
     """
-    Generates a Polars DataFrame mapping original country codes found in a
-    LazyFrame to standardized ISO 3166-1 numeric codes.
+    Applies ISO 3166-1 numeric country code remapping to specified columns
+    in a LazyFrame, handling hardcoded group expansions (like EFTA).
+
+    It uses the `remap_country_code_improved` function, explodes the results
+    for multi-country mappings, and replaces or adds the mapped columns.
 
     Args:
         lf: The input Polars LazyFrame.
@@ -203,164 +193,89 @@ def create_country_code_mapping_df(
         baci_name_col: Column name for names in the BACI reference file.
         wits_code_col: Column name for codes in the WITS reference file.
         wits_name_col: Column name for names in the WITS reference file.
+        drop_original: If True, the original code columns are dropped.
 
     Returns:
-        A Polars DataFrame with columns 'original_code' and 'iso_numeric_code'.
+        A Polars LazyFrame with the specified columns remapped to ISO numeric codes.
+        Rows might be duplicated if a code maps to multiple ISO codes (e.g., EFTA).
     """
-    logger.info(f"Generating country code mapping for columns: {code_columns}")
+    logger.info(f"Starting country code remapping for columns: {code_columns}")
 
-    # Load reference maps
+    # Load reference maps once
     baci_map = load_reference_map(baci_codes_path, baci_code_col, baci_name_col)
     wits_map = load_reference_map(wits_codes_path, wits_code_col, wits_name_col)
 
     if not baci_map and not wits_map:
-        logger.error("Failed to load both BACI and WITS reference maps. Cannot create mapping.")
-        # Return an empty mapping DataFrame with correct schema
-        return pl.DataFrame(
-            {"original_code": [], "iso_numeric_code": []},
-            schema={"original_code": pl.Utf8, "iso_numeric_code": pl.Utf8},
-        )
+        logger.warning("Both BACI and WITS reference maps failed to load. Remapping might be incomplete.")
+        # Proceed, but rely solely on hardcoded map and direct pycountry lookup
 
-    # Collect unique codes from all specified columns
-    logger.info("Collecting unique country codes from the LazyFrame...")
-    unique_codes_set: Set[Any] = set()
-    try:
-        # Select only the necessary columns before collecting unique values
-        unique_lf = lf.select(code_columns).unique()
-        # It's often more memory efficient to collect column by column if the unique set is large
-        # but for country codes (~200-300), collecting together should be fine.
-        unique_df = unique_lf.collect()
-        for col in code_columns:
-            # Add codes, ensuring None is handled gracefully and converting to string
-            unique_codes_set.update(str(c) for c in unique_df[col].drop_nulls().to_list())
-        logger.info(f"Found {len(unique_codes_set)} unique non-null codes to map.")
-    except Exception as e:
-        logger.exception(f"Error collecting unique codes: {e}")
-        # Return an empty mapping DataFrame
-        return pl.DataFrame(
-            {"original_code": [], "iso_numeric_code": []},
-            schema={"original_code": pl.Utf8, "iso_numeric_code": pl.Utf8},
-        )
+    original_cols = lf.columns
+    lf_processed = lf
+    new_col_names_map = {} # Map original col name to new col name
 
-    # Remap each unique code
-    original_codes_list = []
-    mapped_codes_list = []
-    logger.info("Remapping unique codes...")
-    processed_count = 0
-    for code in unique_codes_set:
-        # Pass the string representation of the code
-        mapped_code = remap_country_code_improved(code, baci_map, wits_map)
-        original_codes_list.append(code)  # Store original (already string)
-        mapped_codes_list.append(mapped_code)  # Can be None if mapping failed
-        processed_count += 1
-        if processed_count % 50 == 0:  # Log progress periodically
-            logger.debug(f"Remapped {processed_count}/{len(unique_codes_set)} unique codes...")
+    for col_name in code_columns:
+        if col_name not in lf.columns:
+            logger.warning(f"Column '{col_name}' not found in LazyFrame schema. Skipping.")
+            continue
 
-    # Create the mapping DataFrame
-    mapping_df = pl.DataFrame(
-        {
-            "original_code": original_codes_list,
-            "iso_numeric_code": mapped_codes_list,
-        },
-        schema={"original_code": pl.Utf8, "iso_numeric_code": pl.Utf8},
-    ).drop_nulls(subset=["original_code"])  # Ensure original_code is not null for joins
+        logger.info(f"Processing country codes in column: '{col_name}'")
+        temp_list_col = f"__iso_list_{col_name}__" # Temporary column for the list
+        final_col_name = f"{col_name}_iso_numeric" # Final column name after explode
+        new_col_names_map[col_name] = final_col_name
 
-    # Log summary of mapping results
-    null_mapped_count = mapping_df["iso_numeric_code"].is_null().sum()
-    total_unique = len(unique_codes_set)
-    # Ensure total_unique is not zero before division
-    mapped_percentage = (
-        ((total_unique - null_mapped_count) / total_unique * 100) if total_unique > 0 else 0
-    )
-    logger.info(
-        f"Country code mapping DataFrame created. "
-        f"Mapped {total_unique - null_mapped_count}/{total_unique} unique codes ({mapped_percentage:.2f}% success)."
-    )
-    if null_mapped_count > 0:
-        logger.warning(
-            f"{null_mapped_count} unique codes could not be mapped to an ISO numeric code."
-        )
-        # Optionally log the first few failed codes for debugging:
-        failed_codes_sample = (
-            mapping_df.filter(pl.col("iso_numeric_code").is_null())["original_code"]
-            .head(10)
-            .to_list()
-        )
-        logger.warning(f"Sample of unmapped codes: {failed_codes_sample}")
-
-    return mapping_df
-
-
-def apply_country_code_mapping(
-    lf: pl.LazyFrame,
-    mapping_df: pl.DataFrame,
-    original_col_name: str,
-    new_col_name: Optional[str] = None,
-    drop_original: bool = True,
-) -> pl.LazyFrame:
-    """
-    Applies the country code mapping to a specific column in a LazyFrame using a left join.
-
-    Args:
-        lf: The input Polars LazyFrame.
-        mapping_df: The DataFrame containing 'original_code' and 'iso_numeric_code' columns.
-        original_col_name: The name of the column in 'lf' to map.
-        new_col_name: The desired name for the new column with mapped codes.
-                      Defaults to original_col_name if None.
-        drop_original: Whether to drop the original column after mapping.
-
-    Returns:
-        The modified Polars LazyFrame with the mapped country codes.
-    """
-    target_col_name = new_col_name if new_col_name is not None else original_col_name
-
-    logger.info(
-        f"Applying country code mapping to column '{original_col_name}' -> '{target_col_name}'"
-    )
-
-    # Ensure the original column is string type for joining with mapping_df
-    # Also handle potential integers or other types that need casting
-    lf = lf.with_columns(pl.col(original_col_name).cast(pl.Utf8))
-
-    # Define a temporary unique name for the joined column to avoid conflicts
-    temp_mapped_col = f"__{original_col_name}_iso_numeric_temp__"
-
-    # Perform the join
-    # Use lazy() on the mapping_df for potentially better optimization by Polars
-    lf = lf.join(
-        mapping_df.lazy().rename({"iso_numeric_code": temp_mapped_col}),  # Rename before join
-        left_on=original_col_name,
-        right_on="original_code",
-        how="left",
-    )
-
-    logger.debug(f"Schema after join: {lf.collect_schema()}")
-
-    # Use coalesce to fill nulls from the join with the original code
-    # Create the final target column using coalesce
-    lf = lf.with_columns(
-        pl.coalesce(
-            pl.col(temp_mapped_col),  # Use the mapped code if available (not null)
-            pl.col(original_col_name),  # Otherwise, use the original code
-        ).alias(target_col_name)  # Name the resulting column
-    )
-
-    # Drop the temporary mapped column as it's now incorporated into target_col_name
-    lf = lf.drop(temp_mapped_col)
-    logger.debug(f"Schema after coalesce and drop temp: {lf.collect_schema()}")
-
-    # Drop the original column if requested AND if the target name is different
-    if drop_original and original_col_name != target_col_name:
-        # Check if original column still exists before dropping
-        if original_col_name in lf.columns:
-            logger.debug(f"Dropping original column '{original_col_name}'")
-            lf = lf.drop(original_col_name)
-        else:
-            logger.warning(
-                f"Requested to drop original column '{original_col_name}', but it was not found (possibly same as target)."
+        # Apply the updated mapping function which returns a list or None
+        lf_processed = lf_processed.with_columns(
+            pl.col(col_name)
+            .map_elements(
+                lambda code: remap_country_code_improved(code, baci_map, wits_map),
+                return_dtype=pl.List(pl.Utf8), # Expecting a list of strings
+                skip_nulls=False, # Let the function handle None input if necessary
+                strategy="thread_local", # Potentially faster for complex functions
             )
+            .alias(temp_list_col)
+        )
 
-    logger.info(
-        f"Finished applying mapping for column '{original_col_name}'. Final schema: {lf.collect_schema()}"
-    )
-    return lf
+        # Filter out rows where mapping failed (returned None) before exploding
+        # Collect count is slow in lazy mode, consider alternative or only log if eager
+        # rows_before_filter = lf_processed.select(pl.count()).collect().item()
+        lf_processed = lf_processed.filter(pl.col(temp_list_col).is_not_null())
+        # rows_after_filter = lf_processed.select(pl.count()).collect().item()
+        # if rows_before_filter > rows_after_filter:
+        #      logger.warning(f"Dropped {rows_before_filter - rows_after_filter} rows for column '{col_name}' due to failed country code mapping.")
+
+
+        # Explode the list column to handle multi-country groups (like EFTA)
+        # This duplicates rows for lists with >1 element and keeps single rows for lists with 1 element.
+        lf_processed = lf_processed.explode(temp_list_col)
+
+        # Rename the exploded column (which now contains single ISO codes)
+        lf_processed = lf_processed.rename({temp_list_col: final_col_name})
+
+        logger.debug(f"Remapped column '{col_name}' to '{final_col_name}'. Schema: {lf_processed.collect_schema()}")
+
+
+    # Determine final column set
+    cols_to_keep = list(original_cols) # Start with all original columns
+    if drop_original:
+        # Remove the original columns that were successfully processed
+        for original_name in new_col_names_map.keys():
+            if original_name in cols_to_keep:
+                cols_to_keep.remove(original_name)
+
+    # Add the new ISO numeric columns
+    final_column_selection = cols_to_keep + list(new_col_names_map.values())
+
+    # Select the final set of columns
+    # Ensure the selection doesn't fail if a column wasn't processed
+    valid_final_columns = [col for col in final_column_selection if col in lf_processed.columns]
+    final_lf = lf_processed.select(valid_final_columns)
+
+
+    logger.info(f"Finished country code remapping. Final schema: {final_lf.collect_schema()}")
+    return final_lf
+
+
+# --- Remove the old apply_country_code_mapping function ---
+# The functionality is now integrated into create_country_code_mapping_df
+# def apply_country_code_mapping(...) -> pl.LazyFrame:
+#     ... (delete this function) ...

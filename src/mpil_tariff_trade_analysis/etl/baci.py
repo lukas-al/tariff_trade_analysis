@@ -9,11 +9,11 @@ import polars as pl  # Add polars
 from tqdm.auto import tqdm
 
 # Local imports
+# Updated import: only need create_country_code_mapping_df
 from mpil_tariff_trade_analysis.utils.iso_remapping import (
     DEFAULT_BACI_COUNTRY_CODES_PATH,
     DEFAULT_WITS_COUNTRY_CODES_PATH,
-    apply_country_code_mapping,
-    create_country_code_mapping_df,
+    create_country_code_mapping_df, # <-- Import the updated function
 )
 from mpil_tariff_trade_analysis.utils.logging_config import get_logger
 
@@ -145,15 +145,16 @@ def remap_baci_country_codes(
     wits_codes_path: str | Path = DEFAULT_WITS_COUNTRY_CODES_PATH,
 ) -> Optional[Path]:
     """
-    Loads processed BACI data (e.g., partitioned parquet), remaps country codes ('i', 'j')
-    to ISO numeric using the vectorized approach, and saves the result.
+    Loads processed BACI data, remaps exporter ('i') and importer ('j') country codes
+    to ISO 3166-1 numeric using the unified mapping logic (including hardcodes and
+    potential row explosion for groups like EFTA), and saves the result.
 
     Args:
         input_path: Path to the directory containing the input BACI parquet files
                     (e.g., output of baci_to_parquet_incremental or aggregate_baci).
-                    Assumes a structure readable by pl.scan_parquet (e.g., single file,
-                    directory of files, or hive-partitioned directory).
+                    Assumes a structure readable by pl.scan_parquet.
         output_path: Path to save the remapped data (e.g., a new directory or single file).
+                     The output will contain columns like 'i_iso_numeric', 'j_iso_numeric'.
         baci_codes_path: Optional path to BACI country code reference CSV.
         wits_codes_path: Optional path to WITS country code reference CSV.
 
@@ -166,76 +167,68 @@ def remap_baci_country_codes(
     logger.info(f"Output will be saved to: {output_path}")
 
     try:
-        # Ensure output directory exists if saving to a directory
-        if output_path.suffix == "" or "/" in str(output_path.name):  # Heuristic for directory path
-            output_path.mkdir(parents=True, exist_ok=True)
-            logger.debug(f"Ensured output directory exists: {output_path}")
+        # Ensure output directory exists
+        # Check if output_path looks like a directory path or file path
+        if output_path.suffix == "" or "/" in str(output_path.name) or output_path.is_dir():
+            # Treat as directory path
+            output_dir = output_path
+            # Define a default filename if saving to a directory
+            output_file = output_dir / "remapped_baci_iso_numeric.parquet"
+            output_dir.mkdir(parents=True, exist_ok=True)
+            logger.debug(f"Ensured output directory exists: {output_dir}")
         else:
-            output_path.parent.mkdir(parents=True, exist_ok=True)
-            logger.debug(f"Ensured parent directory exists for output file: {output_path.parent}")
+            # Treat as file path
+            output_file = output_path
+            output_file.parent.mkdir(parents=True, exist_ok=True)
+            logger.debug(f"Ensured parent directory exists for output file: {output_file.parent}")
 
         # Load the dataset as a LazyFrame
         logger.info(f"Scanning input BACI dataset at: {input_path}...")
         lf = pl.scan_parquet(input_path)
 
-        # Define country code columns
-        country_cols = ["i", "j"]
-        logger.debug(f"Columns to remap: {country_cols}")
+        # Define country code columns to remap
+        country_cols_to_remap = ["i", "j"]
+        logger.debug(f"Columns to remap: {country_cols_to_remap}")
 
-        # Generate the mapping DataFrame
-        logger.info("Generating country code mapping...")
-        # Pass reference paths explicitly
-        mapping_df = create_country_code_mapping_df(
-            lf, country_cols, baci_codes_path=baci_codes_path, wits_codes_path=wits_codes_path
-        )
-
-        if mapping_df.height == 0 and mapping_df.select(pl.col("original_code")).is_empty():
-            logger.error(
-                "Country mapping DataFrame is empty, likely due to reference file loading errors. Skipping remapping."
-            )
-            return None
-
-        # Apply the mapping to 'i' and 'j' columns
-        logger.info("Applying mapping to 'i' (exporter) column...")
-        lf = apply_country_code_mapping(
+        # Apply the unified mapping and explosion logic from iso_remapping
+        # This function now handles the mapping, potential explosion, and column renaming/dropping
+        remapped_lf = create_country_code_mapping_df(
             lf=lf,
-            mapping_df=mapping_df,
-            original_col_name="i",
-            new_col_name="i",  # Overwrite original column
-            drop_original=True,
+            code_columns=country_cols_to_remap,
+            baci_codes_path=baci_codes_path,
+            wits_codes_path=wits_codes_path,
+            # Assuming default column names in reference files are correct
+            # baci_code_col="country_code", baci_name_col="country_name",
+            # wits_code_col="ISO3", wits_name_col="Country Name",
+            drop_original=True # Keep this consistent with the function's default or set explicitly
         )
 
-        logger.info("Applying mapping to 'j' (importer) column...")
-        lf = apply_country_code_mapping(
-            lf=lf,
-            mapping_df=mapping_df,
-            original_col_name="j",
-            new_col_name="j",  # Overwrite original column
-            drop_original=True,
-        )
+        # Check if the remapping actually produced results
+        if remapped_lf is None:
+             logger.error("Country code remapping failed unexpectedly. Check logs in iso_remapping.")
+             return None # Remapping failed
+
+        # Cast 't' (year) column to String/Utf8 before saving if it exists
+        if "t" in remapped_lf.columns:
+            logger.info("Casting 't' (year) column to String/Utf8...")
+            remapped_lf = remapped_lf.with_columns(pl.col("t").cast(pl.Utf8))
+        else:
+            logger.warning("Column 't' not found in the remapped DataFrame. Skipping cast.")
+
 
         # Save the result
-        # Cast 't' (year) column to String/Utf8 before saving
-        logger.info("Casting 't' (year) column to String/Utf8...")
-        lf = lf.with_columns(pl.col("t").cast(pl.Utf8))
-
-        # Decide whether to save as a single file or partitioned based on output_path
-        logger.info(f"Saving remapped data to: {output_path}...")
-        if output_path.is_dir():
-            logger.warning(
-                f"Output path {output_path} is a directory. Consider using sink_parquet with partitioning if needed."
-            )
-            # For simplicity, collect and write if it's a directory, but warn.
-            # For very large data, sink_parquet with partition_by is better.
-            lf.collect().write_parquet(output_path / "remapped_baci_data.parquet")
-        else:
-            lf.collect().write_parquet(output_path)
+        logger.info(f"Saving remapped data to: {output_file}...")
+        # Collect the LazyFrame and write to the determined output file path
+        remapped_lf.collect().write_parquet(output_file)
 
         logger.info("BACI country code remapping completed successfully.")
-        return output_path
+        return output_file # Return the path to the saved file
 
     except pl.exceptions.ComputeError as e:
         logger.exception(f"Polars ComputeError during BACI remapping (check paths/data): {e}")
+        return None
+    except FileNotFoundError as e:
+        logger.exception(f"File not found during BACI remapping (check input path '{input_path}'): {e}")
         return None
     except Exception as e:
         logger.exception(f"Unexpected error during BACI country code remapping: {e}")
