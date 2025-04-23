@@ -15,8 +15,9 @@ import polars as pl
 
 # Local/application imports
 from mpil_tariff_trade_analysis.utils.iso_remapping import (
-    apply_country_code_mapping,
-    create_country_code_mapping_df,
+    create_country_code_mapping_df, # Only import the unified function
+    DEFAULT_BACI_COUNTRY_CODES_PATH, # Import defaults if needed for paths
+    DEFAULT_WITS_COUNTRY_CODES_PATH,
 )
 from mpil_tariff_trade_analysis.utils.logging_config import get_logger
 
@@ -218,30 +219,32 @@ def load_wits_tariff_data(
 
     logger.info(f"Starting country code remapping for columns: {country_cols_to_map}")
 
-    country_mapping_df = create_country_code_mapping_df(combined_df, country_cols_to_map)
+    # Apply the unified mapping and explosion logic directly
+    # This function now handles the mapping, potential explosion, and column renaming/dropping
+    combined_df = create_country_code_mapping_df(
+        lf=combined_df,
+        code_columns=country_cols_to_map,
+        # Pass reference paths if they differ from defaults in iso_remapping.py
+        # baci_codes_path=DEFAULT_BACI_COUNTRY_CODES_PATH,
+        # wits_codes_path=DEFAULT_WITS_COUNTRY_CODES_PATH,
+        # Assuming default column names in reference files are correct
+        # baci_code_col="country_code", baci_name_col="country_name",
+        # wits_code_col="ISO3", wits_name_col="Country Name",
+        drop_original=True # This is the default, but explicit is fine
+    )
 
-    if (
-        country_mapping_df.height == 0
-        and country_mapping_df.select(pl.col("original_code")).is_empty()
-    ):
-        logger.error(
-            "Country mapping DataFrame is empty, likely due to reference file loading errors. Skipping remapping."
-        )
+    # Check if the remapping actually produced results (optional, based on function behavior)
+    # The function logs internally if columns are skipped or mapping fails.
+    # We might just check if the expected new columns exist.
+    expected_new_cols = [f"{col}_iso_numeric" for col in country_cols_to_map]
+    missing_cols = [col for col in expected_new_cols if col not in combined_df.columns]
+    if missing_cols:
+        logger.warning(f"Expected remapped columns missing after remapping: {missing_cols}. Check logs.")
     else:
-        logger.info("Applying country code mapping...")
-        for col in country_cols_to_map:
-            # Overwrite original column with standardized ISO numeric code
-            combined_df = apply_country_code_mapping(
-                lf=combined_df,
-                mapping_df=country_mapping_df,
-                original_col_name=col,
-                new_col_name=col,  # Overwrite original column
-                drop_original=True,  # Drop original after join/rename
-            )
+        logger.info("Finished country code remapping for WITS data.")
 
-    logger.info("Finished loading and processing WITS tariff data with country remapping.")
 
-    return combined_df  # ✅ VALIDATED
+    return combined_df
 
 
 def process_and_save_wits_data(
