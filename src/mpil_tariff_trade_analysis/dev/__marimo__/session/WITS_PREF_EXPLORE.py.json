@@ -19,12 +19,12 @@
     },
     {
       "id": "MJUe",
-      "code_hash": "1da674eac3fc984923dab47ab234cf02",
+      "code_hash": "efcb52bdbdfb04b96a78f277cf30ba90",
       "outputs": [
         {
           "type": "data",
           "data": {
-            "text/html": "<marimo-ui-element object-id='MJUe-0' random-id='fd317148-6053-07c2-2dfb-09bc7d1eccd8'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/1867-11129265-H71UDUwx.json&quot;' data-total-rows='9' data-total-columns='10' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;statistic&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;year&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;reporter_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;partner_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;hs_revision&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;tariff_rate&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;tariff_type&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;min_rate&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;max_rate&quot;, [&quot;string&quot;, &quot;str&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+            "text/html": "<marimo-ui-element object-id='MJUe-0' random-id='8b5dfb83-f04c-7acd-ea93-da7d6ae2aeac'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/1411-11129265-WAWlk4JG.json&quot;' data-total-rows='9' data-total-columns='8' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;statistic&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;t&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;i&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;k&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;mfn_tariff_rate&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;mfn_min_tariff_rate&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;mfn_max_tariff_rate&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;tariff_type&quot;, [&quot;string&quot;, &quot;str&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
           }
         }
       ],
@@ -32,12 +32,12 @@
     },
     {
       "id": "GjlM",
-      "code_hash": "11a6f6012799ae9e8bfce956ca986b49",
+      "code_hash": "629dc3f810b0c86f205f00fdf2b7a9d0",
       "outputs": [
         {
           "type": "data",
           "data": {
-            "text/plain": ""
+            "text/html": "<pre style='font-size: 12px'>array([&#x27;756&#x27;, &#x27;410&#x27;, &#x27;356&#x27;, &#x27;586&#x27;, &#x27;392&#x27;, &#x27;578&#x27;, &#x27;840&#x27;, &#x27;124&#x27;, &#x27;710&#x27;,\n       &#x27;608&#x27;, &#x27;566&#x27;, &#x27;144&#x27;, &#x27;140&#x27;, &#x27;702&#x27;, &#x27;096&#x27;, &#x27;246&#x27;, &#x27;090&#x27;, &#x27;682&#x27;,\n       &#x27;158&#x27;, &#x27;036&#x27;, &#x27;643&#x27;, &#x27;818&#x27;, &#x27;764&#x27;, &#x27;270&#x27;, &#x27;690&#x27;, &#x27;360&#x27;, &#x27;780&#x27;,\n       &#x27;458&#x27;, &#x27;148&#x27;, &#x27;434&#x27;, &#x27;262&#x27;, &#x27;716&#x27;, &#x27;554&#x27;, &#x27;076&#x27;, &#x27;308&#x27;, &#x27;524&#x27;,\n       &#x27;662&#x27;, &#x27;500&#x27;, &#x27;659&#x27;, &#x27;404&#x27;, &#x27;052&#x27;, &#x27;040&#x27;, &#x27;862&#x27;, &#x27;070&#x27;, &#x27;826&#x27;,\n       &#x27;752&#x27;, &#x27;591&#x27;, &#x27;112&#x27;, &#x27;417&#x27;, &#x27;548&#x27;, &#x27;268&#x27;, &#x27;705&#x27;, &#x27;800&#x27;, &#x27;480&#x27;,\n       &#x27;376&#x27;, &#x27;498&#x27;, &#x27;520&#x27;, &#x27;533&#x27;, &#x27;352&#x27;, &#x27;788&#x27;, &#x27;372&#x27;, &#x27;748&#x27;, &#x27;646&#x27;,\n       &#x27;762&#x27;, &#x27;792&#x27;, &#x27;426&#x27;, &#x27;414&#x27;, &#x27;060&#x27;, &#x27;585&#x27;, &#x27;208&#x27;, &#x27;191&#x27;, &#x27;442&#x27;,\n       &#x27;516&#x27;, &#x27;422&#x27;, &#x27;598&#x27;, &#x27;108&#x27;, &#x27;051&#x27;, &#x27;670&#x27;, &#x27;438&#x27;, &#x27;100&#x27;, &#x27;462&#x27;,\n       &#x27;184&#x27;, &#x27;050&#x27;, &#x27;512&#x27;, &#x27;882&#x27;, &#x27;860&#x27;, &#x27;499&#x27;, &#x27;660&#x27;, &#x27;894&#x27;, &#x27;380&#x27;,\n       &#x27;616&#x27;, &#x27;634&#x27;, &#x27;072&#x27;, &#x27;292&#x27;, &#x27;242&#x27;, &#x27;233&#x27;, &#x27;348&#x27;, &#x27;807&#x27;, &#x27;620&#x27;,\n       &#x27;834&#x27;, &#x27;031&#x27;, &#x27;703&#x27;, &#x27;218&#x27;, &#x27;470&#x27;, &#x27;250&#x27;, &#x27;056&#x27;, &#x27;275&#x27;, &#x27;795&#x27;,\n       &#x27;784&#x27;, &#x27;156&#x27;, &#x27;583&#x27;, &#x27;136&#x27;, &#x27;203&#x27;, &#x27;048&#x27;, &#x27;398&#x27;, &#x27;724&#x27;, &#x27;804&#x27;,\n       &#x27;484&#x27;, &#x27;064&#x27;, &#x27;528&#x27;, &#x27;032&#x27;, &#x27;196&#x27;, &#x27;428&#x27;, &#x27;400&#x27;, &#x27;642&#x27;, &#x27;440&#x27;,\n       &#x27;276&#x27;, &#x27;300&#x27;, &#x27;084&#x27;, &#x27;116&#x27;, &#x27;430&#x27;, &#x27;798&#x27;, &#x27;170&#x27;, &#x27;296&#x27;, &#x27;028&#x27;,\n       &#x27;012&#x27;], dtype=object)</pre>"
           }
         }
       ],

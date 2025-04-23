@@ -1,22 +1,23 @@
 """
 Pipeline for cleaning, expanding, and preparing WITS Preferential tariff data.
 """
-import logging
+
 import sys
 from pathlib import Path
 from typing import Any, Dict, Optional
 
 import polars as pl
 
+# Import functions moved from matching_logic
+from mpil_tariff_trade_analysis.etl.matching_logic import (
+    expand_preferential_tariffs,  # Now used here
+    load_pref_group_mapping,
+)
+
 # Local imports
 from mpil_tariff_trade_analysis.etl.WITS_cleaner import (
     DEFAULT_WITS_BASE_DIR,
-    load_wits_tariff_data, # Includes HS translation and country remapping
-)
-# Import functions moved from matching_logic
-from mpil_tariff_trade_analysis.etl.matching_logic import (
-    load_pref_group_mapping,
-    expand_preferential_tariffs, # Now used here
+    consolidate_wits_tariff_data,
 )
 from mpil_tariff_trade_analysis.utils.logging_config import get_logger
 
@@ -32,10 +33,10 @@ def rename_wits_pref_expanded(df: pl.LazyFrame) -> pl.LazyFrame:
     logger.debug("Renaming cleaned & expanded WITS Preferential columns.")
     # Expected columns after expansion: t, i (List[Utf8]), j_individual (Utf8), k, pref_tariff_rate, etc.
     rename_map = {
-        "t": "t", # Keep 't' for consistency
-        "i": "i_list", # Reporter list from remapping
-        "j": "j_individual", # Partner individual code from expansion
-        "k": "k", # HS code (already translated)
+        "t": "t",  # Keep 't' for consistency
+        "i": "i_list",  # Reporter list from remapping
+        "j": "j_individual",  # Partner individual code from expansion
+        "k": "k",  # HS code (already translated)
         "pref_tariff_rate": "pref_tariff_rate",
         "pref_min_tariff_rate": "pref_min_tariff_rate",
         "pref_max_tariff_rate": "pref_max_tariff_rate",
@@ -45,7 +46,6 @@ def rename_wits_pref_expanded(df: pl.LazyFrame) -> pl.LazyFrame:
     # Check if tariff_type exists before adding to map/select
     if "tariff_type" in df.columns:
         rename_map["tariff_type"] = "tariff_type"
-
 
     # Select only the columns we need after renaming
     select_cols = [
@@ -63,14 +63,20 @@ def rename_wits_pref_expanded(df: pl.LazyFrame) -> pl.LazyFrame:
     # Check if all keys in rename_map exist in df.columns
     missing_cols = [col for col in rename_map.keys() if col not in df.columns]
     if missing_cols:
-        logger.error(f"Cannot rename WITS Pref: Missing expected input columns: {missing_cols}. Available: {df.columns}")
+        logger.error(
+            f"Cannot rename WITS Pref: Missing expected input columns: {missing_cols}. Available: {df.columns}"
+        )
         raise ValueError(f"Missing columns required for renaming: {missing_cols}")
 
     # Rename, handle the list column 'i_list', and use 'j_individual' as 'j'
-    renamed_df = df.rename(rename_map).with_columns(
-        pl.col("i_list").list.first().alias("i"), # Take first reporter
-        pl.col("j_individual").alias("j") # Use expanded partner as 'j'
-    ).select(select_cols + ["i", "j"]) # Add the new 'i' and 'j' columns
+    renamed_df = (
+        df.rename(rename_map)
+        .with_columns(
+            pl.col("i_list").list.first().alias("i"),  # Take first reporter
+            pl.col("j_individual").alias("j"),  # Use expanded partner as 'j'
+        )
+        .select(select_cols + ["i", "j"])
+    )  # Add the new 'i' and 'j' columns
 
     logger.debug(f"Renamed WITS Preferential Schema: {renamed_df.collect_schema()}")
     return renamed_df
@@ -82,8 +88,8 @@ def validate_cleaned_wits_pref(lf: pl.LazyFrame) -> bool:
     """
     expected_cols = {
         "t",
-        "i", # Single reporter string
-        "j", # Single partner string (individual)
+        "i",  # Single reporter string
+        "j",  # Single partner string (individual)
         "k",
         "pref_tariff_rate",
         "pref_min_tariff_rate",
@@ -107,19 +113,21 @@ def validate_cleaned_wits_pref(lf: pl.LazyFrame) -> bool:
     # - Data types (t: Utf8, i: Utf8, j: Utf8, k: Utf8, rates: Utf8)
     schema = lf.collect_schema()
     if schema.get("t") != pl.Utf8:
-         logger.error(f"Validation Error: Pref 't' column type is {schema.get('t')}, expected Utf8.")
-         return False
+        logger.error(f"Validation Error: Pref 't' column type is {schema.get('t')}, expected Utf8.")
+        return False
     if schema.get("i") != pl.Utf8:
-         logger.error(f"Validation Error: Pref 'i' column type is {schema.get('i')}, expected Utf8.")
-         return False
+        logger.error(f"Validation Error: Pref 'i' column type is {schema.get('i')}, expected Utf8.")
+        return False
     if schema.get("j") != pl.Utf8:
-         logger.error(f"Validation Error: Pref 'j' column type is {schema.get('j')}, expected Utf8.")
-         return False
+        logger.error(f"Validation Error: Pref 'j' column type is {schema.get('j')}, expected Utf8.")
+        return False
     if schema.get("k") != pl.Utf8:
-         logger.error(f"Validation Error: Pref 'k' column type is {schema.get('k')}, expected Utf8.")
-         return False
+        logger.error(f"Validation Error: Pref 'k' column type is {schema.get('k')}, expected Utf8.")
+        return False
     if schema.get("pref_tariff_rate") != pl.Utf8:
-         logger.warning(f"Validation Warning: Pref 'pref_tariff_rate' column type is {schema.get('pref_tariff_rate')}, expected Utf8.")
+        logger.warning(
+            f"Validation Warning: Pref 'pref_tariff_rate' column type is {schema.get('pref_tariff_rate')}, expected Utf8."
+        )
 
     # - Check tariff rates are within a plausible range
     # - Check for excessive nulls in key columns (t, i, j, k)
@@ -170,19 +178,16 @@ def run_wits_pref_cleaning_pipeline(config: Dict[str, Any]) -> Optional[Path]:
         )
     except Exception as e:
         logger.error(f"Failed to load preferential group mapping: {e}", exc_info=True)
-        return None # Cannot proceed without mapping
+        return None  # Cannot proceed without mapping
 
     # --- Step 2: Load Raw Data, Translate HS, Remap Countries ---
     logger.info(f"Loading raw WITS Pref data from base directory: {base_dir}")
     try:
         # Returns LazyFrame with columns like 'year', 'reporter_country_iso_numeric' (List[Utf8]),
         # 'partner_country_iso_numeric' (List[Utf8]), etc.
-        loaded_df = load_wits_tariff_data(
+        loaded_wits_path = consolidate_wits_tariff_data(
             tariff_type="AVEPref",
             base_dir=str(base_dir),
-            mapping_dir=hs_mapping_dir,
-            baci_codes_path=baci_codes_path,
-            wits_codes_path=wits_codes_path
         )
 
         if loaded_df is None:
@@ -203,24 +208,26 @@ def run_wits_pref_cleaning_pipeline(config: Dict[str, Any]) -> Optional[Path]:
         # Let's rename temporarily to match the function's expectation, then rename properly later.
         temp_rename_map_in = {
             "year": "t",
-            "reporter_country_iso_numeric": "i", # Function expects 'i' (list is ok here)
-            "partner_country_iso_numeric": "j", # Function expects 'j' (list is ok here)
+            "reporter_country_iso_numeric": "i",  # Function expects 'i' (list is ok here)
+            "partner_country_iso_numeric": "j",  # Function expects 'j' (list is ok here)
             "product_code": "k",
             "tariff_rate": "pref_tariff_rate",
             "min_rate": "pref_min_tariff_rate",
             "max_rate": "pref_max_tariff_rate",
         }
         # Check if all keys in temp_rename_map_in exist
-        missing_temp_cols = [col for col in temp_rename_map_in.keys() if col not in loaded_df.columns]
+        missing_temp_cols = [
+            col for col in temp_rename_map_in.keys() if col not in loaded_df.columns
+        ]
         if missing_temp_cols:
-             raise ValueError(f"Missing columns needed for temp rename before expansion: {missing_temp_cols}")
+            raise ValueError(
+                f"Missing columns needed for temp rename before expansion: {missing_temp_cols}"
+            )
 
         temp_renamed_df = loaded_df.rename(temp_rename_map_in)
 
         # Now call the expansion function
-        expanded_df = expand_preferential_tariffs(
-            temp_renamed_df, pref_group_mapping.lazy()
-        )
+        expanded_df = expand_preferential_tariffs(temp_renamed_df, pref_group_mapping.lazy())
         # expanded_df now has columns: t, i (List[Utf8]), j_individual (Utf8), k, pref_tariff_rate, etc.
         logger.info("✅ Preferential partner groups expanded.")
         logger.debug(f"Schema after expansion: {expanded_df.collect_schema()}")
@@ -228,7 +235,6 @@ def run_wits_pref_cleaning_pipeline(config: Dict[str, Any]) -> Optional[Path]:
     except Exception as e:
         logger.error(f"❌ Failed during preferential group expansion: {e}", exc_info=True)
         return None
-
 
     # --- Step 4: Rename Columns to Final Cleaned State ---
     logger.info("Renaming columns to final cleaned state.")
@@ -266,6 +272,7 @@ def run_wits_pref_cleaning_pipeline(config: Dict[str, Any]) -> Optional[Path]:
 # Example of how to run (optional, for direct execution)
 if __name__ == "__main__":
     from mpil_tariff_trade_analysis.utils.logging_config import setup_logging
+
     setup_logging(log_level="DEBUG")
 
     # --- Dummy Configuration for Testing ---
@@ -276,7 +283,9 @@ if __name__ == "__main__":
     test_config = {
         "WITS_RAW_DIR": TEST_RAW_DATA_DIR / "WITS_tariff",
         "PREF_GROUPS_PATH": TEST_RAW_DATA_DIR / "WITS_pref_groups" / "WITS_pref_groups.csv",
-        "WITS_PREF_CLEANED_OUTPUT_PATH": TEST_INTERMEDIATE_DATA_DIR / "cleaned_wits_pref" / "WITS_AVEPref_cleaned_expanded.parquet",
+        "WITS_PREF_CLEANED_OUTPUT_PATH": TEST_INTERMEDIATE_DATA_DIR
+        / "cleaned_wits_pref"
+        / "WITS_AVEPref_cleaned_expanded.parquet",
         # Optional paths if not using defaults:
         # "HS_MAPPING_DIR": TEST_RAW_DATA_DIR / "hs_reference",
         # "BACI_REF_CODES_PATH": TEST_RAW_DATA_DIR / "BACI_HS92_V202501" / "country_codes_V202501.csv",
@@ -292,11 +301,12 @@ if __name__ == "__main__":
         logger.error(f"WITS raw dir input not found: {test_config['WITS_RAW_DIR']}")
         sys.exit(1)
 
-
     result_path = run_wits_pref_cleaning_pipeline(test_config)
 
     if result_path:
-        logger.info(f"WITS Pref cleaning pipeline test completed successfully. Output: {result_path}")
+        logger.info(
+            f"WITS Pref cleaning pipeline test completed successfully. Output: {result_path}"
+        )
         sys.exit(0)
     else:
         logger.error("WITS Pref cleaning pipeline test failed.")

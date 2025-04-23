@@ -53,6 +53,7 @@ def load_pref_group_mapping(file_path: str | Path = DEFAULT_PREF_GROUPS_PATH) ->
                 logger.debug(f"Preferential Group Mapping Head (1 row):\n{pref_group_pl.fetch(1)}")
             except Exception as e:
                 logger.warning(f"Could not fetch(1) from pref_group_pl: {e}")
+                raise
 
         return pref_group_pl
     except Exception as e:
@@ -99,10 +100,8 @@ def expand_preferential_tariffs(
         raise
 
     # --- Explicit Type Casting for Join Keys ---
-    # Join key 'j' (now exploded, so Utf8) and 'region_code' (Utf8)
     logger.debug("Casting join keys (pref_group_mapping: region_code) to pl.Utf8.")
     try:
-        # exploded_j_df 'j' should be Utf8 after explode if original list was Utf8
         pref_group_mapping = pref_group_mapping.with_columns(pl.col("region_code").cast(pl.Utf8))
         logger.debug(
             f"Schema after casting pref_group_mapping: {pref_group_mapping.collect_schema()}"
@@ -181,6 +180,7 @@ def expand_preferential_tariffs(
             f"Error occurred during the definition or initial fetch of the second explode operation: {e}",
             exc_info=True,
         )
+        raise
 
 
 def join_datasets(

@@ -2,20 +2,18 @@ import glob
 import os
 import shutil
 from pathlib import Path
-from typing import Optional, List, Dict, Any # Added List, Dict, Any
+from typing import List, Optional  # Added List, Dict, Any
 
 import duckdb
-import polars as pl # Import polars
+import polars as pl  # Import polars
 from tqdm.auto import tqdm
 
 # Local imports
-from mpil_tariff_trade_analysis.utils.iso_remapping import (
+from mpil_tariff_trade_analysis.utils.iso_remapping import (  # We need the underlying functions, not the old wrapper
     DEFAULT_BACI_COUNTRY_CODES_PATH,
     DEFAULT_WITS_COUNTRY_CODES_PATH,
-    # We need the underlying functions, not the old wrapper
-    load_reference_map,
-    create_iso_mapping_table,
     apply_iso_mapping,
+    create_iso_mapping_table,
 )
 from mpil_tariff_trade_analysis.utils.logging_config import get_logger
 
@@ -141,7 +139,7 @@ def aggregate_baci(input, output, aggregation="country"):
 
 # --- Refactored remap_codes_and_explode ---
 def remap_codes_and_explode(
-    input_lf: pl.LazyFrame, # Changed from input_path
+    input_lf: pl.LazyFrame,  # Changed from input_path
     # output_path: str | Path, # Removed - no longer writes file here
     code_columns_to_remap: List[str],
     output_column_names: List[str],
@@ -151,11 +149,11 @@ def remap_codes_and_explode(
     wits_codes_path: str | Path = DEFAULT_WITS_COUNTRY_CODES_PATH,
     baci_ref_code_col: str = "country_code",
     baci_ref_name_col: str = "country_name",
-    wits_ref_code_col: str = "ISO3", # WITS uses ISO3 for numeric codes in its ref file
+    wits_ref_code_col: str = "ISO3",  # WITS uses ISO3 for numeric codes in its ref file
     wits_ref_name_col: str = "Country Name",
     drop_original_code_columns: bool = True,
     filter_failed_mappings: bool = True,
-) -> Optional[pl.LazyFrame]: # Changed return type
+) -> Optional[pl.LazyFrame]:  # Changed return type
     """
     Remaps specified country code columns in a LazyFrame to ISO 3166-1 numeric codes,
     exploding rows where a single input code maps to multiple ISO codes.
@@ -191,19 +189,13 @@ def remap_codes_and_explode(
     )
 
     try:
-        # --- 1. Load Reference Data (remains the same) ---
-        logger.debug("Loading reference country code maps...")
-        baci_map = load_reference_map(baci_codes_path, baci_ref_code_col, baci_ref_name_col)
-        wits_map = load_reference_map(wits_codes_path, wits_ref_code_col, wits_ref_name_col)
-        logger.debug("Reference maps loaded.")
-
-        # --- 2. Prepare Input LazyFrame ---
+        # --- 1. Prepare Input LazyFrame ---
         # No need to scan from path, use input_lf directly
         lf = input_lf
         original_schema = lf.schema
         logger.debug(f"Input LazyFrame schema: {original_schema}")
 
-        # --- 3. Create Mapping Table for Unique Codes ---
+        # --- 2. Create Mapping Table for Unique Codes ---
         unique_codes_list = []
         for col in code_columns_to_remap:
             unique_codes_list.append(lf.select(pl.col(col).unique()))
@@ -223,40 +215,39 @@ def remap_codes_and_explode(
             wits_code_col=wits_ref_code_col,
             wits_name_col=wits_ref_name_col,
         )
-        mapping_lf = mapping_df.lazy() # Use lazy version for joins
+        mapping_lf = mapping_df.lazy()  # Use lazy version for joins
         logger.debug(f"Created mapping table with {mapping_df.height} entries.")
 
         # --- 4. Apply Mapping and Explode ---
         current_lf = lf
-        temp_output_cols = [] # Store intermediate list column names
+        temp_output_cols = []  # Store intermediate list column names
 
         for i, original_col in enumerate(code_columns_to_remap):
             output_col = output_column_names[i]
-            temp_list_col = f"_{output_col}_iso_list" # Temporary name for the list column
+            temp_list_col = f"_{output_col}_iso_list"  # Temporary name for the list column
             temp_output_cols.append(temp_list_col)
 
             logger.debug(f"Applying mapping for column '{original_col}' -> '{temp_list_col}'")
             current_lf = apply_iso_mapping(
                 lf=current_lf,
                 code_column_name=original_col,
-                mapping_df=mapping_lf, # Pass lazy mapping frame
+                mapping_lf=mapping_lf,  # Pass lazy mapping frame
                 output_list_col_name=temp_list_col,
-                drop_original=False, # Keep original for now if needed, or set based on param
+                drop_original=False,  # Keep original for now if needed, or set based on param
             )
 
         # --- 5. Filter Failed Mappings (Optional) ---
         if filter_failed_mappings:
-            filter_expr = pl.all_horizontal(
-                pl.col(c).list.len() > 0 for c in temp_output_cols
-            )
+            filter_expr = pl.all_horizontal(pl.col(c).list.len() > 0 for c in temp_output_cols)
             rows_before = current_lf.select(pl.count()).collect()[0, 0]
             current_lf = current_lf.filter(filter_expr)
             rows_after = current_lf.select(pl.count()).collect()[0, 0]
             if rows_before > rows_after:
-                 logger.warning(f"Filtered out {rows_before - rows_after} rows due to failed mappings.")
+                logger.warning(
+                    f"Filtered out {rows_before - rows_after} rows due to failed mappings."
+                )
             else:
-                 logger.info("No rows filtered due to failed mappings.")
-
+                logger.info("No rows filtered due to failed mappings.")
 
         # --- 6. Explode Mapped Lists ---
         # Explode needs to happen sequentially or carefully managed if multiple columns explode
@@ -265,33 +256,35 @@ def remap_codes_and_explode(
         # If multiple might explode, the cross-product can be large.
         logger.debug(f"Exploding list columns: {temp_output_cols}")
         if temp_output_cols:
-             current_lf = current_lf.explode(temp_output_cols)
-             logger.debug("Explosion complete.")
-
+            current_lf = current_lf.explode(temp_output_cols)
+            logger.debug("Explosion complete.")
 
         # --- 7. Rename and Select Final Columns ---
-        rename_dict = {temp_col: final_col for temp_col, final_col in zip(temp_output_cols, output_column_names)}
+        rename_dict = {
+            temp_col: final_col
+            for temp_col, final_col in zip(temp_output_cols, output_column_names, strict=False)
+        }
         final_lf = current_lf.rename(rename_dict)
 
         # Determine columns to keep
-        final_cols = list(original_schema.keys()) # Start with original columns
+        final_cols = list(original_schema.keys())  # Start with original columns
         if drop_original_code_columns:
             final_cols = [c for c in final_cols if c not in code_columns_to_remap]
 
         # Add the new output columns (if they weren't replacing originals)
         for out_col in output_column_names:
-             if out_col not in final_cols:
-                 final_cols.append(out_col)
+            if out_col not in final_cols:
+                final_cols.append(out_col)
 
         # Ensure order or just select the necessary ones
         # We might have intermediate columns, so select explicitly
-        select_cols = [col for col in final_lf.columns if col in final_cols or col in output_column_names]
+        select_cols = [
+            col for col in final_lf.columns if col in final_cols or col in output_column_names
+        ]
         # Remove duplicates if any column was both original and output
         select_cols = list(dict.fromkeys(select_cols))
 
-
         final_lf = final_lf.select(select_cols)
-
 
         logger.info(f"Remapping and exploding complete. Final schema: {final_lf.schema}")
 
@@ -306,7 +299,7 @@ def remap_codes_and_explode(
         # logger.info("✅ Remapped data saved successfully.")
         # return Path(output_path) # Return Path object
 
-        return final_lf # Return the final LazyFrame
+        return final_lf  # Return the final LazyFrame
 
     except Exception as e:
         logger.error(f"❌ Failed during code remapping and exploding: {e}", exc_info=True)
@@ -318,9 +311,10 @@ def remap_codes_and_explode(
 # and potentially write it if that's its purpose.
 # For now, we focus on the WITS pipeline usage.
 
+
 def remap_baci_country_codes(
     input_path: str | Path,  # Keep input path for initial load if needed
-    output_path: str | Path, # Keep output path for final save
+    output_path: str | Path,  # Keep output path for final save
     baci_codes_path: str | Path = DEFAULT_BACI_COUNTRY_CODES_PATH,
     wits_codes_path: str | Path = DEFAULT_WITS_COUNTRY_CODES_PATH,
 ) -> Optional[Path]:
@@ -347,15 +341,15 @@ def remap_baci_country_codes(
         input_lf = pl.scan_parquet(input_path, hive_partitioning=True)
 
         remapped_lf = remap_codes_and_explode(
-            input_lf=input_lf, # Pass the loaded LazyFrame
+            input_lf=input_lf,  # Pass the loaded LazyFrame
             # output_path=output_path, # Removed from call
             code_columns_to_remap=["i", "j"],
-            output_column_names=["i", "j"], # Output columns replace input
+            output_column_names=["i", "j"],  # Output columns replace input
             year_column_name="t",
             # use_hive_partitioning=True, # Removed from call
             baci_codes_path=baci_codes_path,
             wits_codes_path=wits_codes_path,
-            drop_original_code_columns=True, # Originals 'i', 'j' are replaced
+            drop_original_code_columns=True,  # Originals 'i', 'j' are replaced
             filter_failed_mappings=True,
         )
 

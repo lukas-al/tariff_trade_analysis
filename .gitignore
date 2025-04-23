@@ -21,6 +21,7 @@ __init__.py
 
 # Data folders
 data/*
+*.parquet
 
 # Log files
 logs/*

@@ -8,8 +8,6 @@ import os
 import re
 from pathlib import Path
 
-import pandas as pd
-
 # Third-party imports
 import polars as pl
 
@@ -24,7 +22,9 @@ OUTPUT_DIR = "data/intermediate"
 DEFAULT_WITS_BASE_DIR = "data/raw/WITS_tariff"  # Add a default
 
 
-def consolidate_wits_tariff_data(tariff_type="AVEMFN", base_dir=DEFAULT_WITS_BASE_DIR) -> pl.LazyFrame:
+def consolidate_wits_tariff_data(
+    tariff_type="AVEMFN", base_dir=DEFAULT_WITS_BASE_DIR
+) -> pl.LazyFrame:
     """
     Consolidate all WITS tariff data for a specific tariff type into a single Polars LazyFrame.
 
@@ -160,7 +160,9 @@ def consolidate_wits_tariff_data(tariff_type="AVEMFN", base_dir=DEFAULT_WITS_BAS
 
     # Combine all dataframes
     logger.info("Combining all scanned dataframes")
-    combined_df = pl.concat(dfs, how="vertical_relaxed") # Use relaxed to handle potential schema variations if any
+    combined_df = pl.concat(
+        dfs, how="vertical_relaxed"
+    )  # Use relaxed to handle potential schema variations if any
 
     # Add a column for tariff type
     combined_df = combined_df.with_columns(pl.lit(tariff_type).alias("tariff_type"))
@@ -237,11 +239,13 @@ def vectorized_hs_translation(
             # Use scan_csv for lazy loading if files are large
             mapping_pl = pl.scan_csv(
                 path,
-                dtypes={"source_code": pl.Utf8, "target_code": pl.Utf8}, # Specify dtypes
-                has_header=True, # Assuming header exists
-                use_pyarrow=True, # Often faster
-                encoding="iso-8859-1" # Keep encoding
-            ).select(pl.col(pl.first()).alias("source_code"), pl.col(pl.last()).alias("target_code")) # Select first and last columns
+                dtypes={"source_code": pl.Utf8, "target_code": pl.Utf8},  # Specify dtypes
+                has_header=True,  # Assuming header exists
+                use_pyarrow=True,  # Often faster
+                encoding="iso-8859-1",  # Keep encoding
+            ).select(
+                pl.col(pl.first()).alias("source_code"), pl.col(pl.last()).alias("target_code")
+            )  # Select first and last columns
 
             # mapping_pd = pd.read_csv(path, dtype=str, usecols=[0, 2], encoding="ISO-8859-1")
             # mapping_pd.columns = ["source_code", "target_code"]
@@ -255,14 +259,14 @@ def vectorized_hs_translation(
             logger.error(f"Error loading mapping file for {hs_version}: {path}. Error: {e}")
             # Decide if you want to continue without this mapping or raise
             # raise ValueError(f"Error loading mapping file for {hs_version}: \n {e}") from e
-            continue # Skip this mapping if file is problematic
+            continue  # Skip this mapping if file is problematic
 
     if not mapping_dfs:
         logger.warning("No HS mapping files loaded. HS translation step will be skipped.")
-        return input_lf # Return original if no mappings found
+        return input_lf  # Return original if no mappings found
 
     # Combine all mappings into one Polars LazyFrame.
-    mapping_all = pl.concat(mapping_dfs).lazy() # Ensure it's lazy
+    mapping_all = pl.concat(mapping_dfs).lazy()  # Ensure it's lazy
 
     # Use the input LazyFrame directly
     df = input_lf
@@ -286,21 +290,27 @@ def vectorized_hs_translation(
 
     # Create the translated HS code column: use target_code if available, otherwise fallback to the
     # original code. Ensure the final column name is 'product_code'.
-    df_non_h0 = df_non_h0.with_columns(
-        pl.when(pl.col("target_code").is_not_null()) # Check if target_code exists from join
-        .then(pl.col("target_code"))
-        .otherwise(pl.col("product_code")) # Keep original if no match
-        .alias("product_code_translated") # Use a temporary name
-    ).drop("product_code").rename({"product_code_translated": "product_code"}) # Rename back
+    df_non_h0 = (
+        df_non_h0.with_columns(
+            pl.when(pl.col("target_code").is_not_null())  # Check if target_code exists from join
+            .then(pl.col("target_code"))
+            .otherwise(pl.col("product_code"))  # Keep original if no match
+            .alias("product_code_translated")  # Use a temporary name
+        )
+        .drop("product_code")
+        .rename({"product_code_translated": "product_code"})
+    )  # Rename back
 
     # Optionally drop unnecessary columns from join
-    df_non_h0 = df_non_h0.drop(["target_code"]) # Drop the mapping target code column
+    df_non_h0 = df_non_h0.drop(["target_code"])  # Drop the mapping target code column
 
     # Combine the rows which were already in H0 with the ones translated.
     # Ensure schemas match before concat
     # Select the same columns in the same order from both frames
     common_cols = df_h0.columns
-    df_final = pl.concat([df_h0.select(common_cols), df_non_h0.select(common_cols)], how="vertical_relaxed")
+    df_final = pl.concat(
+        [df_h0.select(common_cols), df_non_h0.select(common_cols)], how="vertical_relaxed"
+    )
 
     # Remove the file writing part
     # vectorised_output_path = Path(intermediate_file_path.stem + "_vectorised.parquet")
@@ -313,6 +323,7 @@ def vectorized_hs_translation(
 
     logger.info("✅ HS code translation completed.")
     return df_final
+
 
 # Remove the __main__ block as this file is now a library
 # if __name__ == "__main__":

@@ -9,7 +9,6 @@ def _():
     import marimo as mo
     import networkx as nx
     import polars as pl
-
     return mo, nx, pl
 
 
@@ -316,7 +315,8 @@ def _():
 
 
 @app.cell
-def _(pref_groups_ref, wits_country_ref):
+def _(baci_country_ref, pref_groups_ref, wits_country_ref):
+    print(baci_country_ref.head())
     print("----")
     print(wits_country_ref.head())
     print("----")

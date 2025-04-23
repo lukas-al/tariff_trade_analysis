@@ -139,14 +139,34 @@
     {
       "id": "ecfG",
       "code_hash": "f68a84098b2fc1d44c6c8e0e611dfe11",
-      "outputs": [],
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
       "console": []
     },
     {
       "id": "Pvdt",
-      "code_hash": "2af3426a0919db20f8ccd198b6e727cb",
-      "outputs": [],
-      "console": []
+      "code_hash": "b23bdf80080399486668c328e402b436",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "  country_code    country_name country_iso2 country_iso3\n0            4     Afghanistan           AF          AFG\n1            8         Albania           AL          ALB\n2           12         Algeria           DZ          DZA\n3           16  American Samoa           AS          ASM\n4           20         Andorra           AD          AND\n----\n     Country Name ISO3 Numeric Code\n0     Afghanistan  AFG            4\n1         Albania  ALB            8\n2         Algeria  DZA           12\n3  American Samoa  ASM           16\n4         Andorra  AND           20\n----\n  RegionCode              RegionName  Partner      PartnerName\n0        00A  Australia GSP for LDCs        4      Afghanistan\n1        00A  Australia GSP for LDCs       24           Angola\n2        00A  Australia GSP for LDCs       50       Bangladesh\n3        00A  Australia GSP for LDCs       64           Bhutan\n4        00A  Australia GSP for LDCs       90  Solomon Islands\n"
+        }
+      ]
     },
     {
       "id": "ZBYS",

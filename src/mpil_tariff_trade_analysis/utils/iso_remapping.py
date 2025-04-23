@@ -190,6 +190,7 @@ def remap_country_code_improved(
 
 # --- New Vectorized Approach ---
 
+
 def create_iso_mapping_table(
     unique_codes: pl.Series,
     baci_codes_path: str | Path = DEFAULT_BACI_COUNTRY_CODES_PATH,
@@ -285,7 +286,7 @@ def create_iso_mapping_table(
 def apply_iso_mapping(
     lf: pl.LazyFrame,
     code_column_name: str,
-    mapping_df: pl.DataFrame,
+    mapping_lf: pl.LazyFrame,
     output_list_col_name: Optional[str] = None,
     drop_original: bool = True,
 ) -> pl.LazyFrame:
@@ -308,13 +309,13 @@ def apply_iso_mapping(
         logger.error(f"Column '{code_column_name}' not found in LazyFrame. Cannot apply mapping.")
         return lf
 
-    if not isinstance(mapping_df, pl.DataFrame) or mapping_df.is_empty():
-        logger.warning(
-            f"Mapping table is empty or invalid for column '{code_column_name}'. Skipping mapping."
-        )
-        return lf
+    # if not isinstance(mapping_lf, pl.LazyFrame) or mapping_lf.is_empty():
+    #     logger.warning(
+    #         f"Mapping table is empty or invalid for column '{code_column_name}'. Skipping mapping."
+    #     )
+    #     return lf
 
-    if "original_code" not in mapping_df.columns or "iso_numeric_list" not in mapping_df.columns:
+    if "original_code" not in mapping_lf.columns or "iso_numeric_list" not in mapping_lf.columns:
         logger.error(
             "Mapping table is missing required columns ('original_code', 'iso_numeric_list')."
         )
@@ -332,7 +333,7 @@ def apply_iso_mapping(
 
     # Perform the left join
     lf_joined = lf_casted.join(
-        mapping_df.lazy(),
+        mapping_lf,
         left_on=code_column_name,
         right_on="original_code",
         how="left",
@@ -374,6 +375,7 @@ def apply_iso_mapping(
 
 # --- Generic Workflow Function ---
 
+
 def remap_codes_and_explode(
     input_path: str | Path,
     output_path: str | Path,
@@ -388,7 +390,7 @@ def remap_codes_and_explode(
     wits_ref_code_col: str = "ISO3",
     wits_ref_name_col: str = "Country Name",
     drop_original_code_columns: bool = True,
-    filter_failed_mappings: bool = True,
+    filter_failed_mappings: bool = False,
 ) -> Optional[Path]:
     """
     Loads data, remaps specified country codes using vectorized joins,
@@ -427,8 +429,7 @@ def remap_codes_and_explode(
         return None
 
     logger.info(
-        f"Starting vectorized code remapping for columns {code_columns_to_remap} "
-        f"from: {input_path}"
+        f"Starting vectorized code remapping for columns {code_columns_to_remap} from: {input_path}"
     )
     logger.info(f"Output will be saved to: {output_path}")
 
@@ -500,34 +501,33 @@ def remap_codes_and_explode(
         temp_list_col_names = []
         for col_name in code_columns_to_remap:
             if col_name not in lf.columns:
-                continue # Skip if column wasn't found initially
+                continue  # Skip if column wasn't found initially
             temp_list_col = f"__{col_name}_iso_list__"
             temp_list_col_names.append(temp_list_col)
             logger.info(f"Applying mapping to '{col_name}' column...")
             lf_mapped = apply_iso_mapping(
                 lf=lf_mapped,
                 code_column_name=col_name,
-                mapping_df=mapping_df,
+                mapping_lf=mapping_df.lazy(),
                 output_list_col_name=temp_list_col,
                 drop_original=drop_original_code_columns,
             )
 
         # --- 6. Handle Rows with Failed Mappings ---
         if filter_failed_mappings:
-            filter_expr = pl.all_horizontal(
-                pl.col(c).is_not_null() for c in temp_list_col_names
-            )
+            filter_expr = pl.all_horizontal(pl.col(c).is_not_null() for c in temp_list_col_names)
             lf_processed = lf_mapped.filter(filter_expr)
             # Optional: Log count difference
-            # original_count = lf.select(pl.count()).collect()[0, 0]
-            # filtered_count = lf_processed.select(pl.count()).collect()[0, 0]
-            # if original_count > filtered_count:
-            #     logger.warning(f"Filtered {original_count - filtered_count} rows due to failed mappings.")
+            original_count = lf.select(pl.count()).collect()[0, 0]
+            filtered_count = lf_processed.select(pl.count()).collect()[0, 0]
+            if original_count > filtered_count:
+                logger.warning(
+                    f"Filtered {original_count - filtered_count} rows due to failed mappings."
+                )
             logger.info("Filtered rows with failed mappings.")
         else:
             lf_processed = lf_mapped
             logger.info("Keeping rows with failed mappings (will have nulls).")
-
 
         # --- 7. Explode Lists for Group Expansion ---
         lf_exploded = lf_processed

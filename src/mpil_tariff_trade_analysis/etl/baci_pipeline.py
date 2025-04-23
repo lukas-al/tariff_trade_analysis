@@ -1,7 +1,7 @@
 """
 Pipeline for cleaning and preparing BACI trade data.
 """
-import sys
+
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -55,14 +55,19 @@ def validate_cleaned_baci(lf: pl.LazyFrame) -> bool:
     #   remap_baci_country_codes casts 't' to Utf8.
     schema = lf.collect_schema()
     if schema.get("t") != pl.Utf8:
-         logger.error(f"Validation Error: BACI 't' column type is {schema.get('t')}, expected Utf8.")
-         return False
-    if schema.get("i_iso_numeric") != pl.List(pl.Utf8): # remap_country_code_improved returns List[str]
-         logger.warning(f"Validation Warning: BACI 'i_iso_numeric' column type is {schema.get('i_iso_numeric')}, expected List(Utf8). Check remapping logic.")
-         # This might not be an error if single codes are not wrapped in lists, adjust expectation if needed.
+        logger.error(f"Validation Error: BACI 't' column type is {schema.get('t')}, expected Utf8.")
+        return False
+    if schema.get("i_iso_numeric") != pl.List(
+        pl.Utf8
+    ):  # remap_country_code_improved returns List[str]
+        logger.warning(
+            f"Validation Warning: BACI 'i_iso_numeric' column type is {schema.get('i_iso_numeric')}, expected List(Utf8). Check remapping logic."
+        )
+        # This might not be an error if single codes are not wrapped in lists, adjust expectation if needed.
     if schema.get("j_iso_numeric") != pl.List(pl.Utf8):
-         logger.warning(f"Validation Warning: BACI 'j_iso_numeric' column type is {schema.get('j_iso_numeric')}, expected List(Utf8).")
-
+        logger.warning(
+            f"Validation Warning: BACI 'j_iso_numeric' column type is {schema.get('j_iso_numeric')}, expected List(Utf8)."
+        )
 
     # - Check for excessive nulls in key columns (i_iso_numeric, j_iso_numeric, k, t)
     #   Need to collect to check nulls properly on LazyFrame. Be careful with large data.
@@ -70,14 +75,12 @@ def validate_cleaned_baci(lf: pl.LazyFrame) -> bool:
     #   null_check_df = lf.select([pl.col(c).is_null().sum().alias(f"{c}_nulls") for c in ['t', 'i_iso_numeric', 'j_iso_numeric', 'k']]).collect()
     #   logger.debug(f"Null counts in key BACI columns: {null_check_df.to_dicts()[0]}")
 
-
     # - Check if HS codes 'k' look like valid HS codes (e.g., length 6 after potential padding)
     #   Example check (might need collect):
     #   invalid_k_count = lf.filter(pl.col('k').str.lengths() != 6).limit(1).collect()
     #   if not invalid_k_count.is_empty():
     #        logger.error("Validation Error: Found HS codes ('k') not of length 6.")
     #        return False
-
 
     logger.info("Cleaned BACI data basic validation passed.")
     return True
@@ -154,25 +157,23 @@ def run_baci_cleaning_pipeline(config: Dict[str, Any]) -> Optional[Path]:
     logger.info(f"Target cleaned output path: {cleaned_output_path}")
 
     try:
-        # Pass optional reference paths if they are in the config
-        baci_codes_path = config.get("BACI_REF_CODES_PATH", None) # Use default from iso_remapping if None
-        wits_codes_path = config.get("WITS_REF_CODES_PATH", None) # Use default from iso_remapping if None
-
         # remap_baci_country_codes handles reading from the input dir and writing to output path
         final_path_obj = remap_baci_country_codes(
-            input_path=initial_output_path, # Input is the directory from step 1
-            output_path=cleaned_output_path, # Output is a file path (e.g., .../remapped.parquet)
-            baci_codes_path=baci_codes_path,
-            wits_codes_path=wits_codes_path,
+            input_path=initial_output_path,  # Input is the directory from step 1
+            output_path=cleaned_output_path,  # Output is a file path (e.g., .../remapped.parquet)
         )
 
         # Verification: final_path_obj should be the same as cleaned_output_path and exist
-        if not (final_path_obj and final_path_obj == cleaned_output_path and cleaned_output_path.exists()):
-             logger.error(
+        if not (
+            final_path_obj
+            and final_path_obj == cleaned_output_path
+            and cleaned_output_path.exists()
+        ):
+            logger.error(
                 f"❌ BACI country code remapping failed. Expected output not found or mismatch. "
                 f"Expected: `{cleaned_output_path}`, Got return value: `{final_path_obj}`."
             )
-             return None
+            return None
 
         logger.info(f"✅ BACI country code remapping successful. Output: {cleaned_output_path}")
 
@@ -191,50 +192,53 @@ def run_baci_cleaning_pipeline(config: Dict[str, Any]) -> Optional[Path]:
             logger.error(f"❌ Failed to load or validate cleaned BACI data: {e}", exc_info=True)
             return None
 
-        logger.info(f"--- BACI Cleaning Pipeline Finished Successfully ---")
+        logger.info("--- BACI Cleaning Pipeline Finished Successfully ---")
         return cleaned_output_path  # Return the path to the final cleaned file
 
     except Exception as e:
         logger.error(f"❌ BACI cleaning pipeline failed with exception: {e}", exc_info=True)
         return None
 
-# Example of how to run (optional, for direct execution)
-if __name__ == "__main__":
-    from mpil_tariff_trade_analysis.utils.logging_config import setup_logging
-    setup_logging(log_level="DEBUG") # Setup logging for direct run
 
-    # --- Dummy Configuration for Testing ---
-    TEST_HS_CODE = "HS92"
-    TEST_BACI_RELEASE = "202501"
-    TEST_BASE_DATA_DIR = Path("data").resolve()
-    TEST_RAW_DATA_DIR = TEST_BASE_DATA_DIR / "raw"
-    TEST_INTERMEDIATE_DATA_DIR = TEST_BASE_DATA_DIR / "intermediate"
+# # Example of how to run (optional, for direct execution)
+# if __name__ == "__main__":
+#     from mpil_tariff_trade_analysis.utils.logging_config import setup_logging
 
-    # Construct paths based on convention used in baci.py and this pipeline
-    baci_intermediate_raw_parquet_name = f"BACI_{TEST_HS_CODE}_V{TEST_BACI_RELEASE}"
-    # Define a specific filename for the remapped output
-    baci_cleaned_filename = f"BACI_{TEST_HS_CODE}_V{TEST_BACI_RELEASE}_cleaned_remapped.parquet"
+#     setup_logging(log_level="DEBUG")  # Setup logging for direct run
 
-    test_config = {
-        "HS_CODE": TEST_HS_CODE,
-        "BACI_RELEASE": TEST_BACI_RELEASE,
-        "BACI_INPUT_FOLDER": TEST_RAW_DATA_DIR, # Parent dir of BACI_HSXX_VYYYYYY CSVs
-        "INTERMEDIATE_DATA_DIR": TEST_INTERMEDIATE_DATA_DIR,
-        # Path to the directory created by baci_to_parquet_incremental
-        "BACI_INTERMEDIATE_RAW_PARQUET_PATH": TEST_INTERMEDIATE_DATA_DIR / baci_intermediate_raw_parquet_name,
-        # Path to the final cleaned parquet file created by remap_baci_country_codes
-        "BACI_CLEANED_OUTPUT_PATH": TEST_INTERMEDIATE_DATA_DIR / baci_cleaned_filename,
-        # Add paths to reference files if not using defaults
-        # "BACI_REF_CODES_PATH": TEST_RAW_DATA_DIR / "BACI_HS92_V202501" / "country_codes_V202501.csv",
-        # "WITS_REF_CODES_PATH": TEST_RAW_DATA_DIR / "WITS_country_codes.csv",
-    }
-    logger.info(f"Running BACI cleaning pipeline with test config: {test_config}")
+#     # --- Dummy Configuration for Testing ---
+#     TEST_HS_CODE = "HS92"
+#     TEST_BACI_RELEASE = "202501"
+#     TEST_BASE_DATA_DIR = Path("data").resolve()
+#     TEST_RAW_DATA_DIR = TEST_BASE_DATA_DIR / "raw"
+#     TEST_INTERMEDIATE_DATA_DIR = TEST_BASE_DATA_DIR / "intermediate"
 
-    result_path = run_baci_cleaning_pipeline(test_config)
+#     # Construct paths based on convention used in baci.py and this pipeline
+#     baci_intermediate_raw_parquet_name = f"BACI_{TEST_HS_CODE}_V{TEST_BACI_RELEASE}"
+#     # Define a specific filename for the remapped output
+#     baci_cleaned_filename = f"BACI_{TEST_HS_CODE}_V{TEST_BACI_RELEASE}_cleaned_remapped.parquet"
 
-    if result_path:
-        logger.info(f"BACI cleaning pipeline test completed successfully. Output: {result_path}")
-        sys.exit(0)
-    else:
-        logger.error("BACI cleaning pipeline test failed.")
-        sys.exit(1)
+#     test_config = {
+#         "HS_CODE": TEST_HS_CODE,
+#         "BACI_RELEASE": TEST_BACI_RELEASE,
+#         "BACI_INPUT_FOLDER": TEST_RAW_DATA_DIR,  # Parent dir of BACI_HSXX_VYYYYYY CSVs
+#         "INTERMEDIATE_DATA_DIR": TEST_INTERMEDIATE_DATA_DIR,
+#         # Path to the directory created by baci_to_parquet_incremental
+#         "BACI_INTERMEDIATE_RAW_PARQUET_PATH": TEST_INTERMEDIATE_DATA_DIR
+#         / baci_intermediate_raw_parquet_name,
+#         # Path to the final cleaned parquet file created by remap_baci_country_codes
+#         "BACI_CLEANED_OUTPUT_PATH": TEST_INTERMEDIATE_DATA_DIR / baci_cleaned_filename,
+#         # Add paths to reference files if not using defaults
+#         # "BACI_REF_CODES_PATH": TEST_RAW_DATA_DIR / "BACI_HS92_V202501" / "country_codes_V202501.csv",
+#         # "WITS_REF_CODES_PATH": TEST_RAW_DATA_DIR / "WITS_country_codes.csv",
+#     }
+#     logger.info(f"Running BACI cleaning pipeline with test config: {test_config}")
+
+#     result_path = run_baci_cleaning_pipeline(test_config)
+
+#     if result_path:
+#         logger.info(f"BACI cleaning pipeline test completed successfully. Output: {result_path}")
+#         sys.exit(0)
+#     else:
+#         logger.error("BACI cleaning pipeline test failed.")
+#         sys.exit(1)
