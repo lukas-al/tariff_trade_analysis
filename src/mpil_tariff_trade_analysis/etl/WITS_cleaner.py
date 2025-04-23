@@ -244,56 +244,7 @@ def load_wits_tariff_data(
     return combined_df
 
 
-def process_and_save_wits_data(
-    tariff_type="AVEMFN",
-    output_dir=OUTPUT_DIR,
-    base_dir=DEFAULT_WITS_BASE_DIR,  # Add base_dir argument here
-):
-    """
-    Process all WITS tariff data for a specific tariff type and save as a parquet file.
-
-    Args:
-        tariff_type (str): Type of tariff to process (AVEMFN or AVEPref)
-        output_dir (str): Directory to save the output parquet file
-        base_dir (str): Base directory containing the raw WITS tariff data folders
-
-    Returns:
-        str: Path to the saved parquet file or None on failure
-    """
-    logger.info(f"Starting processing of {tariff_type} tariff data")
-    logger.info(f"Using base directory for raw data: {base_dir}")  # Log the base dir being used
-
-    # Create output directory if it doesn't exist
-    try:
-        os.makedirs(output_dir, exist_ok=True)
-        logger.debug(f"Created or confirmed output directory: {output_dir}")
-    except Exception as e:
-        logger.error(f"Failed to create output directory {output_dir}: {e}")
-        return None
-
-    # Load the tariff data, passing the base_dir
-    logger.info(f"Loading {tariff_type} tariff data...")
-    # Pass base_dir to the loading function
-    df = load_wits_tariff_data(tariff_type=tariff_type, base_dir=base_dir)
-
-    if df is None:
-        logger.warning("No data loaded, cannot save.")
-        return None
-
-    # Save as parquet
-    output_path = os.path.join(output_dir, f"WITS_{tariff_type}.parquet")
-    logger.info(f"Processing and saving data to {output_path}...")
-
-    try:
-        # Materialize the lazy frame and write to parquet
-        logger.info("   Materializing and writing to parquet...")
-        df.collect().write_parquet(output_path)
-        logger.info(f"Data saved successfully to {output_path}")
-    except Exception as e:
-        logger.error(f"Error saving data to {output_path}: \n {e}")
-        return None
-
-    return output_path
+# process_and_save_wits_data is removed, saving is handled by specific pipelines
 
 
 def vectorized_hs_translation(
@@ -380,23 +331,6 @@ def vectorized_hs_translation(
     return df_final
 
 
-# Modify the __main__ block to pass the base_dir if needed, or rely on default
-if __name__ == "__main__":
-    # Process and save AVEMFN tariff data
-    logger.info("Starting WITS tariff data processing script")
-
-    result = process_and_save_wits_data(tariff_type="AVEMFN")  # Uses default base_dir
-
-    if result:
-        logger.info(f"Successfully processed and saved WITS AVEMFN tariff data to {result}")
-    else:
-        logger.error("Failed to process and save WITS AVEMFN tariff data")
-
-    # Optionally process AVEPref data too
-    logger.info("Starting processing of AVEPref tariff data")
-    result = process_and_save_wits_data(tariff_type="AVEPref")  # Uses default base_dir
-
-    if result:
-        logger.info(f"Successfully processed and saved WITS AVEPref tariff data to {result}")
-    else:
-        logger.error("Failed to process and save WITS AVEPref tariff data")
+# Remove the __main__ block as this file is now a library
+# if __name__ == "__main__":
+#    ...

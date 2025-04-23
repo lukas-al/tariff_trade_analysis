@@ -8,61 +8,61 @@ import pytest
 # Adjust base path if your test execution context is different
 # Assumes tests run from the project root directory
 TEST_DATA_DIR = Path("data")
-BACI_PATH = TEST_DATA_DIR / "intermediate" / "BACI_HS92_V202501"  # Assuming dir of files
-WITS_MFN_PATH = TEST_DATA_DIR / "intermediate" / "WITS_AVEMFN.parquet"
-WITS_PREF_PATH = TEST_DATA_DIR / "intermediate" / "WITS_AVEPref.parquet"
-FINAL_OUTPUT_PATH_SINGLE = TEST_DATA_DIR / "final" / "unified_trade_tariff.parquet"
-FINAL_OUTPUT_PATH_PARTITIONED = TEST_DATA_DIR / "final" / "unified_trade_tariff_partitioned"
+INTERMEDIATE_DIR = TEST_DATA_DIR / "intermediate"
+FINAL_DIR = TEST_DATA_DIR / "final"
+
+# Paths to CLEANED intermediate data (outputs of cleaning pipelines)
+BACI_CLEANED_PATH = INTERMEDIATE_DIR / "BACI_HS92_V202501_cleaned_remapped.parquet" # Example filename
+WITS_MFN_CLEANED_PATH = INTERMEDIATE_DIR / "cleaned_wits_mfn" / "WITS_AVEMFN_cleaned.parquet"
+WITS_PREF_CLEANED_PATH = INTERMEDIATE_DIR / "cleaned_wits_pref" / "WITS_AVEPref_cleaned_expanded.parquet"
+
+# Path to final merged output
+FINAL_OUTPUT_PATH_PARTITIONED = FINAL_DIR / "unified_trade_tariff_partitioned" # Keep consistent name
 
 
 # --- Fixtures ---
 @pytest.fixture(scope="module")
-def wits_mfn_df() -> pl.LazyFrame:
-    """Loads the cleaned WITS MFN data."""
-    if not WITS_MFN_PATH.exists():
-        pytest.skip(f"WITS MFN data not found at {WITS_MFN_PATH}")
-    return pl.scan_parquet(WITS_MFN_PATH)
+def cleaned_baci_df() -> pl.LazyFrame:
+    """Loads the cleaned BACI data."""
+    if not BACI_CLEANED_PATH.exists():
+        pytest.skip(f"Cleaned BACI data not found at {BACI_CLEANED_PATH}")
+    return pl.scan_parquet(BACI_CLEANED_PATH)
 
 
 @pytest.fixture(scope="module")
-def wits_pref_df() -> pl.LazyFrame:
-    """Loads the cleaned WITS Preferential data."""
-    if not WITS_PREF_PATH.exists():
-        pytest.skip(f"WITS Preferential data not found at {WITS_PREF_PATH}")
-    return pl.scan_parquet(WITS_PREF_PATH)
+def cleaned_wits_mfn_df() -> pl.LazyFrame:
+    """Loads the cleaned WITS MFN data."""
+    if not WITS_MFN_CLEANED_PATH.exists():
+        pytest.skip(f"Cleaned WITS MFN data not found at {WITS_MFN_CLEANED_PATH}")
+    return pl.scan_parquet(WITS_MFN_CLEANED_PATH)
+
+
+@pytest.fixture(scope="module")
+def cleaned_wits_pref_df() -> pl.LazyFrame:
+    """Loads the cleaned and expanded WITS Preferential data."""
+    if not WITS_PREF_CLEANED_PATH.exists():
+        pytest.skip(f"Cleaned WITS Preferential data not found at {WITS_PREF_CLEANED_PATH}")
+    return pl.scan_parquet(WITS_PREF_CLEANED_PATH)
 
 
 # Optional BACI fixture if needed for specific checks
-# @pytest.fixture(scope="module")
-# def baci_df() -> pl.LazyFrame:
-#     """Loads the cleaned BACI data."""
-#     baci_glob_path = str(BACI_PATH / "*.parquet") # Example if multiple files
-#     if not list(BACI_PATH.glob("*.parquet")): # Check if any files match
-#         pytest.skip(f"BACI data not found at {BACI_PATH}")
-#     return pl.scan_parquet(baci_glob_path)
 
-
+# Fixture for the final merged dataset
 @pytest.fixture(scope="module")
 def final_df() -> pl.LazyFrame:
-    """Loads the final merged dataset."""
-    final_path = None
-    # Check for partitioned data first
+    """Loads the final merged dataset (partitioned)."""
+    # Check for partitioned data
     partitioned_glob_path = str(FINAL_OUTPUT_PATH_PARTITIONED / "**/*.parquet")
     if FINAL_OUTPUT_PATH_PARTITIONED.is_dir() and list(
         FINAL_OUTPUT_PATH_PARTITIONED.glob("**/*.parquet")
     ):
-        final_path = partitioned_glob_path  # Use glob pattern for partitioned data
-        print(f"Loading partitioned data using glob: {final_path}")
-    elif FINAL_OUTPUT_PATH_SINGLE.exists():
-        final_path = FINAL_OUTPUT_PATH_SINGLE
-        print(f"Loading single file data from: {final_path}")
+        print(f"Loading final partitioned data using glob: {partitioned_glob_path}")
+        # scan_parquet handles glob patterns for partitioned datasets
+        return pl.scan_parquet(partitioned_glob_path)
     else:
         pytest.skip(
-            f"Final output data not found at {FINAL_OUTPUT_PATH_SINGLE} or {FINAL_OUTPUT_PATH_PARTITIONED}"
+            f"Final partitioned output data not found at {FINAL_OUTPUT_PATH_PARTITIONED}"
         )
-
-    # scan_parquet can handle single files and glob patterns
-    return pl.scan_parquet(final_path)
 
 
 # --- Helper Validation Function ---
@@ -95,12 +95,16 @@ def assert_row_exists(
             pytest.fail(
                 f"Column '{col}' used in filter criteria not found in DataFrame schema: {lf.columns}"
             )
+        # Adapt filter for potential list columns in BACI before explode in merge
+        # This helper might need adjustment depending on when/where it's used.
+        # For final_df, columns should be simple types after merge.
         filter_expressions.append(pl.col(col) == val)
 
     if filter_expressions:
         query = query.filter(pl.all_horizontal(filter_expressions))
 
-    result_df = query.collect()
+    # Use streaming=True for potentially large final dataset
+    result_df = query.collect(streaming=True)
     num_rows = len(result_df)
 
     if check_for_unique:
@@ -150,8 +154,17 @@ def assert_row_exists(
             )
         else:
             # Exact comparison for strings, integers (if tolerance is None), etc.
+            # Handle comparison with None explicitly
+            if expected_val is None:
+                assert actual_val is None, (
+                    f"Column '{col}' mismatch: Expected None, got {actual_val} (Type: {type(actual_val)}) for criteria {filter_criteria}"
+                )
+            elif actual_val is None:
+                 assert False, (
+                    f"Column '{col}' mismatch: Expected {expected_val}, got None for criteria {filter_criteria}"
+                )
             # Explicitly cast expected value to string if comparing with string actual_val
-            if isinstance(actual_val, str) and not isinstance(expected_val, str):
+            elif isinstance(actual_val, str) and not isinstance(expected_val, str):
                 assert actual_val == str(expected_val), (
                     f"Column '{col}' mismatch (string vs non-string): Expected '{expected_val}', got '{actual_val}' for criteria {filter_criteria}"
                 )
@@ -163,82 +176,95 @@ def assert_row_exists(
 
 # --- Test Cases ---
 
-
-# --- WITS MFN Data Validation ---
+# --- Cleaned WITS MFN Data Validation ---
 @pytest.mark.parametrize(
-    "reporter, product, year, expected_tariff",
+    "reporter_iso, product_hs92, year_str, expected_tariff_str",
     [
-        # Format: ("COUNTRY_CODE_STR", "HS_CODE_STR", YEAR_INT, EXPECTED_MFN_TARIFF_FLOAT),
-        # Sri Lanka (144), HS 310520, 2008 -> Expected MFN Tariff (e.g., 2.5)
-        ("144", "310520", 2008, 2.5),
-        # ("490", "851210", 2000, ), # This X post shows that ISO country 490 is "Other Asia, not elsewhere specified - TAIWAN"
-        ("268", "300450", 2011, 0.0),  # Georgia medicaments in 2011
-        ("188", "321490", 2008, 5.0),  # Costa Rica Non-refractory surface preparactants
-        ("528", "901839", 2007, 0.0),  # Netherlands, which is in the EU: Needles, catheters, etc.
-        ("591", "290950", 2011, 0.0),  # Panama, Ether-phenols
-        ("840", "845011", 2019, 1.4),  # USA, Laundry machine < 6kg subset
-        ("840", "845019", 2019, 1.8),  # USA, Laundry machine other type
-        ("795", "845019", 2019, None),  # Turkmenistan has no data available
+        # Format: ("REPORTER_ISO_NUMERIC_STR", "HS92_CODE_STR", "YEAR_STR", "EXPECTED_MFN_TARIFF_STR_OR_NONE"),
+        # Using string types as loaded by WITS_cleaner/pipeline
+        # Sri Lanka (144), HS 310520, 2008 -> Expected MFN Tariff 2.5
+        ("144", "310520", "2008", "2.5"),
+        # Georgia (268), HS 300450, 2011 -> 0.0
+        ("268", "300450", "2011", "0"), # WITS might store as "0"
+        # Costa Rica (188), HS 321490, 2008 -> 5.0
+        ("188", "321490", "2008", "5"),
+        # Netherlands (528), HS 901839, 2007 -> 0.0
+        ("528", "901839", "2007", "0"),
+        # Panama (591), HS 290950, 2011 -> 0.0
+        ("591", "290950", "2011", "0"),
+        # USA (840), HS 845011, 2019 -> 1.4
+        ("840", "845011", "2019", "1.4"),
+        # USA (840), HS 845019, 2019 -> 1.8
+        ("840", "845019", "2019", "1.8"),
+        # Turkmenistan (795), HS 845019, 2019 -> No data (expect row might be missing or tariff is null)
+        # Test for missing row or null value separately if needed. This checks for existing row with None.
+        # ("795", "845019", "2019", None), # How WITS represents missing data needs verification ("NA", "", null?)
     ],
 )
-def test_wits_mfn_values(wits_mfn_df, reporter, product, year, expected_tariff):
-    """Verify specific MFN tariff values exist in the WITS MFN dataset."""
-    # *** Use column names from WITS_cleaner.py output ***
-    criteria = {"reporter_country": reporter, "product_code": product, "year": year}
-    # *** Target the correct tariff column name ***
-    expected = {"tariff_rate": expected_tariff}
-    assert_row_exists(wits_mfn_df, criteria, expected, tolerance=0.01)
+def test_cleaned_wits_mfn_values(cleaned_wits_mfn_df, reporter_iso, product_hs92, year_str, expected_tariff_str):
+    """Verify specific MFN tariff values exist in the cleaned WITS MFN dataset."""
+    # Use column names AFTER cleaning/renaming ('t', 'i', 'k', 'mfn_tariff_rate')
+    criteria = {"i": reporter_iso, "k": product_hs92, "t": year_str}
+    expected = {"mfn_tariff_rate": expected_tariff_str} # Compare as strings initially
+    # Use exact comparison (tolerance=None) as we expect specific string representations from source
+    assert_row_exists(cleaned_wits_mfn_df, criteria, expected, tolerance=None)
 
 
-# --- WITS Preferential Data Validation ---
+# --- Cleaned WITS Preferential Data Validation ---
 @pytest.mark.parametrize(
-    "reporter, partner, product, year, expected_tariff",
+    "reporter_iso, partner_iso, product_hs92, year_str, expected_tariff_str",
     [
-        # --- Add validated cases ---
-        # Format: ("REP_CODE_STR", "PARTNER_CODE_STR", "HS_CODE_STR", YEAR_INT, EXP_PREF_TARIFF_FLOAT),
-        ("...", "...", "...", ..., ...),  # Placeholder - REMOVE OR REPLACE
+        # --- Add validated cases AFTER expansion ---
+        # Format: ("REP_ISO_STR", "PARTNER_ISO_STR", "HS92_CODE_STR", "YEAR_STR", "EXP_PREF_TARIFF_STR_OR_NONE"),
+        # Example: If EU (e.g., 97) gives preference to CH (756) for product X in year Y
+        # Find a specific case from the raw data and trace its expansion.
+        # E.g., DE (276) reporting pref for CH (756) on HS 870321 in 2010 might be 0.0
+        ("276", "756", "870321", "2010", "0"), # Hypothetical - VALIDATE THIS!
+        # ("...", "...", "...", "...", "..."),  # Placeholder - REMOVE OR REPLACE
     ],
 )
-def test_wits_pref_values(wits_pref_df, reporter, partner, product, year, expected_tariff):
-    """Verify specific Preferential tariff values exist in the WITS Pref dataset."""
-    # *** Use column names from WITS_cleaner.py output ***
+def test_cleaned_wits_pref_values(cleaned_wits_pref_df, reporter_iso, partner_iso, product_hs92, year_str, expected_tariff_str):
+    """Verify specific Preferential tariff values exist in the cleaned & expanded WITS Pref dataset."""
+    # Use column names AFTER cleaning/expansion/renaming ('t', 'i', 'j', 'k', 'pref_tariff_rate')
     criteria = {
-        "reporter_country": reporter,
-        "partner_country": partner,
-        "product_code": product,
-        "year": year,
+        "i": reporter_iso,
+        "j": partner_iso, # Partner is now individual ISO code
+        "k": product_hs92,
+        "t": year_str,
     }
-    # *** Target the correct tariff column name ***
-    expected = {"tariff_rate": expected_tariff}
-    assert_row_exists(wits_pref_df, criteria, expected, tolerance=0.01)
+    expected = {"pref_tariff_rate": expected_tariff_str} # Compare as strings
+    assert_row_exists(cleaned_wits_pref_df, criteria, expected, tolerance=None)
 
 
-# --- Merged Output Validation ---
+# --- Final Merged Output Validation ---
 @pytest.mark.parametrize(
-    "source, target, hs_code, year, expected_value, expected_qty, expected_tariff",
+    "source_iso, target_iso, hs_code_hs92, year_str, expected_value, expected_qty, expected_effective_tariff",
     [
-        # --- Example Case from NETWORK.py ---
+        # Format: ("SOURCE_ISO_STR", "TARGET_ISO_STR", "HS92_CODE_STR", "YEAR_STR", EXP_VALUE_FLOAT, EXP_QTY_FLOAT, EXP_EFFECTIVE_TARIFF_FLOAT_OR_NONE),
+        # --- Example Case from NETWORK.py (using ISO codes) ---
         # Germany ("276") -> Sri Lanka ("144"), HS "310520", 2008
-        # !!! IMPORTANT: Replace example values with actual validated data !!!
-        ("276", "144", "310520", 2008, 11700.0, 30000.0, 2.5),
+        # Value: 11700, Qty: 30000. MFN was 2.5. Assume no pref. Effective = 2.5
+        ("276", "144", "310520", "2008", 11700.0, 30000.0, 2.5),
         # --- Romania ("642") -> Georgia ("268"), HS "040690", 2000 ---
-        # !!! IMPORTANT: Replace example values with actual validated data !!!
-        ("642", "268", "040690", 2000, 7829.0, 250.0, 0.0),
-        # --- Add more validated cases ---
-        # Format: ("SOURCE_CODE_STR", "TARGET_CODE_STR", "HS_CODE_STR", YEAR_INT, EXP_VALUE_FLOAT, EXP_QTY_FLOAT, EXP_TARIFF_FLOAT),
-        # ("...", "...", "...", ..., ..., ..., ...), # Placeholder - REMOVE OR REPLACE
+        # Value: 7829, Qty: 250. MFN was 0.0. Assume no pref. Effective = 0.0
+        ("642", "268", "040690", "2000", 7829.0, 250.0, 0.0),
+        # --- Add more validated cases, tracing from BACI + Cleaned Tariffs ---
+        # USA (840) -> Mexico (484), HS 845011, 2019. BACI V/Q? MFN=1.4. Pref (NAFTA/USMCA)? Assume 0.0. Effective=0.0
+        # Need actual BACI V/Q for this row. Let's assume V=100k, Q=500 for example.
+        ("840", "484", "845011", "2019", 100000.0, 500.0, 0.0), # Hypothetical V/Q - VALIDATE! Tariff should be 0 due to NAFTA/USMCA.
+        # ("...", "...", "...", "...", ..., ..., ...), # Placeholder - REMOVE OR REPLACE
     ],
 )
 def test_final_output_values(
-    final_df, source, target, hs_code, year, expected_value, expected_qty, expected_tariff
+    final_df, source_iso, target_iso, hs_code_hs92, year_str, expected_value, expected_qty, expected_effective_tariff
 ):
     """Verify specific trade flows have the correct value, quantity, and effective tariff in the final output."""
-    # *** Use column names from matching_logic.py's create_final_table ***
-    criteria = {"Source": source, "Target": target, "HS_Code": hs_code, "Year": year}
+    # Use column names from create_final_table ('Year', 'Source', 'Target', 'HS_Code', 'Value', 'Quantity', 'effective_tariff_rate')
+    criteria = {"Source": source_iso, "Target": target_iso, "HS_Code": hs_code_hs92, "Year": year_str}
     expected = {
         "Value": expected_value,
         "Quantity": expected_qty,
-        "effective_tariff_rate": expected_tariff,  # This is the key calculated column
+        "effective_tariff_rate": expected_effective_tariff, # This is the numeric coalesced rate
     }
-    # Use a potentially larger tolerance for final values due to aggregation/matching nuances
-    assert_row_exists(final_df, criteria, expected, tolerance=0.05)  # Adjust tolerance if needed
+    # Use tolerance for numeric comparisons (Value, Quantity, Tariff)
+    assert_row_exists(final_df, criteria, expected, tolerance=0.01) # Adjust tolerance if needed

@@ -4,22 +4,24 @@ from pathlib import Path
 import pandas as pd
 import polars as pl
 
+import logging
+from pathlib import Path
+
+import pandas as pd
+import polars as pl
+
 # Assuming your logging setup is accessible via this import path
 from mpil_tariff_trade_analysis.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
 # --- Configuration ---
-# Define default paths (consider making these configurable, e.g., via arguments)
-DEFAULT_BACI_PATH = "data/intermediate/BACI_HS92_V202501"
-DEFAULT_WITS_MFN_PATH = "data/intermediate/WITS_AVEMFN.parquet"
-DEFAULT_WITS_PREF_PATH = "data/intermediate/WITS_AVEPref.parquet"
+# Default paths are less relevant here now, but keep for load_pref_group_mapping default if needed
 DEFAULT_PREF_GROUPS_PATH = "data/raw/WITS_pref_groups/WITS_pref_groups.csv"
-DEFAULT_OUTPUT_PATH = "data/final/unified_trade_tariff.parquet"
 
 
 # --- Helper Functions ---
-def load_pref_group_mapping(file_path: str | Path) -> pl.LazyFrame:
+def load_pref_group_mapping(file_path: str | Path = DEFAULT_PREF_GROUPS_PATH) -> pl.LazyFrame:
     """
     Loads and processes the WITS preferential group mapping file.
 
@@ -64,53 +66,124 @@ def load_pref_group_mapping(file_path: str | Path) -> pl.LazyFrame:
         raise
 
 
-def rename_wits_mfn(df: pl.LazyFrame) -> pl.LazyFrame:
-    """Renames columns in the WITS MFN tariff dataframe."""
-    logger.debug("Renaming WITS MFN columns.")
-    renamed_df = df.rename(
-        {
-            "year": "t",
-            "reporter_country": "i",
-            "product_code": "k",
-            "tariff_rate": "mfn_tariff_rate",
-            "min_rate": "mfn_min_tariff_rate",
-            "max_rate": "mfn_max_tariff_rate",
-            "tariff_type": "tariff_type",  # Keep tariff type for potential debugging
-        }
-    ).select(
-        "t",
-        "i",
-        "k",
-        "mfn_tariff_rate",
-        "mfn_min_tariff_rate",
-        "mfn_max_tariff_rate",
-        "tariff_type",
-    )
-    logger.debug(f"Renamed WITS MFN Schema: {renamed_df.collect_schema()}")
-    return renamed_df
-
-
-def rename_wits_pref(df: pl.LazyFrame) -> pl.LazyFrame:
-    """Renames columns in the WITS Preferential tariff dataframe."""
-    logger.debug("Renaming WITS Preferential columns.")
-    renamed_df = df.rename(
-        {
-            "year": "t",
-            "reporter_country": "i",
-            "partner_country": "j",  # This might be a group code or individual country
-            "product_code": "k",
-            "tariff_rate": "pref_tariff_rate",
-            "min_rate": "pref_min_tariff_rate",
-            "max_rate": "pref_max_tariff_rate",
-        }
-    ).select("t", "i", "j", "k", "pref_tariff_rate", "pref_min_tariff_rate", "pref_max_tariff_rate")
-    logger.debug(f"Renamed WITS Preferential Schema: {renamed_df.collect_schema()}")
-    return renamed_df
+# rename_wits_mfn moved to wits_mfn_pipeline.py
+# rename_wits_pref moved to wits_pref_pipeline.py
 
 
 def expand_preferential_tariffs(
-    renamed_avepref: pl.LazyFrame, pref_group_mapping: pl.LazyFrame
+    # Expects input df with columns like t, i (list), j (list), k, pref_tariff_rate etc.
+    # from load_wits_tariff_data + temp rename
+    input_pref_df: pl.LazyFrame,
+    pref_group_mapping: pl.LazyFrame
 ) -> pl.LazyFrame:
+    """
+    Expands WITS preferential tariff data from partner groups to individual countries.
+    Handles list columns for reporter ('i') and partner ('j') resulting from country remapping.
+
+    Args:
+        input_pref_df: LazyFrame of WITS preferential tariffs after loading/remapping/HS translation
+                       and temporary renaming (expects 't', 'i' (list), 'j' (list), 'k', 'pref_tariff_rate').
+        pref_group_mapping: LazyFrame mapping region codes to partner lists (strings).
+
+    Returns:
+        A LazyFrame with preferential tariffs expanded to individual partner countries.
+        Output schema includes: t, i (list), j_individual (string), k, pref_tariff_rate, ...
+    """
+    logger.info("Expanding preferential tariff partner groups.")
+    logger.debug(f"Input input_pref_df schema: {input_pref_df.collect_schema()}")
+    logger.debug(f"Input pref_group_mapping schema: {pref_group_mapping.collect_schema()}")
+
+    # --- Explode the partner list ('j') first ---
+    # The 'j' column from load_wits_tariff_data (via create_country_code_mapping_df) is List[Utf8].
+    # We need to explode this to handle cases where the original partner code mapped to multiple ISO codes.
+    logger.debug("Exploding input partner list column 'j'.")
+    try:
+        exploded_j_df = input_pref_df.explode("j")
+        logger.debug(f"Schema after exploding 'j': {exploded_j_df.collect_schema()}")
+    except Exception as e:
+        logger.error(f"Failed to explode partner list 'j': {e}", exc_info=True)
+        raise
+
+    # --- Explicit Type Casting for Join Keys ---
+    # Join key 'j' (now exploded, so Utf8) and 'region_code' (Utf8)
+    logger.debug("Casting join keys (pref_group_mapping: region_code) to pl.Utf8.")
+    try:
+        # exploded_j_df 'j' should be Utf8 after explode if original list was Utf8
+        pref_group_mapping = pref_group_mapping.with_columns(pl.col("region_code").cast(pl.Utf8))
+        logger.debug(
+            f"Schema after casting pref_group_mapping: {pref_group_mapping.collect_schema()}"
+        )
+    except Exception as e:
+        logger.error(f"Failed to cast join keys: {e}")
+        raise
+
+    # --- Left join avepref (with exploded 'j') with the group mapping ---
+    logger.debug(
+        "Attempting left join: exploded_j_df with pref_group_mapping on 'j' == 'region_code'."
+    )
+    joined_pref_mapping = exploded_j_df.join(
+        pref_group_mapping,
+        left_on="j",  # Partner code (now individual Utf8 after explode)
+        right_on="region_code",  # Group code from mapping (Utf8)
+        how="left",
+    )
+    logger.debug("Join completed.")
+    logger.debug(
+        f"Schema after joining with group mapping: {joined_pref_mapping.collect_schema()}"
+    )
+
+    # --- Create the final partner list ---
+    # If 'partner_list' (from group mapping) is not null, use it.
+    # Otherwise, use the original 'j' (which is now an individual code after the first explode)
+    # Wrap the result in a list for the next explode step.
+    logger.debug("Creating final partner list using coalesce logic.")
+    expanded_pref_pre_explode2 = joined_pref_mapping.with_columns(
+        pl.when(
+            pl.col("partner_list").is_not_null() & (pl.col("partner_list").list.len() > 0)
+        )
+        .then(pl.col("partner_list"))  # Use the list from mapping
+        .otherwise(
+            pl.concat_list(pl.col("j")) # Use original exploded 'j' as a single-item list
+        )
+        .alias("final_partner_list")
+    ).drop(["partner_list", "region_code"]) # Drop intermediate columns
+
+    logger.debug("Final partner list column created ('final_partner_list').")
+    logger.debug(f"Schema before second explode: {expanded_pref_pre_explode2.collect_schema()}")
+
+    # --- Explode the final partner list ---
+    logger.debug("Attempting to explode 'final_partner_list'.")
+    try:
+        # Keep all original columns, replace 'j' effectively
+        # Select all columns from the input EXCEPT the intermediate ones we dropped
+        cols_to_keep = [c for c in joined_pref_mapping.columns if c not in ["partner_list", "region_code"]]
+
+        expanded_pref_final = (
+            expanded_pref_pre_explode2.explode("final_partner_list")
+            .rename({"final_partner_list": "j_individual"}) # This is the final partner string
+            # Select original columns (like t, i (list), k, rates) + the new j_individual
+            .select(cols_to_keep + ["j_individual"])
+            # We don't rename j_individual to 'j' here, let the final rename step handle it
+        )
+        logger.debug("Second explode operation defined in lazy frame.")
+        logger.info("Preferential tariffs expansion plan created.")
+        logger.debug(f"Schema AFTER defining second explode: {expanded_pref_final.collect_schema()}")
+
+        # Optional fetch for debugging
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Attempting to fetch(1) AFTER second explode definition...")
+            try:
+                fetched_row = expanded_pref_final.fetch(1)
+                logger.debug(f"Successfully fetched 1 row AFTER second explode:\n{fetched_row}")
+            except Exception as e:
+                logger.error(f"CRITICAL: Failed to fetch(1) AFTER second explode definition: {e}", exc_info=True)
+                raise
+        return expanded_pref_final
+    except Exception as e:
+        logger.error(
+            f"Error occurred during the definition or initial fetch of the second explode operation: {e}",
+            exc_info=True,
+        )
     """
     Expands WITS preferential tariff data from partner groups to individual countries.
 
@@ -251,100 +324,105 @@ def expand_preferential_tariffs(
 
 
 def join_datasets(
-    baci: pl.LazyFrame, renamed_avemfn: pl.LazyFrame, expanded_pref: pl.LazyFrame
+    baci: pl.LazyFrame,
+    renamed_avemfn: pl.LazyFrame,
+    # This is now the cleaned, expanded, renamed PREF data
+    cleaned_expanded_pref: pl.LazyFrame
 ) -> pl.LazyFrame:
     """
-    Joins BACI, MFN, and expanded Preferential tariff data.
+    Joins cleaned BACI, cleaned MFN, and cleaned/expanded Preferential tariff data.
 
     Args:
-        baci: LazyFrame of BACI trade data.
-        renamed_avemfn: LazyFrame of renamed WITS MFN tariffs.
-        expanded_pref: LazyFrame of expanded WITS preferential tariffs.
+        baci: LazyFrame of cleaned BACI trade data (with columns t, i, j, k, v, q).
+              Assumes country codes 'i', 'j' might be lists from remapping.
+        renamed_avemfn: LazyFrame of cleaned/renamed WITS MFN tariffs (t, i, k, rates).
+                        Assumes 'i' is a single string.
+        cleaned_expanded_pref: LazyFrame of cleaned/expanded/renamed WITS preferential tariffs
+                               (t, i, j, k, rates). Assumes 'i', 'j' are single strings.
 
     Returns:
         A LazyFrame containing the joined data with an 'effective_tariff_rate' column.
     """
     logger.info("Joining BACI, MFN, and Preferential datasets.")
     logger.debug(f"Input BACI schema: {baci.collect_schema()}")
-    logger.debug(f"Input renamed_avemfn schema: {renamed_avemfn.collect_schema()}")
-    logger.debug(
-        f"Input expanded_pref schema: {expanded_pref.collect_schema()}"
-    )  # Schema is known even if fetch failed
+    logger.debug(f"Input MFN schema: {renamed_avemfn.collect_schema()}")
+    logger.debug(f"Input Pref schema: {cleaned_expanded_pref.collect_schema()}")
 
     # Define join keys
+    # BACI 'i' and 'j' might be lists, MFN 'i' is string, Pref 'i' and 'j' are strings.
+    # We need to explode BACI's 'i' and 'j' before joining.
     mfn_join_keys = ["t", "i", "k"]
     pref_join_keys = ["t", "i", "j", "k"]
 
     # --- Ensure join key types are compatible ---
-    # Add casting if necessary, based on actual data types observed
-    # Example: Cast all keys to common types (e.g., Int64 for t, i, j; Utf8 for k)
-    logger.debug("Casting join key types for final joins (adjust types as needed).")
+    # Cast all keys to common types (e.g., Utf8 for t, i, j, k)
+    # Tariff rates are likely Utf8 from cleaning, handle later in coalesce.
+    logger.debug("Casting join key types to Utf8.")
     try:
+        # Explode BACI country lists before casting/joining
+        if "i_iso_numeric" in baci.columns and isinstance(baci.collect_schema()["i_iso_numeric"], pl.List):
+             logger.debug("Exploding BACI 'i_iso_numeric' (exporter list).")
+             baci = baci.explode("i_iso_numeric")
+        if "j_iso_numeric" in baci.columns and isinstance(baci.collect_schema()["j_iso_numeric"], pl.List):
+             logger.debug("Exploding BACI 'j_iso_numeric' (importer list).")
+             baci = baci.explode("j_iso_numeric")
+
+        # Rename BACI columns to match join keys AFTER exploding
+        baci = baci.rename({"i_iso_numeric": "i", "j_iso_numeric": "j"})
+
+        # Cast keys to Utf8
         baci = baci.with_columns(
-            [
-                pl.col("t").cast(pl.Int64),
-                pl.col("i").cast(pl.Utf8),  # Assuming country codes are strings now
-                pl.col("j").cast(pl.Utf8),
-                pl.col("k").cast(pl.Utf8),
-            ]
+            [pl.col(c).cast(pl.Utf8) for c in ["t", "i", "j", "k"] if c in baci.columns]
         )
         renamed_avemfn = renamed_avemfn.with_columns(
-            [pl.col("t").cast(pl.Int64), pl.col("i").cast(pl.Utf8), pl.col("k").cast(pl.Utf8)]
+            [pl.col(c).cast(pl.Utf8) for c in mfn_join_keys if c in renamed_avemfn.columns]
         )
-        # expanded_pref 'j' should already be Utf8 from the explode step if casting was done there
-        expanded_pref = expanded_pref.with_columns(
-            [
-                pl.col("t").cast(pl.Int64),
-                pl.col("i").cast(pl.Utf8),
-                pl.col("j").cast(pl.Utf8),  # Ensure j is Utf8
-                pl.col("k").cast(pl.Utf8),
-            ]
+        cleaned_expanded_pref = cleaned_expanded_pref.with_columns(
+            [pl.col(c).cast(pl.Utf8) for c in pref_join_keys if c in cleaned_expanded_pref.columns]
         )
-        logger.debug(f"Schema after casting - BACI: {baci.collect_schema()}")
+
+        logger.debug(f"Schema after casting/exploding - BACI: {baci.collect_schema()}")
         logger.debug(f"Schema after casting - MFN: {renamed_avemfn.collect_schema()}")
-        logger.debug(f"Schema after casting - Pref: {expanded_pref.collect_schema()}")
+        logger.debug(f"Schema after casting - Pref: {cleaned_expanded_pref.collect_schema()}")
+
     except Exception as e:
-        logger.error(f"Failed to cast join keys for final joins: {e}")
+        logger.error(f"Failed to cast/explode join keys: {e}", exc_info=True)
         raise
 
-    # 1. Left join BACI with MFN tariffs
+    # 1. Left join BACI (exploded) with MFN tariffs
     logger.debug(f"Joining BACI with MFN tariffs on {mfn_join_keys}.")
     joined_mfn = baci.join(renamed_avemfn, on=mfn_join_keys, how="left")
     logger.debug(f"Schema after BACI-MFN join: {joined_mfn.collect_schema()}")
-    if logger.isEnabledFor(logging.DEBUG):
-        try:
-            logger.debug(f"Head(1) after BACI-MFN join:\n{joined_mfn.fetch(1)}")
-        except Exception as e:
-            logger.warning(f"Could not fetch(1) from joined_mfn: {e}")
 
-    # 2. Left join the result with Expanded Preferential tariffs
+    # 2. Left join the result with Cleaned/Expanded Preferential tariffs
     logger.debug(
-        f"Joining intermediate result with expanded Preferential tariffs on {pref_join_keys}."
+        f"Joining intermediate result with cleaned/expanded Preferential tariffs on {pref_join_keys}."
     )
-    joined_all = joined_mfn.join(expanded_pref, on=pref_join_keys, how="left")
+    joined_all = joined_mfn.join(cleaned_expanded_pref, on=pref_join_keys, how="left")
     logger.debug(f"Schema after joining with Pref tariffs: {joined_all.collect_schema()}")
-    if logger.isEnabledFor(logging.DEBUG):
-        try:
-            logger.debug(f"Head(1) after joining with Pref tariffs:\n{joined_all.fetch(1)}")
-        except Exception as e:
-            logger.warning(f"Could not fetch(1) from joined_all: {e}")
 
     # 3. Calculate the final effective tariff
+    # Coalesce needs numeric types. Cast tariff rates first, handling errors.
     logger.debug(
         "Calculating effective tariff rate using coalesce(pref_tariff_rate, mfn_tariff_rate)."
     )
     final_table = joined_all.with_columns(
-        pl.coalesce(pl.col("pref_tariff_rate"), pl.col("mfn_tariff_rate")).alias(
-            "effective_tariff_rate"
+        pl.col("pref_tariff_rate").cast(pl.Float64, strict=False).alias("pref_numeric"),
+        pl.col("mfn_tariff_rate").cast(pl.Float64, strict=False).alias("mfn_numeric"),
+    ).with_columns(
+        pl.coalesce(pl.col("pref_numeric"), pl.col("mfn_numeric")).alias(
+            "effective_tariff_rate_numeric" # Keep numeric version
         )
-    )
+        # Optionally keep original string versions or cast numeric back to string if needed
+        # .cast(pl.Utf8).alias("effective_tariff_rate")
+    ).drop(["pref_numeric", "mfn_numeric"]) # Drop intermediate numeric columns
+
+    # Rename numeric effective rate to final name
+    final_table = final_table.rename({"effective_tariff_rate_numeric": "effective_tariff_rate"})
+
     logger.info("Datasets joined successfully.")
     logger.debug(f"Schema after calculating effective tariff: {final_table.collect_schema()}")
-    if logger.isEnabledFor(logging.DEBUG):
-        try:
-            logger.debug(f"Head(1) after calculating effective tariff:\n{final_table.fetch(1)}")
-        except Exception as e:
-            logger.warning(f"Could not fetch(1) from final_table (post-coalesce): {e}")
+
     return final_table
 
 
@@ -363,49 +441,61 @@ def create_final_table(joined_data: pl.LazyFrame) -> pl.LazyFrame:
 
     # Ensure the columns exist before selecting
     available_cols = joined_data.columns
-    select_cols = [
-        pl.col("t").alias("Year"),
-        pl.col("i").alias("Source"),  # Reporter country code
-        pl.col("j").alias("Target"),  # Partner country code (individual)
-        pl.col("k").alias("HS_Code"),  # Product code (HS92)
-    ]
+    select_exprs = [] # Use expressions for safe selection
+
+    # Core identifiers (should exist after join)
+    select_exprs.extend([
+        pl.col("t").alias("Year"), # t is Utf8
+        pl.col("i").alias("Source"), # i is Utf8 (exploded BACI reporter)
+        pl.col("j").alias("Target"), # j is Utf8 (exploded BACI importer / expanded Pref partner)
+        pl.col("k").alias("HS_Code"), # k is Utf8
+    ])
+
+    # BACI Value/Quantity (check existence)
     if "q" in available_cols:
-        select_cols.append(pl.col("q").alias("Quantity"))  # Assuming 'q' is Quantity in BACI
+        select_exprs.append(pl.col("q").alias("Quantity"))
     else:
         logger.warning("Column 'q' (Quantity) not found in joined data. Skipping.")
     if "v" in available_cols:
-        select_cols.append(pl.col("v").alias("Value"))  # Assuming 'v' is Value in BACI
+        select_exprs.append(pl.col("v").alias("Value"))
     else:
         logger.warning("Column 'v' (Value) not found in joined data. Skipping.")
 
-    select_cols.extend(
-        [
-            pl.col("mfn_tariff_rate"),
-            pl.col("pref_tariff_rate"),
-            pl.col("effective_tariff_rate"),  # The coalesced rate
-        ]
-    )
-    if "mfn_min_tariff_rate" in available_cols:
-        select_cols.append(pl.col("mfn_min_tariff_rate"))
-    if "mfn_max_tariff_rate" in available_cols:
-        select_cols.append(pl.col("mfn_max_tariff_rate"))
-    if "pref_min_tariff_rate" in available_cols:
-        select_cols.append(pl.col("pref_min_tariff_rate"))
-    if "pref_max_tariff_rate" in available_cols:
-        select_cols.append(pl.col("pref_max_tariff_rate"))
-    if "tariff_type" in available_cols:
-        select_cols.append(pl.col("tariff_type"))  # Optionally add tariff type
+    # Tariff Rates (check existence)
+    if "mfn_tariff_rate" in available_cols:
+        # Keep original string rate for reference
+        select_exprs.append(pl.col("mfn_tariff_rate").alias("mfn_tariff_rate_str"))
+    if "pref_tariff_rate" in available_cols:
+        # Keep original string rate for reference
+        select_exprs.append(pl.col("pref_tariff_rate").alias("pref_tariff_rate_str"))
+    if "effective_tariff_rate" in available_cols:
+        # This is the coalesced numeric rate calculated in join_datasets
+        select_exprs.append(pl.col("effective_tariff_rate")) # Already named correctly
+    else:
+        # This should not happen if join_datasets worked
+        logger.error("Column 'effective_tariff_rate' not found after join. Adding null.")
+        select_exprs.append(pl.lit(None, dtype=pl.Float64).alias("effective_tariff_rate"))
 
-    final_unified_table = joined_data.select(select_cols)
+    # Optional Min/Max Rates (check existence)
+    if "mfn_min_tariff_rate" in available_cols:
+        select_exprs.append(pl.col("mfn_min_tariff_rate"))
+    if "mfn_max_tariff_rate" in available_cols:
+        select_exprs.append(pl.col("mfn_max_tariff_rate"))
+    if "pref_min_tariff_rate" in available_cols:
+        select_exprs.append(pl.col("pref_min_tariff_rate"))
+    if "pref_max_tariff_rate" in available_cols:
+        select_exprs.append(pl.col("pref_max_tariff_rate"))
+
+    # Optional Tariff Type (check existence)
+    if "tariff_type" in available_cols:
+        select_exprs.append(pl.col("tariff_type"))
+
+    # Select the columns using the expressions
+    final_unified_table = joined_data.select(select_exprs)
 
     logger.debug(
         f"Final table schema after selection/renaming: {final_unified_table.collect_schema()}"
     )
-    if logger.isEnabledFor(logging.DEBUG):
-        try:
-            logger.debug(f"Final table head(1):\n{final_unified_table.fetch(1)}")
-        except Exception as e:
-            logger.warning(f"Could not fetch(1) from final_unified_table: {e}")
     return final_unified_table
 
 

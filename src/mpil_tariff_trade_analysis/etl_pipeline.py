@@ -11,14 +11,16 @@ from typing import Any, Dict, Optional
 
 # Assume these functions exist and perform the described actions.
 # It's assumed they can handle Path objects as input where appropriate.
-from mpil_tariff_trade_analysis.etl.baci import (
-    baci_to_parquet_incremental,
-    remap_baci_country_codes,  # Import the remapping function
-)
-from mpil_tariff_trade_analysis.etl.matching_chunked import run_chunked_matching_pipeline
-from mpil_tariff_trade_analysis.etl.WITS_cleaner import process_and_save_wits_data
+from pathlib import Path
+from typing import Any, Dict, Optional
 
-# Logging setup (assuming this works as intended)
+# Import the new pipeline runner functions
+from mpil_tariff_trade_analysis.etl.baci_pipeline import run_baci_cleaning_pipeline
+from mpil_tariff_trade_analysis.etl.merge_pipeline import run_merge_pipeline
+from mpil_tariff_trade_analysis.etl.wits_mfn_pipeline import run_wits_mfn_cleaning_pipeline
+from mpil_tariff_trade_analysis.etl.wits_pref_pipeline import run_wits_pref_cleaning_pipeline
+
+# Logging setup
 from mpil_tariff_trade_analysis.utils.logging_config import get_logger, setup_logging
 
 # --- Global Configuration & Setup ---
@@ -44,324 +46,211 @@ def get_pipeline_config() -> Dict[str, Any]:
     intermediate_data_dir = base_data_dir / "intermediate"
     final_data_dir = base_data_dir / "final"
 
-    # Ensure base directories exist (optional, but good practice)
+    # Ensure base directories exist (optional, can be handled by pipelines)
+    # raw_data_dir.mkdir(parents=True, exist_ok=True)
     # intermediate_data_dir.mkdir(parents=True, exist_ok=True)
     # final_data_dir.mkdir(parents=True, exist_ok=True)
 
     # --- Input Paths ---
-    baci_input_folder = raw_data_dir
-    wits_raw_dir = raw_data_dir / "WITS_tariff"
-    # Assumes pref_groups is in raw data, adjust if needed
+    baci_input_folder = raw_data_dir # Parent dir of BACI_HSXX_VYYYYYY CSVs
+    wits_raw_dir = raw_data_dir / "WITS_tariff" # Parent dir of AVEMFN/AVEPref folders
     pref_groups_path = raw_data_dir / "WITS_pref_groups" / "WITS_pref_groups.csv"
+    # Optional reference file paths (can be omitted if defaults in iso_remapping are used)
+    # baci_ref_codes_path = raw_data_dir / f"BACI_{hs_code}_V{baci_release}" / f"country_codes_V{baci_release}.csv"
+    # wits_ref_codes_path = raw_data_dir / "WITS_country_codes.csv"
+    hs_mapping_dir = raw_data_dir / "hs_reference"
 
     # --- Intermediate & Output Paths ---
-    # Define the *intended* output paths clearly.
-    baci_output_dir_name = f"BACI_{hs_code}_V{baci_release}"
-    baci_intermediate_parquet_path = intermediate_data_dir / baci_output_dir_name
-    # Define path for remapped data
-    baci_remapped_output_path = intermediate_data_dir / f"{baci_output_dir_name}_remapped"
-    wits_mfn_output_path = intermediate_data_dir / "WITS_AVEMFN.parquet"
-    wits_pref_output_path = intermediate_data_dir / "WITS_AVEPref.parquet"
-    matching_output_dir = final_data_dir / "unified_trade_tariff_partitioned"
+    # BACI Paths
+    baci_intermediate_raw_parquet_name = f"BACI_{hs_code}_V{baci_release}"
+    baci_intermediate_raw_parquet_path = intermediate_data_dir / baci_intermediate_raw_parquet_name
+    baci_cleaned_filename = f"BACI_{hs_code}_V{baci_release}_cleaned_remapped.parquet"
+    baci_cleaned_output_path = intermediate_data_dir / baci_cleaned_filename
+
+    # WITS Paths
+    wits_mfn_cleaned_dir = intermediate_data_dir / "cleaned_wits_mfn"
+    wits_mfn_cleaned_output_path = wits_mfn_cleaned_dir / "WITS_AVEMFN_cleaned.parquet"
+    wits_pref_cleaned_dir = intermediate_data_dir / "cleaned_wits_pref"
+    wits_pref_cleaned_output_path = wits_pref_cleaned_dir / "WITS_AVEPref_cleaned_expanded.parquet"
+
+    # Final Merged Output Path
+    merged_output_dir = final_data_dir / "unified_trade_tariff_partitioned" # Keep consistent name
 
     # Return configuration parameters
-    return {
+    config = {
         # Core Params
         "HS_CODE": hs_code,
         "BACI_RELEASE": baci_release,
-        # Base Directories (as Path objects)
+        # Base Directories
         "RAW_DATA_DIR": raw_data_dir,
         "INTERMEDIATE_DATA_DIR": intermediate_data_dir,
         "FINAL_DATA_DIR": final_data_dir,
-        # Specific Input Paths (as Path objects)
+        # Specific Input Paths
         "BACI_INPUT_FOLDER": baci_input_folder,
         "WITS_RAW_DIR": wits_raw_dir,
         "PREF_GROUPS_PATH": pref_groups_path,
-        # Specific Intermediate/Output Paths (as Path objects)
-        "BACI_INTERMEDIATE_OUTPUT_PATH": baci_intermediate_parquet_path,  # Initial parquet output
-        "BACI_REMAPPED_OUTPUT_PATH": baci_remapped_output_path,  # After country code remapping
-        "WITS_MFN_OUTPUT_PATH": wits_mfn_output_path,
-        "WITS_PREF_OUTPUT_PATH": wits_pref_output_path,
-        "MATCHING_OUTPUT_DIR": matching_output_dir,
+        "HS_MAPPING_DIR": hs_mapping_dir,
+        # Optional Ref Paths
+        # "BACI_REF_CODES_PATH": baci_ref_codes_path,
+        # "WITS_REF_CODES_PATH": wits_ref_codes_path,
+        # Specific Intermediate/Output Paths
+        "BACI_INTERMEDIATE_RAW_PARQUET_PATH": baci_intermediate_raw_parquet_path, # Dir for raw parquet
+        "BACI_CLEANED_OUTPUT_PATH": baci_cleaned_output_path, # File for cleaned BACI
+        "WITS_MFN_CLEANED_OUTPUT_PATH": wits_mfn_cleaned_output_path, # File for cleaned MFN
+        "WITS_PREF_CLEANED_OUTPUT_PATH": wits_pref_cleaned_output_path, # File for cleaned/expanded Pref
+        "MERGED_OUTPUT_DIR": merged_output_dir, # Dir for final partitioned output
+        # Merge Pipeline Params (can be overridden)
+        "CHUNK_COLUMN_NAME": "t",
+        "PARTITION_COLUMN": "Year",
     }
+    # Log the configuration being used
+    logger.info("Pipeline Configuration:")
+    for key, value in config.items():
+        logger.info(f"  {key}: {value}")
+    return config
 
 
 # --- Pipeline Steps as Functions ---
-def process_baci_step(config: Dict[str, Any]) -> Optional[Path]:
-    """
-    Processes BACI data from CSV to partitioned Parquet.
 
-    Args:
-        config: The pipeline configuration dictionary.
-
-    Returns:
-        The Path object to the *final*, remapped BACI Parquet directory if successful,
-        otherwise None.
-    """
-    logger.info("--- Step 1: Processing and Remapping BACI Data ---")
-    hs_code = config["HS_CODE"]
-    baci_release = config["BACI_RELEASE"]
-    input_folder = config["BACI_INPUT_FOLDER"]
-    initial_output_path = config["BACI_INTERMEDIATE_OUTPUT_PATH"]
-    remapped_output_path = config["BACI_REMAPPED_OUTPUT_PATH"]
-    output_parent_folder = config["INTERMEDIATE_DATA_DIR"]
-
-    # --- Sub-step 1.1: Convert CSV to Parquet ---
-    logger.info(f"Starting BACI CSV to Parquet conversion: HS={hs_code}, Release={baci_release}")
-    logger.info(f"Input folder: {input_folder}")
-    logger.info(f"Target intermediate output path: {initial_output_path}")
-
+def run_baci_cleaning_step(config: Dict[str, Any]) -> Optional[Path]:
+    """Runs the BACI cleaning pipeline."""
+    logger.info("--- Step 1: Running BACI Cleaning Pipeline ---")
     try:
-        created_path_str_or_none = baci_to_parquet_incremental(
-            hs=hs_code,
-            release=baci_release,
-            input_folder=str(input_folder),
-            output_folder=str(output_parent_folder),
-        )
-
-        # Verification
-        if not (
-            created_path_str_or_none
-            and Path(created_path_str_or_none) == initial_output_path
-            and initial_output_path.exists()
-            and initial_output_path.is_dir()
-        ):
-            logger.error(
-                f"❌ BACI CSV to Parquet failed or produced unexpected output. Expected: `{initial_output_path}`, Got: `{created_path_str_or_none}`."
-            )
-            return None
-        logger.info(
-            f"✅ BACI CSV to Parquet conversion successful. Output: `{initial_output_path}`"
-        )
-
-    except Exception as e:
-        logger.error(f"❌ BACI CSV to Parquet failed with exception: {e}", exc_info=True)
-        return None
-
-    # --- Sub-step 1.2: Remap Country Codes ---
-    logger.info("Starting BACI country code remapping.")
-    logger.info(f"Input for remapping: {initial_output_path}")
-    logger.info(f"Target remapped output path: {remapped_output_path}")
-
-    try:
-        # Call the remapping function
-        final_path = remap_baci_country_codes(
-            input_path=initial_output_path,
-            output_path=remapped_output_path,
-            # baci_codes_path=config["BACI_REF_CODES_PATH"],
-            # wits_codes_path=config["WITS_REF_CODES_PATH"],
-        )
-
-        # Verification
-        if final_path and final_path == remapped_output_path and remapped_output_path.exists():
-            logger.info(f"✅ BACI country code remapping successful. Final Output: `{final_path}`")
-            return final_path  # Return the path to the remapped data
+        cleaned_baci_path = run_baci_cleaning_pipeline(config)
+        if cleaned_baci_path:
+            logger.info(f"✅ BACI cleaning finished. Output: {cleaned_baci_path}")
+            return cleaned_baci_path
         else:
-            logger.error(
-                f"❌ BACI country code remapping failed. Expected: `{remapped_output_path}`, Got: `{final_path}`."
-            )
+            logger.error("❌ BACI cleaning pipeline failed.")
             return None
-
     except Exception as e:
-        logger.error(f"❌ BACI country code remapping failed with exception: {e}", exc_info=True)
+        logger.error(f"❌ BACI cleaning pipeline failed with exception: {e}", exc_info=True)
         return None
 
 
-def process_wits_step(config: Dict[str, Any]) -> bool:
-    """
-    Processes WITS MFN and Preferential tariff data.
-
-    Args:
-        config: The pipeline configuration dictionary.
-
-    Returns:
-        True if both WITS processing steps were successful, False otherwise.
-    """
-    logger.info("--- Step 2: Processing WITS Tariff Data ---")
-    wits_raw_dir = config["WITS_RAW_DIR"]
-    intermediate_dir = config["INTERMEDIATE_DATA_DIR"]
-    mfn_output_path = config["WITS_MFN_OUTPUT_PATH"]
-    pref_output_path = config["WITS_PREF_OUTPUT_PATH"]
-    overall_success = True
-
-    # Process MFN Tariffs
-    logger.info("Starting WITS MFN Tariff processing.")
-    logger.info(f"Raw WITS dir: {wits_raw_dir}")
-    logger.info(f"Expected output path: {mfn_output_path}")
+def run_wits_mfn_cleaning_step(config: Dict[str, Any]) -> Optional[Path]:
+    """Runs the WITS MFN cleaning pipeline."""
+    logger.info("--- Step 2: Running WITS MFN Cleaning Pipeline ---")
     try:
-        # Assuming process_and_save_wits_data saves the file within intermediate_dir
-        # and returns the full path to the created file.
-        mfn_result_path_str = process_and_save_wits_data(
-            tariff_type="AVEMFN",
-            base_dir=str(wits_raw_dir),  # Convert Path to str if necessary
-            output_dir=str(intermediate_dir),  # Convert Path to str if necessary
-            # If the function *can* take the full desired path, it's better:
-            # output_path=str(mfn_output_path)
-        )
-
-        # Verify the expected output file was created at the correct location
-        if (
-            mfn_result_path_str
-            and Path(mfn_result_path_str) == mfn_output_path
-            and mfn_output_path.exists()
-        ):
-            logger.info(f"✅ WITS MFN data processed successfully. Output: `{mfn_output_path}`")
+        cleaned_mfn_path = run_wits_mfn_cleaning_pipeline(config)
+        if cleaned_mfn_path:
+            logger.info(f"✅ WITS MFN cleaning finished. Output: {cleaned_mfn_path}")
+            return cleaned_mfn_path
         else:
-            logger.error(
-                f"❌ WITS MFN processing failed or produced unexpected output. Expected: `{mfn_output_path}`, Result: `{mfn_result_path_str}`"
-            )
-            overall_success = False
-
+            logger.error("❌ WITS MFN cleaning pipeline failed.")
+            return None
     except Exception as e:
-        logger.error(f"❌ WITS MFN processing failed with exception: {e}", exc_info=True)
-        overall_success = False
+        logger.error(f"❌ WITS MFN cleaning pipeline failed with exception: {e}", exc_info=True)
+        return None
 
-    # Process Preferential Tariffs only if MFN succeeded (or run regardless, depending on logic)
-    # Current logic runs regardless, only flags failure.
-    logger.info("Starting WITS Preferential Tariff processing.")
-    logger.info(f"Raw WITS dir: {wits_raw_dir}")
-    logger.info(f"Expected output path: {pref_output_path}")
+
+def run_wits_pref_cleaning_step(config: Dict[str, Any]) -> Optional[Path]:
+    """Runs the WITS Preferential cleaning and expansion pipeline."""
+    logger.info("--- Step 3: Running WITS Preferential Cleaning & Expansion Pipeline ---")
     try:
-        pref_result_path_str = process_and_save_wits_data(
-            tariff_type="AVEPref",
-            base_dir=str(wits_raw_dir),  # Convert Path to str if necessary
-            output_dir=str(intermediate_dir),  # Convert Path to str if necessary
-            # If the function *can* take the full desired path, it's better:
-            # output_path=str(pref_output_path)
-        )
+        # This pipeline now needs PREF_GROUPS_PATH from config
+        if "PREF_GROUPS_PATH" not in config or not config["PREF_GROUPS_PATH"].exists():
+             logger.error(f"❌ Cannot run WITS Pref cleaning: Missing PREF_GROUPS_PATH in config or file not found at {config.get('PREF_GROUPS_PATH')}")
+             return None
 
-        # Verify the expected output file was created
-        if (
-            pref_result_path_str
-            and Path(pref_result_path_str) == pref_output_path
-            and pref_output_path.exists()
-        ):
-            logger.info(
-                f"✅ WITS Preferential data processed successfully. Output: `{pref_output_path}`"
-            )
+        cleaned_pref_path = run_wits_pref_cleaning_pipeline(config)
+        if cleaned_pref_path:
+            logger.info(f"✅ WITS Pref cleaning & expansion finished. Output: {cleaned_pref_path}")
+            return cleaned_pref_path
         else:
-            logger.error(
-                f"❌ WITS Preferential processing failed or produced unexpected output. Expected: `{pref_output_path}`, Result: `{pref_result_path_str}`"
-            )
-            overall_success = False
-
+            logger.error("❌ WITS Pref cleaning & expansion pipeline failed.")
+            return None
     except Exception as e:
-        logger.error(f"❌ WITS Preferential processing failed with exception: {e}", exc_info=True)
-        overall_success = False
-
-    return overall_success
+        logger.error(f"❌ WITS Pref cleaning & expansion pipeline failed with exception: {e}", exc_info=True)
+        return None
 
 
-def run_matching_step(config: Dict[str, Any], baci_processed_path: Path) -> bool:
-    """
-    Runs the matching pipeline to unify trade and tariff data.
+def run_merge_step(
+    config: Dict[str, Any],
+    cleaned_baci_path: Path,
+    cleaned_mfn_path: Path,
+    cleaned_pref_path: Path,
+) -> bool:
+    """Runs the merge pipeline using the cleaned data."""
+    logger.info("--- Step 4: Running Data Merging Pipeline ---")
 
-    Assumes WITS data has already been processed successfully.
-
-    Args:
-        config: The pipeline configuration dictionary.
-        baci_processed_path: Path to the successfully processed BACI data directory.
-
-    Returns:
-        True if the matching pipeline completed successfully, False otherwise.
-    """
-    logger.info("--- Step 3: Running Matching Pipeline ---")
-
-    # Inputs are taken directly from config or passed arguments
-    wits_mfn_path = config["WITS_MFN_OUTPUT_PATH"]
-    wits_pref_path = config["WITS_PREF_OUTPUT_PATH"]
-    pref_groups_path = config["PREF_GROUPS_PATH"]
-    matching_output_dir = config["MATCHING_OUTPUT_DIR"]
-
-    # Basic check for WITS file existence before running (optional robustness)
-    if not wits_mfn_path.exists() or not wits_pref_path.exists():
-        logger.error(
-            f"❌ Cannot run matching: Missing WITS input files. Checked: `{wits_mfn_path}`, `{wits_pref_path}`"
-        )
+    # Basic check for cleaned input file existence
+    if not cleaned_baci_path or not cleaned_baci_path.exists():
+        logger.error(f"❌ Cannot run merge: Missing cleaned BACI input file. Checked: `{cleaned_baci_path}`")
         return False
-    if not pref_groups_path.exists():
-        logger.error(
-            f"❌ Cannot run matching: Missing Preference Groups file. Checked: `{pref_groups_path}`"
-        )
+    if not cleaned_mfn_path or not cleaned_mfn_path.exists():
+        logger.error(f"❌ Cannot run merge: Missing cleaned MFN input file. Checked: `{cleaned_mfn_path}`")
+        return False
+    if not cleaned_pref_path or not cleaned_pref_path.exists():
+        logger.error(f"❌ Cannot run merge: Missing cleaned Pref input file. Checked: `{cleaned_pref_path}`")
         return False
 
-    logger.info("Starting Matching Pipeline.")
-    logger.info(f"BACI input: {baci_processed_path}")
-    logger.info(f"WITS MFN input: {wits_mfn_path}")
-    logger.info(f"WITS Pref input: {wits_pref_path}")
-    logger.info(f"Pref Groups input: {pref_groups_path}")
-    logger.info(f"Output directory: {matching_output_dir}")
-
     try:
-        # Pass Path objects if the function supports them, otherwise convert to str
-        run_chunked_matching_pipeline(
-            baci_path=str(baci_processed_path),  # Or baci_processed_path if it handles Path
-            wits_mfn_path=str(wits_mfn_path),  # Or wits_mfn_path
-            wits_pref_path=str(wits_pref_path),  # Or wits_pref_path
-            pref_groups_path=str(pref_groups_path),  # Or pref_groups_path
-            output_dir=str(matching_output_dir),  # Or matching_output_dir
-            # chunk_column="t",  # Keep defaults or specify if needed
-            # partition_column="Year",
+        success = run_merge_pipeline(
+            config=config,
+            cleaned_baci_path=cleaned_baci_path,
+            cleaned_mfn_path=cleaned_mfn_path,
+            cleaned_pref_path=cleaned_pref_path,
         )
-        # Basic verification: Check if the output directory was created
-        # More robust check would involve checking for expected partition files.
-        if matching_output_dir.exists() and matching_output_dir.is_dir():
-            logger.info(
-                f"✅ Matching Pipeline completed successfully. Output: `{matching_output_dir}`"
-            )
+        if success:
+            logger.info(f"✅ Merging pipeline completed successfully. Output: `{config.get('MERGED_OUTPUT_DIR')}`")
             return True
         else:
-            logger.warning(
-                f"🤔 Matching pipeline reported success, but output directory `{matching_output_dir}` not found or is not a directory."
-            )
-            # Depending on strictness, you might return False here.
-            # Let's assume the function handles its own errors primarily.
-            return True  # Or False if strict check required
-
+            logger.error("❌ Merging pipeline failed.")
+            return False
     except Exception as e:
-        logger.error(f"❌ Matching Pipeline failed with exception: {e}", exc_info=True)
+        logger.error(f"❌ Merging pipeline failed with exception: {e}", exc_info=True)
         return False
 
 
 # --- Main Execution ---
 def main() -> int:
     """
-    Orchestrates the data processing pipeline.
+    Orchestrates the data processing pipeline: Clean BACI, Clean MFN, Clean Pref, Merge.
 
     Returns:
         0 for success, 1 for failure.
     """
-    logger.info("--- Starting MPIL Tariff Trade Analysis Pipeline ---")
+    logger.info("--- Starting MPIL Tariff Trade Analysis ETL Pipeline ---")
 
     try:
         config = get_pipeline_config()
     except Exception as e:
-        logger.critical(f"Failed to load configuration: {e}", exc_info=True)
+        logger.critical(f"❌ Failed to load configuration: {e}", exc_info=True)
         return 1  # Configuration error
 
-    # Step 1: Process BACI Data (includes conversion and remapping)
-    baci_remapped_path = process_baci_step(config)
-    if not baci_remapped_path:
-        logger.critical("BACI processing and remapping failed. Aborting pipeline.")
-        return 1  # Exit with error code
+    # Step 1: Clean BACI Data
+    cleaned_baci_path = run_baci_cleaning_step(config)
+    if not cleaned_baci_path:
+        logger.critical("Pipeline aborted due to BACI cleaning failure.")
+        return 1
 
-    # Step 2: Process WITS Data
-    wits_success = process_wits_step(config)
-    if not wits_success:
-        logger.critical("WITS processing failed. Aborting pipeline.")
-        return 1  # Exit with error code
+    # Step 2: Clean WITS MFN Data
+    cleaned_mfn_path = run_wits_mfn_cleaning_step(config)
+    if not cleaned_mfn_path:
+        logger.critical("Pipeline aborted due to WITS MFN cleaning failure.")
+        return 1
 
-    # Step 3: Run Matching Pipeline
-    # Pass the verified *remapped* BACI output path from step 1
-    matching_success = run_matching_step(config, baci_remapped_path)
-    if not matching_success:
-        logger.critical("Matching pipeline failed.")
-        return 1  # Exit with error code
+    # Step 3: Clean WITS Pref Data (includes expansion)
+    cleaned_pref_path = run_wits_pref_cleaning_step(config)
+    if not cleaned_pref_path:
+        logger.critical("Pipeline aborted due to WITS Pref cleaning failure.")
+        return 1
 
-    logger.info("--- Pipeline Execution Finished Successfully ---")
+    # Step 4: Run Merging Pipeline
+    merge_success = run_merge_step(
+        config, cleaned_baci_path, cleaned_mfn_path, cleaned_pref_path
+    )
+    if not merge_success:
+        logger.critical("Pipeline aborted due to merging failure.")
+        return 1
+
+    logger.info("--- ETL Pipeline Execution Finished Successfully ---")
     return 0  # Exit with success code
 
 
 if __name__ == "__main__":
+    import sys
     exit_code = main()
+    logger.info(f"Pipeline finished with exit code {exit_code}.")
     sys.exit(exit_code)
