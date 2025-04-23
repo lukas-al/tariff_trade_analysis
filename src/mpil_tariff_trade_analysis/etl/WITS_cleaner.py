@@ -14,11 +14,7 @@ import pandas as pd
 import polars as pl
 
 # Local/application imports
-from mpil_tariff_trade_analysis.utils.iso_remapping import (
-    create_country_code_mapping_df, # Only import the unified function
-    DEFAULT_BACI_COUNTRY_CODES_PATH, # Import defaults if needed for paths
-    DEFAULT_WITS_COUNTRY_CODES_PATH,
-)
+from mpil_tariff_trade_analysis.utils.iso_remapping import create_country_code_mapping_df
 from mpil_tariff_trade_analysis.utils.logging_config import get_logger
 
 # Get logger for this module
@@ -230,7 +226,7 @@ def load_wits_tariff_data(
         # Assuming default column names in reference files are correct
         # baci_code_col="country_code", baci_name_col="country_name",
         # wits_code_col="ISO3", wits_name_col="Country Name",
-        drop_original=True # This is the default, but explicit is fine
+        drop_original=True,  # This is the default, but explicit is fine
     )
 
     # Check if the remapping actually produced results (optional, based on function behavior)
@@ -239,10 +235,11 @@ def load_wits_tariff_data(
     expected_new_cols = [f"{col}_iso_numeric" for col in country_cols_to_map]
     missing_cols = [col for col in expected_new_cols if col not in combined_df.columns]
     if missing_cols:
-        logger.warning(f"Expected remapped columns missing after remapping: {missing_cols}. Check logs.")
+        logger.warning(
+            f"Expected remapped columns missing after remapping: {missing_cols}. Check logs."
+        )
     else:
         logger.info("Finished country code remapping for WITS data.")
-
 
     return combined_df
 

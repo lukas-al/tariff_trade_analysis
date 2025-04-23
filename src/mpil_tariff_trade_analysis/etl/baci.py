@@ -13,7 +13,7 @@ from tqdm.auto import tqdm
 from mpil_tariff_trade_analysis.utils.iso_remapping import (
     DEFAULT_BACI_COUNTRY_CODES_PATH,
     DEFAULT_WITS_COUNTRY_CODES_PATH,
-    create_country_code_mapping_df, # <-- Import the updated function
+    create_country_code_mapping_df,  # <-- Import the updated function
 )
 from mpil_tariff_trade_analysis.utils.logging_config import get_logger
 
@@ -200,13 +200,13 @@ def remap_baci_country_codes(
             # Assuming default column names in reference files are correct
             # baci_code_col="country_code", baci_name_col="country_name",
             # wits_code_col="ISO3", wits_name_col="Country Name",
-            drop_original=True # Keep this consistent with the function's default or set explicitly
+            drop_original=True,  # Keep this consistent with the function's default or set explicitly
         )
 
         # Check if the remapping actually produced results
         if remapped_lf is None:
-             logger.error("Country code remapping failed unexpectedly. Check logs in iso_remapping.")
-             return None # Remapping failed
+            logger.error("Country code remapping failed unexpectedly. Check logs in iso_remapping.")
+            return None  # Remapping failed
 
         # Cast 't' (year) column to String/Utf8 before saving if it exists
         if "t" in remapped_lf.columns:
@@ -215,20 +215,21 @@ def remap_baci_country_codes(
         else:
             logger.warning("Column 't' not found in the remapped DataFrame. Skipping cast.")
 
-
         # Save the result
         logger.info(f"Saving remapped data to: {output_file}...")
         # Collect the LazyFrame and write to the determined output file path
         remapped_lf.collect().write_parquet(output_file)
 
         logger.info("BACI country code remapping completed successfully.")
-        return output_file # Return the path to the saved file
+        return output_file  # Return the path to the saved file
 
     except pl.exceptions.ComputeError as e:
         logger.exception(f"Polars ComputeError during BACI remapping (check paths/data): {e}")
         return None
     except FileNotFoundError as e:
-        logger.exception(f"File not found during BACI remapping (check input path '{input_path}'): {e}")
+        logger.exception(
+            f"File not found during BACI remapping (check input path '{input_path}'): {e}"
+        )
         return None
     except Exception as e:
         logger.exception(f"Unexpected error during BACI country code remapping: {e}")

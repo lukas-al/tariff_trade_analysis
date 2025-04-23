@@ -78,8 +78,8 @@ def get_pipeline_config() -> Dict[str, Any]:
         "WITS_RAW_DIR": wits_raw_dir,
         "PREF_GROUPS_PATH": pref_groups_path,
         # Specific Intermediate/Output Paths (as Path objects)
-        "BACI_INTERMEDIATE_OUTPUT_PATH": baci_intermediate_parquet_path, # Initial parquet output
-        "BACI_REMAPPED_OUTPUT_PATH": baci_remapped_output_path,       # After country code remapping
+        "BACI_INTERMEDIATE_OUTPUT_PATH": baci_intermediate_parquet_path,  # Initial parquet output
+        "BACI_REMAPPED_OUTPUT_PATH": baci_remapped_output_path,  # After country code remapping
         "WITS_MFN_OUTPUT_PATH": wits_mfn_output_path,
         "WITS_PREF_OUTPUT_PATH": wits_pref_output_path,
         "MATCHING_OUTPUT_DIR": matching_output_dir,
@@ -130,7 +130,9 @@ def process_baci_step(config: Dict[str, Any]) -> Optional[Path]:
                 f"❌ BACI CSV to Parquet failed or produced unexpected output. Expected: `{initial_output_path}`, Got: `{created_path_str_or_none}`."
             )
             return None
-        logger.info(f"✅ BACI CSV to Parquet conversion successful. Output: `{initial_output_path}`")
+        logger.info(
+            f"✅ BACI CSV to Parquet conversion successful. Output: `{initial_output_path}`"
+        )
 
     except Exception as e:
         logger.error(f"❌ BACI CSV to Parquet failed with exception: {e}", exc_info=True)
@@ -146,7 +148,6 @@ def process_baci_step(config: Dict[str, Any]) -> Optional[Path]:
         final_path = remap_baci_country_codes(
             input_path=initial_output_path,
             output_path=remapped_output_path,
-            # Assuming default reference paths are okay, otherwise pass from config
             # baci_codes_path=config["BACI_REF_CODES_PATH"],
             # wits_codes_path=config["WITS_REF_CODES_PATH"],
         )
