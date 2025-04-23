@@ -188,103 +188,185 @@ def remap_country_code_improved(
         return None  # Indicate failure
 
 
-def create_country_code_mapping_df(
-    lf: pl.LazyFrame,
-    code_columns: List[str],
+# --- New Vectorized Approach ---
+
+def create_iso_mapping_table(
+    unique_codes: pl.Series,
     baci_codes_path: str | Path = DEFAULT_BACI_COUNTRY_CODES_PATH,
     wits_codes_path: str | Path = DEFAULT_WITS_COUNTRY_CODES_PATH,
     baci_code_col: str = "country_code",
     baci_name_col: str = "country_name",
-    wits_code_col: str = "ISO3",  # Assumed column name in WITS ref file !! VERIFY !!
-    wits_name_col: str = "Country Name",  # Assumed column name in WITS ref file !! VERIFY !!
-    drop_original: bool = True,  # Option to keep original columns
-) -> pl.LazyFrame:
+    wits_code_col: str = "ISO3",
+    wits_name_col: str = "Country Name",
+) -> pl.DataFrame:
     """
-    Applies ISO 3166-1 numeric country code remapping to specified columns
-    in a LazyFrame, handling hardcoded group expansions (like EFTA).
-
-    It uses the `remap_country_code_improved` function, explodes the results
-    for multi-country mappings, and replaces or adds the mapped columns.
+    Creates a mapping table from original codes to lists of ISO numeric codes.
 
     Args:
-        lf: The input Polars LazyFrame.
-        code_columns: A list of column names in 'lf' containing country codes to map.
+        unique_codes: A Polars Series containing unique original country codes.
+        baci_codes_path: Path to the BACI country codes reference CSV.
+        wits_codes_path: Path to the WITS country codes reference CSV.
         baci_codes_path: Path to the BACI country codes reference CSV.
         wits_codes_path: Path to the WITS country codes reference CSV.
         baci_code_col: Column name for codes in the BACI reference file.
         baci_name_col: Column name for names in the BACI reference file.
         wits_code_col: Column name for codes in the WITS reference file.
         wits_name_col: Column name for names in the WITS reference file.
-        drop_original: If True, the original code columns are dropped.
 
     Returns:
-        A Polars LazyFrame with the specified columns remapped to ISO numeric codes.
-        Rows might be duplicated if a code maps to multiple ISO codes (e.g., EFTA).
+        A Polars DataFrame with columns 'original_code' and 'iso_numeric_list'.
+        'iso_numeric_list' contains lists of ISO 3166-1 numeric code strings.
+        Returns an empty DataFrame if reference maps cannot be loaded.
     """
-    logger.info(f"Starting country code remapping for columns: {code_columns}")
+    logger.info(f"Creating ISO mapping table for {len(unique_codes)} unique codes.")
 
-    # Load reference maps once
-    baci_map = load_reference_map(baci_codes_path, baci_code_col, baci_name_col)
-    wits_map = load_reference_map(wits_codes_path, wits_code_col, wits_name_col)
+    # --- 1. Load Reference Maps ---
+    try:
+        baci_map = load_reference_map(baci_codes_path, baci_code_col, baci_name_col)
+        wits_map = load_reference_map(wits_codes_path, wits_code_col, wits_name_col)
+    except Exception as e:
+        logger.exception(f"Failed to load reference maps: {e}")
+        return pl.DataFrame(
+            {"original_code": [], "iso_numeric_list": []},
+            schema={"original_code": pl.Utf8, "iso_numeric_list": pl.List(pl.Utf8)},
+        )
 
-    if not baci_map or not wits_map:
-        logger.error("Either BACI and WITS reference maps failed to load.")
-        raise
+    if not baci_map and not wits_map:
+        logger.error(
+            "Both BACI and WITS reference maps failed to load or are empty. Cannot create mapping."
+        )
+        return pl.DataFrame(
+            {"original_code": [], "iso_numeric_list": []},
+            schema={"original_code": pl.Utf8, "iso_numeric_list": pl.List(pl.Utf8)},
+        )
+    elif not baci_map:
+        logger.warning("BACI reference map failed to load or is empty.")
+    elif not wits_map:
+        logger.warning("WITS reference map failed to load or is empty.")
 
-    original_cols = lf.columns
-    lf_processed = lf
-    new_col_names_map = {}  # Map original col name to new col name
+    # --- 2. Map Unique Codes ---
+    mapping_data = []
+    processed_count = 0
+    failed_count = 0
+    # Ensure unique codes are strings for consistent lookup
+    unique_codes_str = unique_codes.cast(pl.Utf8).drop_nulls()
 
-    for col_name in code_columns:
-        if col_name not in lf.columns:
-            logger.warning(f"Column '{col_name}' not found in LazyFrame schema. Skipping.")
-            continue
+    for code in unique_codes_str:
+        iso_list = remap_country_code_improved(code, baci_map, wits_map)
+        if iso_list:  # Only add if mapping was successful
+            mapping_data.append({"original_code": code, "iso_numeric_list": iso_list})
+            processed_count += 1
+        else:
+            # Log the failure for the specific code
+            logger.debug(f"Failed to map original code: '{code}'")
+            failed_count += 1
 
-        logger.info(f"Processing country codes in column: '{col_name}'")
-        temp_list_col = f"__iso_list_{col_name}__"  # Temporary column for the list
-        final_col_name = f"{col_name}_iso_numeric"  # Final column name after explode
-        new_col_names_map[col_name] = final_col_name
+    logger.info(
+        f"Finished mapping unique codes. Success: {processed_count}, Failures: {failed_count}"
+    )
 
-        # Apply the updated mapping function which returns a list or None
-        lf_processed = lf_processed.with_columns(
-            pl.col(col_name)
-            .map_elements(
-                lambda code: remap_country_code_improved(code, baci_map, wits_map),
-                return_dtype=pl.List(pl.Utf8),  # Expecting a list of strings
-                skip_nulls=False,  # Let the function handle None input if necessary
-                strategy="thread_local",  # Potentially faster for complex functions
+    if not mapping_data:
+        logger.warning("No successful mappings found for any unique codes.")
+        return pl.DataFrame(
+            {"original_code": [], "iso_numeric_list": []},
+            schema={"original_code": pl.Utf8, "iso_numeric_list": pl.List(pl.Utf8)},
+        )
+
+    # --- 3. Create Mapping DataFrame ---
+    mapping_df = pl.DataFrame(
+        mapping_data,
+        schema={"original_code": pl.Utf8, "iso_numeric_list": pl.List(pl.Utf8)},
+    )
+
+    logger.info(f"Created mapping table with {len(mapping_df)} entries.")
+    return mapping_df
+
+
+def apply_iso_mapping(
+    lf: pl.LazyFrame,
+    code_column_name: str,
+    mapping_df: pl.DataFrame,
+    output_list_col_name: Optional[str] = None,
+    drop_original: bool = True,
+) -> pl.LazyFrame:
+    """
+    Applies a pre-computed ISO code mapping table to a column in a LazyFrame using a join.
+
+    Args:
+        lf: The input Polars LazyFrame.
+        code_column_name: The name of the column in 'lf' containing the original codes.
+        mapping_df: The mapping DataFrame created by `create_iso_mapping_table`.
+                    Must contain 'original_code' and 'iso_numeric_list' columns.
+        output_list_col_name: The desired name for the new column containing the list
+                              of ISO codes. Defaults to f"{code_column_name}_iso_list".
+        drop_original: If True, the original code column is dropped after mapping.
+
+    Returns:
+        A Polars LazyFrame with the mapped ISO code list column added/replaced.
+    """
+    if code_column_name not in lf.columns:
+        logger.error(f"Column '{code_column_name}' not found in LazyFrame. Cannot apply mapping.")
+        return lf
+
+    if not isinstance(mapping_df, pl.DataFrame) or mapping_df.is_empty():
+        logger.warning(
+            f"Mapping table is empty or invalid for column '{code_column_name}'. Skipping mapping."
+        )
+        return lf
+
+    if "original_code" not in mapping_df.columns or "iso_numeric_list" not in mapping_df.columns:
+        logger.error(
+            "Mapping table is missing required columns ('original_code', 'iso_numeric_list')."
+        )
+        return lf
+
+    if output_list_col_name is None:
+        output_list_col_name = f"{code_column_name}_iso_list"
+
+    logger.info(
+        f"Applying ISO mapping to column '{code_column_name}', creating '{output_list_col_name}'."
+    )
+
+    # Ensure the join keys have compatible types (cast original code column to Utf8)
+    lf_casted = lf.with_columns(pl.col(code_column_name).cast(pl.Utf8))
+
+    # Perform the left join
+    lf_joined = lf_casted.join(
+        mapping_df.lazy(),
+        left_on=code_column_name,
+        right_on="original_code",
+        how="left",
+    )
+
+    # Rename the joined list column
+    # Note: The column from the right side of the join might be named "iso_numeric_list_right"
+    # if "iso_numeric_list" already existed. Polars handles this, but let's be explicit.
+    # We assume the new column is named "iso_numeric_list" after the join if it wasn't present,
+    # or "iso_numeric_list_right" if it was. Let's check the schema.
+    joined_schema = lf_joined.collect_schema()
+    iso_list_col_actual = "iso_numeric_list"
+    if iso_list_col_actual not in joined_schema:
+        iso_list_col_actual = "iso_numeric_list_right"
+        if iso_list_col_actual not in joined_schema:
+            logger.error(
+                f"Could not find the expected list column ('iso_numeric_list' or 'iso_numeric_list_right') after join for '{code_column_name}'. Aborting rename."
             )
-            .alias(temp_list_col)
-        )
+            # Return the joined frame without rename/drop if the column isn't found
+            return lf_joined
 
-        # Filter out rows where mapping failed (returned None) before exploding
-        lf_processed = lf_processed.filter(pl.col(temp_list_col).is_not_null())
+    lf_renamed = lf_joined.rename({iso_list_col_actual: output_list_col_name})
 
-        # Explode the list column to handle multi-country groups (like EFTA)
-        lf_processed = lf_processed.explode(temp_list_col)
-
-        # Rename the exploded column (which now contains single ISO codes)
-        lf_processed = lf_processed.rename({temp_list_col: final_col_name})
-
-        logger.debug(
-            f"Remapped column '{col_name}' to '{final_col_name}'. Schema: {lf_processed.collect_schema()}"
-        )
-
-    # Determine final column set
-    cols_to_keep = list(original_cols)  # Start with all original columns
+    # Drop the original column if requested
     if drop_original:
-        # Remove the original columns that were successfully processed
-        for original_name in new_col_names_map.keys():
-            if original_name in cols_to_keep:
-                cols_to_keep.remove(original_name)
+        logger.debug(f"Dropping original column: '{code_column_name}'")
+        lf_final = lf_renamed.drop(code_column_name)
+    else:
+        lf_final = lf_renamed
 
-    # Add the new ISO numeric columns
-    final_column_selection = cols_to_keep + list(new_col_names_map.values())
+    # Log rows that didn't get mapped (where the new list column is null)
+    # This check is better done after collect, but we can add a note here.
+    logger.info(
+        f"Mapping applied for '{code_column_name}'. Check for nulls in '{output_list_col_name}' for codes that failed to map."
+    )
 
-    # Select the final set of columns
-    # Ensure the selection doesn't fail if a column wasn't processed
-    valid_final_columns = [col for col in final_column_selection if col in lf_processed.columns]
-    final_lf = lf_processed.select(valid_final_columns)
-
-    logger.info(f"Finished country code remapping. Final schema: {final_lf.collect_schema()}")
-    return final_lf
+    return lf_final
