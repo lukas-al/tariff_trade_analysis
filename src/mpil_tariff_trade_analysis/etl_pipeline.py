@@ -11,7 +11,10 @@ from typing import Any, Dict, Optional
 
 # Assume these functions exist and perform the described actions.
 # It's assumed they can handle Path objects as input where appropriate.
-from mpil_tariff_trade_analysis.etl.baci import baci_to_parquet_incremental
+from mpil_tariff_trade_analysis.etl.baci import (
+    baci_to_parquet_incremental,
+    remap_baci_country_codes,  # Import the remapping function
+)
 from mpil_tariff_trade_analysis.etl.matching_chunked import run_chunked_matching_pipeline
 from mpil_tariff_trade_analysis.etl.WITS_cleaner import process_and_save_wits_data
 
@@ -55,6 +58,8 @@ def get_pipeline_config() -> Dict[str, Any]:
     # Define the *intended* output paths clearly.
     baci_output_dir_name = f"BACI_{hs_code}_V{baci_release}"
     baci_intermediate_parquet_path = intermediate_data_dir / baci_output_dir_name
+    # Define path for remapped data
+    baci_remapped_output_path = intermediate_data_dir / f"{baci_output_dir_name}_remapped"
     wits_mfn_output_path = intermediate_data_dir / "WITS_AVEMFN.parquet"
     wits_pref_output_path = intermediate_data_dir / "WITS_AVEPref.parquet"
     matching_output_dir = final_data_dir / "unified_trade_tariff_partitioned"
@@ -73,7 +78,8 @@ def get_pipeline_config() -> Dict[str, Any]:
         "WITS_RAW_DIR": wits_raw_dir,
         "PREF_GROUPS_PATH": pref_groups_path,
         # Specific Intermediate/Output Paths (as Path objects)
-        "BACI_INTERMEDIATE_OUTPUT_PATH": baci_intermediate_parquet_path,
+        "BACI_INTERMEDIATE_OUTPUT_PATH": baci_intermediate_parquet_path, # Initial parquet output
+        "BACI_REMAPPED_OUTPUT_PATH": baci_remapped_output_path,       # After country code remapping
         "WITS_MFN_OUTPUT_PATH": wits_mfn_output_path,
         "WITS_PREF_OUTPUT_PATH": wits_pref_output_path,
         "MATCHING_OUTPUT_DIR": matching_output_dir,
@@ -89,56 +95,74 @@ def process_baci_step(config: Dict[str, Any]) -> Optional[Path]:
         config: The pipeline configuration dictionary.
 
     Returns:
-        The Path object to the processed BACI Parquet directory if successful,
+        The Path object to the *final*, remapped BACI Parquet directory if successful,
         otherwise None.
     """
-    logger.info("--- Step 1: Processing BACI Data ---")
+    logger.info("--- Step 1: Processing and Remapping BACI Data ---")
     hs_code = config["HS_CODE"]
     baci_release = config["BACI_RELEASE"]
     input_folder = config["BACI_INPUT_FOLDER"]
-    # Use the specific output path defined in the config
-    output_path = config["BACI_INTERMEDIATE_OUTPUT_PATH"]
-    # The function needs the parent directory to create the specific output folder in
+    initial_output_path = config["BACI_INTERMEDIATE_OUTPUT_PATH"]
+    remapped_output_path = config["BACI_REMAPPED_OUTPUT_PATH"]
     output_parent_folder = config["INTERMEDIATE_DATA_DIR"]
 
-    logger.info(f"Starting BACI processing: HS={hs_code}, Release={baci_release}")
+    # --- Sub-step 1.1: Convert CSV to Parquet ---
+    logger.info(f"Starting BACI CSV to Parquet conversion: HS={hs_code}, Release={baci_release}")
     logger.info(f"Input folder: {input_folder}")
-    logger.info(f"Target output path: {output_path}")
+    logger.info(f"Target intermediate output path: {initial_output_path}")
 
     try:
-        # Assuming baci_to_parquet_incremental creates the directory
-        # 'BACI_{hs}_V{release}' inside `output_parent_folder`.
-        # We rely on it creating the *exact* directory specified by `output_path`.
-        # If it *returns* the path it created, we should still verify it.
         created_path_str_or_none = baci_to_parquet_incremental(
             hs=hs_code,
             release=baci_release,
-            input_folder=str(input_folder),  # Convert to string if function requires it
-            output_folder=str(output_parent_folder),  # Convert to string if function requires it
+            input_folder=str(input_folder),
+            output_folder=str(output_parent_folder),
         )
 
-        # Verification is key
-        if (
+        # Verification
+        if not (
             created_path_str_or_none
-            and Path(created_path_str_or_none) == output_path
-            and output_path.exists()
-            and output_path.is_dir()
+            and Path(created_path_str_or_none) == initial_output_path
+            and initial_output_path.exists()
+            and initial_output_path.is_dir()
         ):
-            logger.info(f"✅ BACI data processed successfully. Output: `{output_path}`")
-            return output_path  # Return the Path object
-        elif created_path_str_or_none:
             logger.error(
-                f"❌ BACI processing mismatch. Expected: `{output_path}`, Got: `{created_path_str_or_none}`. Check function behavior."
+                f"❌ BACI CSV to Parquet failed or produced unexpected output. Expected: `{initial_output_path}`, Got: `{created_path_str_or_none}`."
             )
             return None
+        logger.info(f"✅ BACI CSV to Parquet conversion successful. Output: `{initial_output_path}`")
+
+    except Exception as e:
+        logger.error(f"❌ BACI CSV to Parquet failed with exception: {e}", exc_info=True)
+        return None
+
+    # --- Sub-step 1.2: Remap Country Codes ---
+    logger.info("Starting BACI country code remapping.")
+    logger.info(f"Input for remapping: {initial_output_path}")
+    logger.info(f"Target remapped output path: {remapped_output_path}")
+
+    try:
+        # Call the remapping function
+        final_path = remap_baci_country_codes(
+            input_path=initial_output_path,
+            output_path=remapped_output_path,
+            # Assuming default reference paths are okay, otherwise pass from config
+            # baci_codes_path=config["BACI_REF_CODES_PATH"],
+            # wits_codes_path=config["WITS_REF_CODES_PATH"],
+        )
+
+        # Verification
+        if final_path and final_path == remapped_output_path and remapped_output_path.exists():
+            logger.info(f"✅ BACI country code remapping successful. Final Output: `{final_path}`")
+            return final_path  # Return the path to the remapped data
         else:
             logger.error(
-                f"❌ BACI processing failed to produce expected output at `{output_path}` (Function returned None or empty)."
+                f"❌ BACI country code remapping failed. Expected: `{remapped_output_path}`, Got: `{final_path}`."
             )
             return None
 
     except Exception as e:
-        logger.error(f"❌ BACI processing failed with exception: {e}", exc_info=True)
+        logger.error(f"❌ BACI country code remapping failed with exception: {e}", exc_info=True)
         return None
 
 
@@ -314,10 +338,10 @@ def main() -> int:
         logger.critical(f"Failed to load configuration: {e}", exc_info=True)
         return 1  # Configuration error
 
-    # Step 1: Process BACI Data
-    baci_output_path = process_baci_step(config)
-    if not baci_output_path:
-        logger.critical("BACI processing failed. Aborting pipeline.")
+    # Step 1: Process BACI Data (includes conversion and remapping)
+    baci_remapped_path = process_baci_step(config)
+    if not baci_remapped_path:
+        logger.critical("BACI processing and remapping failed. Aborting pipeline.")
         return 1  # Exit with error code
 
     # Step 2: Process WITS Data
@@ -327,8 +351,8 @@ def main() -> int:
         return 1  # Exit with error code
 
     # Step 3: Run Matching Pipeline
-    # Pass the verified BACI output path from step 1
-    matching_success = run_matching_step(config, baci_output_path)
+    # Pass the verified *remapped* BACI output path from step 1
+    matching_success = run_matching_step(config, baci_remapped_path)
     if not matching_success:
         logger.critical("Matching pipeline failed.")
         return 1  # Exit with error code

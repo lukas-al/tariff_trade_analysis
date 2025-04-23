@@ -215,6 +215,10 @@ def remap_baci_country_codes(
         )
 
         # Save the result
+        # Cast 't' (year) column to String/Utf8 before saving
+        logger.info("Casting 't' (year) column to String/Utf8...")
+        lf = lf.with_columns(pl.col("t").cast(pl.Utf8))
+
         # Decide whether to save as a single file or partitioned based on output_path
         logger.info(f"Saving remapped data to: {output_path}...")
         if output_path.is_dir():
