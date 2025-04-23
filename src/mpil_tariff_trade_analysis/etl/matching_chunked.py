@@ -95,17 +95,11 @@ def get_unique_chunk_values(paths: list[str | Path], column_name: str) -> list:
             f"No unique values found for column '{column_name}' in any of the provided paths. Cannot proceed."
         )
 
-    # Convert to appropriate type if needed (e.g., int) and sort
-    try:
-        sorted_values = sorted([int(v) for v in unique_values if v is not None])
-    except ValueError:
-        logger.warning(
-            f"Could not convert all values in '{column_name}' to integers. Sorting as strings."
-        )
-        sorted_values = sorted([str(v) for v in unique_values if v is not None])
-
+    # Ensure all values are strings and sort them as strings.
+    # This guarantees consistency with the Utf8 type of the chunk column in the dataframes.
+    sorted_values = sorted([str(v) for v in unique_values if v is not None])
     logger.info(
-        f"Found {len(sorted_values)} unique chunk values: {sorted_values[:5]}...{sorted_values[-5:]}"
+        f"Found {len(sorted_values)} unique string chunk values: {sorted_values[:5]}...{sorted_values[-5:]}"
     )
     return sorted_values
 
