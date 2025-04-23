@@ -5,7 +5,6 @@ from pathlib import Path  # Add Path
 from typing import Optional  # Add Optional
 
 import duckdb
-import polars as pl  # Add polars
 from tqdm.auto import tqdm
 
 # Local imports
@@ -156,14 +155,14 @@ def remap_baci_country_codes(
     Returns:
         Path object to the output location if successful, otherwise None.
     """
-    logger.info(f"Initiating BACI-specific country code remapping via generic function.")
+    logger.info("Initiating BACI-specific country code remapping via generic function.")
     logger.info(f"Input: {input_path}, Output: {output_path}")
 
     return remap_codes_and_explode(
         input_path=input_path,
         output_path=output_path,
         code_columns_to_remap=["i", "j"],
-        output_column_names=["i_iso_numeric", "j_iso_numeric"],
+        output_column_names=["i", "j"],
         year_column_name="t",  # BACI uses 't' for year
         use_hive_partitioning=True,  # BACI often uses hive partitioning
         baci_codes_path=baci_codes_path,
@@ -174,5 +173,5 @@ def remap_baci_country_codes(
         # wits_ref_code_col="ISO3",
         # wits_ref_name_col="Country Name",
         drop_original_code_columns=True,
-        filter_failed_mappings=True, # Standard behavior for BACI pipeline
+        filter_failed_mappings=True,  # Standard behavior for BACI pipeline
     )

@@ -14,7 +14,6 @@ import pandas as pd
 import polars as pl
 
 # Local/application imports
-from mpil_tariff_trade_analysis.utils.iso_remapping import create_country_code_mapping_df
 from mpil_tariff_trade_analysis.utils.logging_config import get_logger
 
 # Get logger for this module
@@ -25,18 +24,18 @@ OUTPUT_DIR = "data/intermediate"
 DEFAULT_WITS_BASE_DIR = "data/raw/WITS_tariff"  # Add a default
 
 
-def load_wits_tariff_data(
-    tariff_type="AVEMFN", base_dir=DEFAULT_WITS_BASE_DIR
-):  # Use default here too
+def consolidate_wits_tariff_data(tariff_type="AVEMFN", base_dir=DEFAULT_WITS_BASE_DIR) -> Path:
     """
-    Load all WITS tariff data for a specific tariff type into a single Polars DataFrame.
+    Consolidate all WITS tariff data for a specific tariff type into a single Polars DataFrame.
+    Save it to the intermediate data folder.
+    Returns the path to the consolidated data
 
     Args:
         tariff_type (str): Type of tariff to load (AVEMFN or AVEPref)
         base_dir (str): Base directory for the WITS tariff data
 
     Returns:
-        pl.LazyFrame: Combined lazy dataframe with all tariff data
+        pathlib.Path: Path object to file
     """
     logger.info(f"Starting to load {tariff_type} tariff data from {base_dir}")
 
@@ -55,7 +54,7 @@ def load_wits_tariff_data(
         logger.debug(f"Found {len(subdirs)} subdirectories in {tariff_dir}")
     except FileNotFoundError:
         logger.error(f"Directory not found: {tariff_dir}")
-        return None
+        raise
 
     for subdir in subdirs:
         match = re.match(pattern, subdir)
@@ -157,7 +156,7 @@ def load_wits_tariff_data(
 
     if not dfs:
         logger.warning("No valid CSV files found.")
-        return None
+        raise
 
     # Combine all dataframes
     logger.info("Combining all dataframes")
@@ -177,14 +176,9 @@ def load_wits_tariff_data(
                 pl.col("Min_Rate").alias("min_rate"),
                 pl.col("Max_Rate").alias("max_rate"),
                 pl.col("tariff_type"),
-                # pl.col("SimpleAverage").cast(pl.Float64, strict=False).alias("tariff_rate"),
-                # pl.col("Min_Rate").cast(pl.Float64, strict=False).alias("min_rate"),
-                # pl.col("Max_Rate").cast(pl.Float64, strict=False).alias("max_rate"),
             ]
         )
 
-        logger.info("Translating HS codes...")
-        combined_df = vectorized_hs_translation(combined_df)
     elif tariff_type == "AVEPref":
         combined_df = combined_df.select(
             [
@@ -193,71 +187,39 @@ def load_wits_tariff_data(
                 pl.col("Partner").alias("partner_country"),
                 pl.col("ProductCode").alias("product_code"),
                 pl.col("NomenCode").alias("hs_revision"),
-                # pl.col("SimpleAverage").cast(pl.Float64, strict=False).alias("tariff_rate"),
                 pl.col("SimpleAverage").alias("tariff_rate"),
-                # pl.col("Min_Rate").cast(pl.Float64, strict=False).alias("min_rate"),
                 pl.col("Min_Rate").alias("min_rate"),
-                # pl.col("Max_Rate").cast(pl.Float64, strict=False).alias("max_rate"),
                 pl.col("Max_Rate").alias("max_rate"),
                 pl.col("tariff_type"),
             ]
         )
 
-        logger.info("Translating HS codes...")
-        combined_df = vectorized_hs_translation(combined_df)
-
-    logger.info("Finished initial loading and HS translation for WITS tariff data.")
-
-    # --- Apply Vectorized Country Code Remapping ---
-    country_cols_to_map = ["reporter_country"]
-    if tariff_type == "AVEPref":
-        country_cols_to_map.append("partner_country")
-
-    logger.info(f"Starting country code remapping for columns: {country_cols_to_map}")
-
-    # Apply the unified mapping and explosion logic directly
-    # This function now handles the mapping, potential explosion, and column renaming/dropping
-    combined_df = create_country_code_mapping_df(
-        lf=combined_df,
-        code_columns=country_cols_to_map,
-        # Pass reference paths if they differ from defaults in iso_remapping.py
-        # baci_codes_path=DEFAULT_BACI_COUNTRY_CODES_PATH,
-        # wits_codes_path=DEFAULT_WITS_COUNTRY_CODES_PATH,
-        # Assuming default column names in reference files are correct
-        # baci_code_col="country_code", baci_name_col="country_name",
-        # wits_code_col="ISO3", wits_name_col="Country Name",
-        drop_original=True,  # This is the default, but explicit is fine
-    )
-
-    # Check if the remapping actually produced results (optional, based on function behavior)
-    # The function logs internally if columns are skipped or mapping fails.
-    # We might just check if the expected new columns exist.
-    expected_new_cols = [f"{col}_iso_numeric" for col in country_cols_to_map]
-    missing_cols = [col for col in expected_new_cols if col not in combined_df.columns]
-    if missing_cols:
-        logger.warning(
-            f"Expected remapped columns missing after remapping: {missing_cols}. Check logs."
+    final_path = Path(f"{tariff_dir}/WITS_{tariff_type}.parquet")
+    try:
+        combined_df.sink_parquet(
+            final_path,
         )
-    else:
-        logger.info("Finished country code remapping for WITS data.")
 
-    return combined_df
+        logger.info(f"Sucesffuly sank WITS MFN post-consolidation to {final_path}")
 
+        return final_path
 
-# process_and_save_wits_data is removed, saving is handled by specific pipelines
+    except Exception as e:
+        logger.error(f"Failed to write WITS {tariff_type} data:\n{e}")
+        raise
 
 
 def vectorized_hs_translation(
-    df: pl.LazyFrame, mapping_dir: str = "data/raw/hs_reference"
-) -> pl.LazyFrame:
+    intermediate_file_path: Path, mapping_dir: str = "data/raw/hs_reference"
+) -> Path:
     """
     This function translates between harmonised system codes. The data in WITS is coded based on
     the HS at the time of the series date. This means we need to map from HS 1-6 to HS92,
     the HS our BACI data is in with the longest available series.
 
-    !WARNING: Given inaccuracies which result from this process, it may be desirable in the future
-    !    to use a different, shorter but more accurate BACI dataset coded in a more modern HS, and
-    !    then to update this function to account for that.
+    !WARNING: Given inaccuracies which mechanically result from this process, it may be desirable
+    ! in the future to use a different, shorter but more accurate BACI dataset coded in a more
+    ! modern HS, and to update this function to account for that.
 
     The HS in use is referred to as follows in the dataset:
     H0: HS 1988/92
@@ -272,6 +234,8 @@ def vectorized_hs_translation(
     HS to another. The files stored are H1_to_H0, H2_to_H0, H3_to_H0, H4_to_H0, H5_to_H0, H6_to_H0.
 
     !WARNING: I haven't fully validated that this is working, will assume so for now.
+
+    File consumes str path and returns string path.
 
     """
     # Define which HS revisions require mapping (all except H0)
@@ -295,6 +259,9 @@ def vectorized_hs_translation(
 
     # Combine all mappings into one Polars LazyFrame.
     mapping_all = pl.concat(mapping_dfs).lazy()
+
+    # Load the main dataframe
+    df = pl.scan_parquet(intermediate_file_path)
 
     # Pre-process the main LazyFrame:
     # Ensure product codes are padded to 6 digits.
@@ -328,7 +295,15 @@ def vectorized_hs_translation(
     # Combine the rows which were already in H0 with the ones translated.
     df_final = pl.concat([df_h0, df_non_h0])
 
-    return df_final
+    # Save output and return the path
+    vectorised_output_path = Path(intermediate_file_path.stem + "_vectorised.parquet")
+    try:
+        df_final.sink_parquet(vectorised_output_path)
+    except Exception as e:
+        logger.error(f"Failed to sink hs_translated WITS file:\n{e}")
+        raise
+
+    return vectorised_output_path
 
 
 # Remove the __main__ block as this file is now a library
