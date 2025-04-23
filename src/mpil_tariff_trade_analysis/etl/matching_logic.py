@@ -4,12 +4,6 @@ from pathlib import Path
 import pandas as pd
 import polars as pl
 
-import logging
-from pathlib import Path
-
-import pandas as pd
-import polars as pl
-
 # Assuming your logging setup is accessible via this import path
 from mpil_tariff_trade_analysis.utils.logging_config import get_logger
 
@@ -74,7 +68,7 @@ def expand_preferential_tariffs(
     # Expects input df with columns like t, i (list), j (list), k, pref_tariff_rate etc.
     # from load_wits_tariff_data + temp rename
     input_pref_df: pl.LazyFrame,
-    pref_group_mapping: pl.LazyFrame
+    pref_group_mapping: pl.LazyFrame,
 ) -> pl.LazyFrame:
     """
     Expands WITS preferential tariff data from partner groups to individual countries.
@@ -128,9 +122,7 @@ def expand_preferential_tariffs(
         how="left",
     )
     logger.debug("Join completed.")
-    logger.debug(
-        f"Schema after joining with group mapping: {joined_pref_mapping.collect_schema()}"
-    )
+    logger.debug(f"Schema after joining with group mapping: {joined_pref_mapping.collect_schema()}")
 
     # --- Create the final partner list ---
     # If 'partner_list' (from group mapping) is not null, use it.
@@ -138,15 +130,13 @@ def expand_preferential_tariffs(
     # Wrap the result in a list for the next explode step.
     logger.debug("Creating final partner list using coalesce logic.")
     expanded_pref_pre_explode2 = joined_pref_mapping.with_columns(
-        pl.when(
-            pl.col("partner_list").is_not_null() & (pl.col("partner_list").list.len() > 0)
-        )
+        pl.when(pl.col("partner_list").is_not_null() & (pl.col("partner_list").list.len() > 0))
         .then(pl.col("partner_list"))  # Use the list from mapping
         .otherwise(
-            pl.concat_list(pl.col("j")) # Use original exploded 'j' as a single-item list
+            pl.concat_list(pl.col("j"))  # Use original exploded 'j' as a single-item list
         )
         .alias("final_partner_list")
-    ).drop(["partner_list", "region_code"]) # Drop intermediate columns
+    ).drop(["partner_list", "region_code"])  # Drop intermediate columns
 
     logger.debug("Final partner list column created ('final_partner_list').")
     logger.debug(f"Schema before second explode: {expanded_pref_pre_explode2.collect_schema()}")
@@ -156,18 +146,22 @@ def expand_preferential_tariffs(
     try:
         # Keep all original columns, replace 'j' effectively
         # Select all columns from the input EXCEPT the intermediate ones we dropped
-        cols_to_keep = [c for c in joined_pref_mapping.columns if c not in ["partner_list", "region_code"]]
+        cols_to_keep = [
+            c for c in joined_pref_mapping.columns if c not in ["partner_list", "region_code"]
+        ]
 
         expanded_pref_final = (
             expanded_pref_pre_explode2.explode("final_partner_list")
-            .rename({"final_partner_list": "j_individual"}) # This is the final partner string
+            .rename({"final_partner_list": "j_individual"})  # This is the final partner string
             # Select original columns (like t, i (list), k, rates) + the new j_individual
             .select(cols_to_keep + ["j_individual"])
             # We don't rename j_individual to 'j' here, let the final rename step handle it
         )
         logger.debug("Second explode operation defined in lazy frame.")
         logger.info("Preferential tariffs expansion plan created.")
-        logger.debug(f"Schema AFTER defining second explode: {expanded_pref_final.collect_schema()}")
+        logger.debug(
+            f"Schema AFTER defining second explode: {expanded_pref_final.collect_schema()}"
+        )
 
         # Optional fetch for debugging
         if logger.isEnabledFor(logging.DEBUG):
@@ -176,7 +170,10 @@ def expand_preferential_tariffs(
                 fetched_row = expanded_pref_final.fetch(1)
                 logger.debug(f"Successfully fetched 1 row AFTER second explode:\n{fetched_row}")
             except Exception as e:
-                logger.error(f"CRITICAL: Failed to fetch(1) AFTER second explode definition: {e}", exc_info=True)
+                logger.error(
+                    f"CRITICAL: Failed to fetch(1) AFTER second explode definition: {e}",
+                    exc_info=True,
+                )
                 raise
         return expanded_pref_final
     except Exception as e:
@@ -324,10 +321,7 @@ def expand_preferential_tariffs(
 
 
 def join_datasets(
-    baci: pl.LazyFrame,
-    renamed_avemfn: pl.LazyFrame,
-    # This is now the cleaned, expanded, renamed PREF data
-    cleaned_expanded_pref: pl.LazyFrame
+    baci: pl.LazyFrame, renamed_avemfn: pl.LazyFrame, cleaned_expanded_pref: pl.LazyFrame
 ) -> pl.LazyFrame:
     """
     Joins cleaned BACI, cleaned MFN, and cleaned/expanded Preferential tariff data.
@@ -360,12 +354,16 @@ def join_datasets(
     logger.debug("Casting join key types to Utf8.")
     try:
         # Explode BACI country lists before casting/joining
-        if "i_iso_numeric" in baci.columns and isinstance(baci.collect_schema()["i_iso_numeric"], pl.List):
-             logger.debug("Exploding BACI 'i_iso_numeric' (exporter list).")
-             baci = baci.explode("i_iso_numeric")
-        if "j_iso_numeric" in baci.columns and isinstance(baci.collect_schema()["j_iso_numeric"], pl.List):
-             logger.debug("Exploding BACI 'j_iso_numeric' (importer list).")
-             baci = baci.explode("j_iso_numeric")
+        if "i_iso_numeric" in baci.columns and isinstance(
+            baci.collect_schema()["i_iso_numeric"], pl.List
+        ):
+            logger.debug("Exploding BACI 'i_iso_numeric' (exporter list).")
+            baci = baci.explode("i_iso_numeric")
+        if "j_iso_numeric" in baci.columns and isinstance(
+            baci.collect_schema()["j_iso_numeric"], pl.List
+        ):
+            logger.debug("Exploding BACI 'j_iso_numeric' (importer list).")
+            baci = baci.explode("j_iso_numeric")
 
         # Rename BACI columns to match join keys AFTER exploding
         baci = baci.rename({"i_iso_numeric": "i", "j_iso_numeric": "j"})
@@ -406,16 +404,20 @@ def join_datasets(
     logger.debug(
         "Calculating effective tariff rate using coalesce(pref_tariff_rate, mfn_tariff_rate)."
     )
-    final_table = joined_all.with_columns(
-        pl.col("pref_tariff_rate").cast(pl.Float64, strict=False).alias("pref_numeric"),
-        pl.col("mfn_tariff_rate").cast(pl.Float64, strict=False).alias("mfn_numeric"),
-    ).with_columns(
-        pl.coalesce(pl.col("pref_numeric"), pl.col("mfn_numeric")).alias(
-            "effective_tariff_rate_numeric" # Keep numeric version
+    final_table = (
+        joined_all.with_columns(
+            pl.col("pref_tariff_rate").cast(pl.Float64, strict=False).alias("pref_numeric"),
+            pl.col("mfn_tariff_rate").cast(pl.Float64, strict=False).alias("mfn_numeric"),
         )
-        # Optionally keep original string versions or cast numeric back to string if needed
-        # .cast(pl.Utf8).alias("effective_tariff_rate")
-    ).drop(["pref_numeric", "mfn_numeric"]) # Drop intermediate numeric columns
+        .with_columns(
+            pl.coalesce(pl.col("pref_numeric"), pl.col("mfn_numeric")).alias(
+                "effective_tariff_rate_numeric"  # Keep numeric version
+            )
+            # Optionally keep original string versions or cast numeric back to string if needed
+            # .cast(pl.Utf8).alias("effective_tariff_rate")
+        )
+        .drop(["pref_numeric", "mfn_numeric"])
+    )  # Drop intermediate numeric columns
 
     # Rename numeric effective rate to final name
     final_table = final_table.rename({"effective_tariff_rate_numeric": "effective_tariff_rate"})
@@ -441,15 +443,19 @@ def create_final_table(joined_data: pl.LazyFrame) -> pl.LazyFrame:
 
     # Ensure the columns exist before selecting
     available_cols = joined_data.columns
-    select_exprs = [] # Use expressions for safe selection
+    select_exprs = []  # Use expressions for safe selection
 
     # Core identifiers (should exist after join)
-    select_exprs.extend([
-        pl.col("t").alias("Year"), # t is Utf8
-        pl.col("i").alias("Source"), # i is Utf8 (exploded BACI reporter)
-        pl.col("j").alias("Target"), # j is Utf8 (exploded BACI importer / expanded Pref partner)
-        pl.col("k").alias("HS_Code"), # k is Utf8
-    ])
+    select_exprs.extend(
+        [
+            pl.col("t").alias("Year"),  # t is Utf8
+            pl.col("i").alias("Source"),  # i is Utf8 (exploded BACI reporter)
+            pl.col("j").alias(
+                "Target"
+            ),  # j is Utf8 (exploded BACI importer / expanded Pref partner)
+            pl.col("k").alias("HS_Code"),  # k is Utf8
+        ]
+    )
 
     # BACI Value/Quantity (check existence)
     if "q" in available_cols:
@@ -470,7 +476,7 @@ def create_final_table(joined_data: pl.LazyFrame) -> pl.LazyFrame:
         select_exprs.append(pl.col("pref_tariff_rate").alias("pref_tariff_rate_str"))
     if "effective_tariff_rate" in available_cols:
         # This is the coalesced numeric rate calculated in join_datasets
-        select_exprs.append(pl.col("effective_tariff_rate")) # Already named correctly
+        select_exprs.append(pl.col("effective_tariff_rate"))  # Already named correctly
     else:
         # This should not happen if join_datasets worked
         logger.error("Column 'effective_tariff_rate' not found after join. Adding null.")
