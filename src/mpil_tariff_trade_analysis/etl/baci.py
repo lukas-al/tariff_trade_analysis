@@ -140,11 +140,8 @@ def aggregate_baci(input, output, aggregation="country"):
 # --- Refactored remap_codes_and_explode ---
 def remap_codes_and_explode(
     input_lf: pl.LazyFrame,  # Changed from input_path
-    # output_path: str | Path, # Removed - no longer writes file here
     code_columns_to_remap: List[str],
     output_column_names: List[str],
-    year_column_name: Optional[str] = "t",
-    # use_hive_partitioning: bool = True, # Removed - not relevant for LazyFrame input
     baci_codes_path: str | Path = DEFAULT_BACI_COUNTRY_CODES_PATH,
     wits_codes_path: str | Path = DEFAULT_WITS_COUNTRY_CODES_PATH,
     baci_ref_code_col: str = "country_code",
@@ -165,8 +162,6 @@ def remap_codes_and_explode(
         code_columns_to_remap: List of column names containing the original country codes.
         output_column_names: List of desired output column names for the remapped ISO codes.
                              Must be the same length as code_columns_to_remap.
-        year_column_name: Optional name of the year column for partitioning output (if writing later).
-                          Not used for partitioning here, but kept for potential downstream use.
         baci_codes_path: Path to BACI country code reference CSV.
         wits_codes_path: Path to WITS country code reference CSV.
         baci_ref_code_col: Column name for codes in BACI reference.
@@ -196,14 +191,19 @@ def remap_codes_and_explode(
         logger.debug(f"Input LazyFrame schema: {original_schema}")
 
         # --- 2. Create Mapping Table for Unique Codes ---
-        unique_codes_list = []
-        for col in code_columns_to_remap:
-            unique_codes_list.append(lf.select(pl.col(col).unique()))
 
-        # Combine unique codes from all specified columns
-        unique_codes_combined_lf = pl.concat(unique_codes_list).unique()
-        # The column name here doesn't strictly matter as create_iso_mapping_table works on the Series
-        unique_codes_series = unique_codes_combined_lf.collect().to_series()
+        melted_codes_lf = lf.select(code_columns_to_remap).melt(value_name="code")
+        unique_codes_lf = melted_codes_lf.select("code").unique()
+        unique_codes_series = unique_codes_lf.collect().to_series()
+
+        # unique_codes_list = []
+        # for col in code_columns_to_remap:
+        #     unique_codes_list.append(lf.select(pl.col(col).unique()))
+
+        # # Combine unique codes from all specified columns
+        # unique_codes_combined_lf = pl.concat(unique_codes_list).unique()
+        # # The column name here doesn't strictly matter as create_iso_mapping_table works on the Series
+        # unique_codes_series = unique_codes_combined_lf.collect().to_series()
         logger.info(f"Found {len(unique_codes_series)} unique codes across columns to map.")
 
         mapping_df = create_iso_mapping_table(
@@ -223,6 +223,9 @@ def remap_codes_and_explode(
         temp_output_cols = []  # Store intermediate list column names
 
         for i, original_col in enumerate(code_columns_to_remap):
+            # Pad all the i and j columns to be 3 digits
+            current_lf = current_lf.with_columns(pl.col(original_col).str.zfill(3))
+
             output_col = output_column_names[i]
             temp_list_col = f"_{output_col}_iso_list"  # Temporary name for the list column
             temp_output_cols.append(temp_list_col)
@@ -233,7 +236,7 @@ def remap_codes_and_explode(
                 code_column_name=original_col,
                 mapping_lf=mapping_lf,  # Pass lazy mapping frame
                 output_list_col_name=temp_list_col,
-                drop_original=False,  # Keep original for now if needed, or set based on param
+                drop_original=True,  # Keep original for now if needed, or set based on param
             )
 
         # --- 5. Filter Failed Mappings (Optional) ---
@@ -306,12 +309,6 @@ def remap_codes_and_explode(
         return None
 
 
-# --- remap_baci_country_codes needs adjustment if used ---
-# This function now needs to accept the output LazyFrame from remap_codes_and_explode
-# and potentially write it if that's its purpose.
-# For now, we focus on the WITS pipeline usage.
-
-
 def remap_baci_country_codes(
     input_path: str | Path,  # Keep input path for initial load if needed
     output_path: str | Path,  # Keep output path for final save
@@ -340,13 +337,13 @@ def remap_baci_country_codes(
         # Assuming hive partitioning based on original function call context
         input_lf = pl.scan_parquet(input_path, hive_partitioning=True)
 
+        # Make sure everything is a string
+        lf_casted = input_lf.with_columns(pl.all().cast(pl.Utf8))
+
         remapped_lf = remap_codes_and_explode(
-            input_lf=input_lf,  # Pass the loaded LazyFrame
-            # output_path=output_path, # Removed from call
+            input_lf=lf_casted,  # Pass the loaded LazyFrame
             code_columns_to_remap=["i", "j"],
             output_column_names=["i", "j"],  # Output columns replace input
-            year_column_name="t",
-            # use_hive_partitioning=True, # Removed from call
             baci_codes_path=baci_codes_path,
             wits_codes_path=wits_codes_path,
             drop_original_code_columns=True,  # Originals 'i', 'j' are replaced
@@ -359,8 +356,7 @@ def remap_baci_country_codes(
 
         # Write the final result
         logger.info(f"Writing remapped BACI data to: {output_path}")
-        # Decide on partitioning for the output here if needed
-        remapped_lf.collect().write_parquet(output_path)
+        remapped_lf.sink_parquet(output_path)
         logger.info("✅ Remapped BACI data saved successfully.")
         return Path(output_path)
 

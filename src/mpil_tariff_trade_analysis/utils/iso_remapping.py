@@ -331,6 +331,9 @@ def apply_iso_mapping(
     # Ensure the join keys have compatible types (cast original code column to Utf8)
     lf_casted = lf.with_columns(pl.col(code_column_name).cast(pl.Utf8))
 
+    logger.debug(f"Lazyframe to join to:\n{lf_casted.fetch(5)}")
+    logger.debug(f"Mapping to join using:\n{mapping_lf.fetch(5)}")
+
     # Perform the left join
     lf_joined = lf_casted.join(
         mapping_lf,
@@ -339,12 +342,16 @@ def apply_iso_mapping(
         how="left",
     )
 
+    logger.debug(f"Joined lazyframe: \n{lf_joined.fetch(5)}")
+
     # Rename the joined list column
     # Note: The column from the right side of the join might be named "iso_numeric_list_right"
     # if "iso_numeric_list" already existed. Polars handles this, but let's be explicit.
     # We assume the new column is named "iso_numeric_list" after the join if it wasn't present,
     # or "iso_numeric_list_right" if it was. Let's check the schema.
     joined_schema = lf_joined.collect_schema()
+    logger.debug(f"Joined schema after joining ISO mappings:\n{joined_schema}")
+
     iso_list_col_actual = "iso_numeric_list"
     if iso_list_col_actual not in joined_schema:
         iso_list_col_actual = "iso_numeric_list_right"
@@ -371,9 +378,6 @@ def apply_iso_mapping(
     )
 
     return lf_final
-
-
-# --- Generic Workflow Function ---
 
 
 def remap_codes_and_explode(

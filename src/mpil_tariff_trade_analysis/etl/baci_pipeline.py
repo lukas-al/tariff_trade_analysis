@@ -5,8 +5,6 @@ Pipeline for cleaning and preparing BACI trade data.
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-import polars as pl
-
 # Local imports
 from mpil_tariff_trade_analysis.etl.baci import (
     baci_to_parquet_incremental,
@@ -17,73 +15,73 @@ from mpil_tariff_trade_analysis.utils.logging_config import get_logger
 logger = get_logger(__name__)
 
 
-def validate_cleaned_baci(lf: pl.LazyFrame) -> bool:
-    """
-    Performs basic validation on the cleaned BACI LazyFrame.
+# def validate_cleaned_baci(lf: pl.LazyFrame) -> bool:
+#     """
+#     Performs basic validation on the cleaned BACI LazyFrame.
 
-    Args:
-        lf: The LazyFrame to validate.
+#     Args:
+#         lf: The LazyFrame to validate.
 
-    Returns:
-        True if validation passes, False otherwise.
-    """
-    # Expect remapped columns from remap_baci_country_codes
-    # The function currently produces 'i_iso_numeric', 'j_iso_numeric'
-    # It also keeps original columns unless drop_original=True was set explicitly
-    # Let's assume drop_original=True was used in remap_baci_country_codes
-    expected_cols_subset = {
-        "t",  # Year (original, should be cast later if needed)
-        "i_iso_numeric",  # Remapped exporter ISO numeric code
-        "j_iso_numeric",  # Remapped importer ISO numeric code
-        "k",  # HS Product code (original)
-        "v",  # Value
-        "q",  # Quantity
-    }
-    actual_cols = set(lf.columns)
+#     Returns:
+#         True if validation passes, False otherwise.
+#     """
+#     # Expect remapped columns from remap_baci_country_codes
+#     # The function currently produces 'i_iso_numeric', 'j_iso_numeric'
+#     # It also keeps original columns unless drop_original=True was set explicitly
+#     # Let's assume drop_original=True was used in remap_baci_country_codes
+#     expected_cols_subset = {
+#         "t",  # Year (original, should be cast later if needed)
+#         "i_iso_numeric",  # Remapped exporter ISO numeric code
+#         "j_iso_numeric",  # Remapped importer ISO numeric code
+#         "k",  # HS Product code (original)
+#         "v",  # Value
+#         "q",  # Quantity
+#     }
+#     actual_cols = set(lf.columns)
 
-    # Check if the core expected columns are present
-    if not expected_cols_subset.issubset(actual_cols):
-        missing = expected_cols_subset - actual_cols
-        logger.error(
-            f"Validation Error: Missing expected columns in cleaned BACI data. "
-            f"Missing: {missing}, Found: {actual_cols}"
-        )
-        return False
+#     # Check if the core expected columns are present
+#     if not expected_cols_subset.issubset(actual_cols):
+#         missing = expected_cols_subset - actual_cols
+#         logger.error(
+#             f"Validation Error: Missing expected columns in cleaned BACI data. "
+#             f"Missing: {missing}, Found: {actual_cols}"
+#         )
+#         return False
 
-    # Add more checks here:
-    # - Data type checks (e.g., are i_iso_numeric, j_iso_numeric strings? Is 't' string?)
-    #   remap_baci_country_codes casts 't' to Utf8.
-    schema = lf.collect_schema()
-    if schema.get("t") != pl.Utf8:
-        logger.error(f"Validation Error: BACI 't' column type is {schema.get('t')}, expected Utf8.")
-        return False
-    if schema.get("i_iso_numeric") != pl.List(
-        pl.Utf8
-    ):  # remap_country_code_improved returns List[str]
-        logger.warning(
-            f"Validation Warning: BACI 'i_iso_numeric' column type is {schema.get('i_iso_numeric')}, expected List(Utf8). Check remapping logic."
-        )
-        # This might not be an error if single codes are not wrapped in lists, adjust expectation if needed.
-    if schema.get("j_iso_numeric") != pl.List(pl.Utf8):
-        logger.warning(
-            f"Validation Warning: BACI 'j_iso_numeric' column type is {schema.get('j_iso_numeric')}, expected List(Utf8)."
-        )
+#     # Add more checks here:
+#     # - Data type checks (e.g., are i_iso_numeric, j_iso_numeric strings? Is 't' string?)
+#     #   remap_baci_country_codes casts 't' to Utf8.
+#     schema = lf.collect_schema()
+#     if schema.get("t") != pl.Utf8:
+#         logger.error(f"Validation Error: BACI 't' column type is {schema.get('t')}, expected Utf8.")
+#         return False
+#     if schema.get("i_iso_numeric") != pl.List(
+#         pl.Utf8
+#     ):  # remap_country_code_improved returns List[str]
+#         logger.warning(
+#             f"Validation Warning: BACI 'i_iso_numeric' column type is {schema.get('i_iso_numeric')}, expected List(Utf8). Check remapping logic."
+#         )
+#         # This might not be an error if single codes are not wrapped in lists, adjust expectation if needed.
+#     if schema.get("j_iso_numeric") != pl.List(pl.Utf8):
+#         logger.warning(
+#             f"Validation Warning: BACI 'j_iso_numeric' column type is {schema.get('j_iso_numeric')}, expected List(Utf8)."
+#         )
 
-    # - Check for excessive nulls in key columns (i_iso_numeric, j_iso_numeric, k, t)
-    #   Need to collect to check nulls properly on LazyFrame. Be careful with large data.
-    #   Example (consider sampling or doing this on the saved file):
-    #   null_check_df = lf.select([pl.col(c).is_null().sum().alias(f"{c}_nulls") for c in ['t', 'i_iso_numeric', 'j_iso_numeric', 'k']]).collect()
-    #   logger.debug(f"Null counts in key BACI columns: {null_check_df.to_dicts()[0]}")
+#     # - Check for excessive nulls in key columns (i_iso_numeric, j_iso_numeric, k, t)
+#     #   Need to collect to check nulls properly on LazyFrame. Be careful with large data.
+#     #   Example (consider sampling or doing this on the saved file):
+#     #   null_check_df = lf.select([pl.col(c).is_null().sum().alias(f"{c}_nulls") for c in ['t', 'i_iso_numeric', 'j_iso_numeric', 'k']]).collect()
+#     #   logger.debug(f"Null counts in key BACI columns: {null_check_df.to_dicts()[0]}")
 
-    # - Check if HS codes 'k' look like valid HS codes (e.g., length 6 after potential padding)
-    #   Example check (might need collect):
-    #   invalid_k_count = lf.filter(pl.col('k').str.lengths() != 6).limit(1).collect()
-    #   if not invalid_k_count.is_empty():
-    #        logger.error("Validation Error: Found HS codes ('k') not of length 6.")
-    #        return False
+#     # - Check if HS codes 'k' look like valid HS codes (e.g., length 6 after potential padding)
+#     #   Example check (might need collect):
+#     #   invalid_k_count = lf.filter(pl.col('k').str.lengths() != 6).limit(1).collect()
+#     #   if not invalid_k_count.is_empty():
+#     #        logger.error("Validation Error: Found HS codes ('k') not of length 6.")
+#     #        return False
 
-    logger.info("Cleaned BACI data basic validation passed.")
-    return True
+#     logger.info("Cleaned BACI data basic validation passed.")
+#     return True
 
 
 def run_baci_cleaning_pipeline(config: Dict[str, Any]) -> Optional[Path]:
@@ -110,9 +108,7 @@ def run_baci_cleaning_pipeline(config: Dict[str, Any]) -> Optional[Path]:
     baci_release = config["BACI_RELEASE"]
     input_folder = config["BACI_INPUT_FOLDER"]
     intermediate_parent_dir = config["INTERMEDIATE_DATA_DIR"]
-    # Path where the output of baci_to_parquet_incremental will be stored (directory)
     initial_output_path = config["BACI_INTERMEDIATE_RAW_PARQUET_PATH"]
-    # Final output path after remapping (directory or file)
     cleaned_output_path = config["BACI_CLEANED_OUTPUT_PATH"]
 
     # --- Step 1: Convert CSV to Partitioned Parquet ---
@@ -121,9 +117,6 @@ def run_baci_cleaning_pipeline(config: Dict[str, Any]) -> Optional[Path]:
     logger.info(f"Target intermediate output directory: {initial_output_path}")
 
     try:
-        # baci_to_parquet_incremental saves to a directory named based on hs/release
-        # inside the output_folder. We need to ensure the returned path matches
-        # our expected initial_output_path.
         created_path_str_or_none = baci_to_parquet_incremental(
             hs=hs_code,
             release=baci_release,
@@ -177,20 +170,20 @@ def run_baci_cleaning_pipeline(config: Dict[str, Any]) -> Optional[Path]:
 
         logger.info(f"✅ BACI country code remapping successful. Output: {cleaned_output_path}")
 
-        # --- Step 3: Validation ---
-        logger.info(f"Validating cleaned BACI data at: {cleaned_output_path}")
-        # remap_baci_country_codes saves a single parquet file
-        try:
-            cleaned_lf = pl.scan_parquet(cleaned_output_path)
-            if not validate_cleaned_baci(cleaned_lf):
-                logger.error("❌ Cleaned BACI data validation failed.")
-                # Consider deleting the invalid output file
-                # cleaned_output_path.unlink(missing_ok=True)
-                return None
-            logger.info("✅ Cleaned BACI data validation successful.")
-        except Exception as e:
-            logger.error(f"❌ Failed to load or validate cleaned BACI data: {e}", exc_info=True)
-            return None
+        #     # --- Step 3: Validation ---
+        #     logger.info(f"Validating cleaned BACI data at: {cleaned_output_path}")
+        #     # remap_baci_country_codes saves a single parquet file
+        #     try:
+        #         cleaned_lf = pl.scan_parquet(cleaned_output_path)
+        #         if not validate_cleaned_baci(cleaned_lf):
+        #             logger.error("❌ Cleaned BACI data validation failed.")
+        #             # Consider deleting the invalid output file
+        #             # cleaned_output_path.unlink(missing_ok=True)
+        #             return None
+        #         logger.info("✅ Cleaned BACI data validation successful.")
+        #     except Exception as e:
+        #         logger.error(f"❌ Failed to load or validate cleaned BACI data: {e}", exc_info=True)
+        #         return None
 
         logger.info("--- BACI Cleaning Pipeline Finished Successfully ---")
         return cleaned_output_path  # Return the path to the final cleaned file

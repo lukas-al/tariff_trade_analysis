@@ -8,6 +8,8 @@ import os
 import re
 from pathlib import Path
 
+import pandas as pd
+
 # Third-party imports
 import polars as pl
 
@@ -212,11 +214,125 @@ def consolidate_wits_tariff_data(
     return combined_df
 
 
+# def vectorized_hs_translation(
+#     input_lf: pl.LazyFrame, mapping_dir: str = "data/raw/hs_reference"
+# ) -> pl.LazyFrame:
+#     """
+#     Translates Harmonized System (HS) codes within a Polars LazyFrame to HS92 (H0).
+
+#     Args:
+#         input_lf (pl.LazyFrame): The input LazyFrame containing WITS data with a
+#                                  'product_code' and 'hs_revision' column.
+#         mapping_dir (str): Directory containing HS mapping CSV files (e.g., H1_to_H0.CSV).
+
+#     Returns:
+#         pl.LazyFrame: A LazyFrame with 'product_code' translated to HS92 where possible.
+#     """
+#     logger.info("Starting HS code translation to H0 (HS92).")
+#     # Define which HS revisions require mapping (all except H0)
+#     hs_versions = [f"H{i}" for i in range(1, 7)]  # H1, H2, H3, H4, H5, H6
+
+#     mapping_dfs = []
+#     for hs_version in hs_versions:
+#         # Build mapping file path (assumes file naming convention like H1_to_H0.CSV)
+#         path = Path(mapping_dir) / f"{hs_version}_to_H0.CSV"
+#         try:
+#             # Load mapping as pandas and convert it to a Polars DataFrame
+#             # Use scan_csv for lazy loading if files are large
+#             mapping_pl = pl.scan_csv(
+#                 path,
+#                 dtypes={"source_code": pl.Utf8, "target_code": pl.Utf8},  # Specify dtypes
+#                 has_header=True,  # Assuming header exists
+#                 use_pyarrow=True,  # Often faster
+#                 encoding="iso-8859-1",  # Keep encoding
+#             ).select(
+#                 pl.col(pl.first()).alias("source_code"), pl.col(pl.last()).alias("target_code")
+#             )  # Select first and last columns
+
+#             # mapping_pd = pd.read_csv(path, dtype=str, usecols=[0, 2], encoding="ISO-8859-1")
+#             # mapping_pd.columns = ["source_code", "target_code"]
+#             # mapping_pl = pl.from_pandas(mapping_pd) # Eager load
+
+#             mapping_pl = mapping_pl.with_columns(pl.lit(hs_version).alias("hs_revision"))
+#             mapping_pl = mapping_pl.with_columns(pl.col("source_code").str.zfill(6))
+#             mapping_dfs.append(mapping_pl)
+
+#         except Exception as e:
+#             logger.error(f"Error loading mapping file for {hs_version}: {path}. Error: {e}")
+#             # Decide if you want to continue without this mapping or raise
+#             # raise ValueError(f"Error loading mapping file for {hs_version}: \n {e}") from e
+#             continue  # Skip this mapping if file is problematic
+
+#     if not mapping_dfs:
+#         logger.warning("No HS mapping files loaded. HS translation step will be skipped.")
+#         return input_lf  # Return original if no mappings found
+
+#     # Combine all mappings into one Polars LazyFrame.
+#     mapping_all = pl.concat(mapping_dfs).lazy()  # Ensure it's lazy
+
+#     # Use the input LazyFrame directly
+#     df = input_lf
+
+#     # Pre-process the main LazyFrame:
+#     # Ensure product codes are padded to 6 digits.
+#     df = df.with_columns(pl.col("product_code").str.zfill(6))
+
+#     # Split rows where translation is not needed (H0) from those that need translation.
+#     df_h0 = df.filter(pl.col("hs_revision") == "H0")
+#     df_non_h0 = df.filter(pl.col("hs_revision") != "H0")
+
+#     # Perform a vectorized join between df_non_h0 and the mapping dataframe.
+#     # The join is done on the hs_revision and the padded product_code versus mapping's source_code.
+#     df_non_h0 = df_non_h0.join(
+#         mapping_all,
+#         left_on=["hs_revision", "product_code"],
+#         right_on=["hs_revision", "source_code"],
+#         how="left",
+#     )
+
+#     # Create the translated HS code column: use target_code if available, otherwise fallback to the
+#     # original code. Ensure the final column name is 'product_code'.
+#     df_non_h0 = (
+#         df_non_h0.with_columns(
+#             pl.when(pl.col("target_code").is_not_null())  # Check if target_code exists from join
+#             .then(pl.col("target_code"))
+#             .otherwise(pl.col("product_code"))  # Keep original if no match
+#             .alias("product_code_translated")  # Use a temporary name
+#         )
+#         .drop("product_code")
+#         .rename({"product_code_translated": "product_code"})
+#     )  # Rename back
+
+#     # Optionally drop unnecessary columns from join
+#     df_non_h0 = df_non_h0.drop(["target_code"])  # Drop the mapping target code column
+
+#     # Combine the rows which were already in H0 with the ones translated.
+#     # Ensure schemas match before concat
+#     # Select the same columns in the same order from both frames
+#     common_cols = df_h0.columns
+#     df_final = pl.concat(
+#         [df_h0.select(common_cols), df_non_h0.select(common_cols)], how="vertical_relaxed"
+#     )
+
+#     # Remove the file writing part
+#     # vectorised_output_path = Path(intermediate_file_path.stem + "_vectorised.parquet")
+#     # try:
+#     #     df_final.sink_parquet(vectorised_output_path)
+#     # except Exception as e:
+#     #     logger.error(f"Failed to sink hs_translated WITS file:\n{e}")
+#     #     raise
+#     # return vectorised_output_path
+
+#     logger.info("✅ HS code translation completed.")
+#     return df_final
+
+
 def vectorized_hs_translation(
     input_lf: pl.LazyFrame, mapping_dir: str = "data/raw/hs_reference"
 ) -> pl.LazyFrame:
     """
     Translates Harmonized System (HS) codes within a Polars LazyFrame to HS92 (H0).
+    Uses pandas to load and concatenate mapping files before converting to Polars.
 
     Args:
         input_lf (pl.LazyFrame): The input LazyFrame containing WITS data with a
@@ -226,47 +342,54 @@ def vectorized_hs_translation(
     Returns:
         pl.LazyFrame: A LazyFrame with 'product_code' translated to HS92 where possible.
     """
-    logger.info("Starting HS code translation to H0 (HS92).")
+    logger.info("Starting HS code translation to H0 (HS92) using pandas for loading mappings.")
     # Define which HS revisions require mapping (all except H0)
     hs_versions = [f"H{i}" for i in range(1, 7)]  # H1, H2, H3, H4, H5, H6
 
-    mapping_dfs = []
+    mapping_dfs_pd = []  # List to hold pandas DataFrames
     for hs_version in hs_versions:
         # Build mapping file path (assumes file naming convention like H1_to_H0.CSV)
         path = Path(mapping_dir) / f"{hs_version}_to_H0.CSV"
         try:
-            # Load mapping as pandas and convert it to a Polars DataFrame
-            # Use scan_csv for lazy loading if files are large
-            mapping_pl = pl.scan_csv(
+            # Load mapping as pandas DataFrame
+            # Simplified the read_csv call by removing the default header=0
+            mapping_pd = pd.read_csv(
                 path,
-                dtypes={"source_code": pl.Utf8, "target_code": pl.Utf8},  # Specify dtypes
-                has_header=True,  # Assuming header exists
-                use_pyarrow=True,  # Often faster
+                dtype=str,  # Read all as string initially
+                usecols=[0, 2],  # Select first and third columns
                 encoding="iso-8859-1",  # Keep encoding
-            ).select(
-                pl.col(pl.first()).alias("source_code"), pl.col(pl.last()).alias("target_code")
-            )  # Select first and last columns
+            )
+            # Rename columns explicitly
+            mapping_pd.columns = ["source_code", "target_code"]
 
-            # mapping_pd = pd.read_csv(path, dtype=str, usecols=[0, 2], encoding="ISO-8859-1")
-            # mapping_pd.columns = ["source_code", "target_code"]
-            # mapping_pl = pl.from_pandas(mapping_pd) # Eager load
+            # Add the HS revision column
+            mapping_pd["hs_revision"] = hs_version
 
-            mapping_pl = mapping_pl.with_columns(pl.lit(hs_version).alias("hs_revision"))
-            mapping_pl = mapping_pl.with_columns(pl.col("source_code").str.zfill(6))
-            mapping_dfs.append(mapping_pl)
+            # Pad the source code to 6 digits
+            mapping_pd["source_code"] = mapping_pd["source_code"].astype(str).str.zfill(6)
+
+            mapping_dfs_pd.append(mapping_pd)
+
+        except FileNotFoundError as e:
+            logger.warning(f"Mapping file not found for {hs_version}: {path}. Skipping.")
+            raise ValueError(f"Error loading mapping file for {hs_version}: \n {e}") from e
 
         except Exception as e:
             logger.error(f"Error loading mapping file for {hs_version}: {path}. Error: {e}")
-            # Decide if you want to continue without this mapping or raise
-            # raise ValueError(f"Error loading mapping file for {hs_version}: \n {e}") from e
-            continue  # Skip this mapping if file is problematic
+            raise ValueError(f"Error loading mapping file for {hs_version}: \n {e}") from e
 
-    if not mapping_dfs:
+    if not mapping_dfs_pd:
         logger.warning("No HS mapping files loaded. HS translation step will be skipped.")
         return input_lf  # Return original if no mappings found
 
-    # Combine all mappings into one Polars LazyFrame.
-    mapping_all = pl.concat(mapping_dfs).lazy()  # Ensure it's lazy
+    # Combine all pandas mapping DataFrames into one.
+    mapping_all_pd = pd.concat(mapping_dfs_pd, ignore_index=True)
+
+    # Convert the combined pandas DataFrame to a Polars LazyFrame.
+    schema = {"source_code": pl.Utf8, "target_code": pl.Utf8, "hs_revision": pl.Utf8}
+    mapping_all = pl.from_pandas(mapping_all_pd, schema_overrides=schema).lazy()
+
+    # --- Rest of the Polars logic remains the same ---
 
     # Use the input LazyFrame directly
     df = input_lf
@@ -311,15 +434,6 @@ def vectorized_hs_translation(
     df_final = pl.concat(
         [df_h0.select(common_cols), df_non_h0.select(common_cols)], how="vertical_relaxed"
     )
-
-    # Remove the file writing part
-    # vectorised_output_path = Path(intermediate_file_path.stem + "_vectorised.parquet")
-    # try:
-    #     df_final.sink_parquet(vectorised_output_path)
-    # except Exception as e:
-    #     logger.error(f"Failed to sink hs_translated WITS file:\n{e}")
-    #     raise
-    # return vectorised_output_path
 
     logger.info("✅ HS code translation completed.")
     return df_final
