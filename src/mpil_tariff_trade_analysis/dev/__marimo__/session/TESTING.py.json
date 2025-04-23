@@ -1,0 +1,60 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.12.8"
+  },
+  "cells": [
+    {
+      "id": "Hbol",
+      "code_hash": "3dfac3184a6b6ee544a9f7e90e16f5fa",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "mXZD",
+      "code_hash": "58f244700f07d9b79027c489274a3266",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "VuiQ",
+      "code_hash": "407d6b9bc872ed083f785429e474b2e0",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "application/json": "[\"year\", \"reporter_country\", \"partner_country\", \"product_code\", \"hs_revision\", \"tariff_rate\", \"tariff_type\", \"min_rate\", \"max_rate\"]"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "rcQb",
+      "code_hash": "0f8bfc22329523a80f8a48981fe28102",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='rcQb-0' random-id='c1677bba-762c-5f81-f4af-9fb3a626ae2b'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/2051-11117888-IoxE90SO.json&quot;' data-total-rows='10' data-total-columns='9' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;year&quot;, [&quot;integer&quot;, &quot;i32&quot;]], [&quot;reporter_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;partner_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;hs_revision&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;tariff_rate&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;tariff_type&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;min_rate&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;max_rate&quot;, [&quot;string&quot;, &quot;str&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    }
+  ]
+}

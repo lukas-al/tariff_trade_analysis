@@ -76,6 +76,7 @@ def get_unique_chunk_values(paths: list[str | Path], column_name: str) -> list:
                     lf_renamed_scan.select(pl.col(column_name).unique())
                     .collect(engine="streaming")  # Use streaming engine
                     .get_column(column_name)
+                    .cast(pl.Utf8, strict=False)
                     .to_list()
                 )
                 unique_values.update(values)
@@ -174,6 +175,8 @@ def run_chunked_matching_pipeline(
         if chunk_column not in wits_pref_lazy_base_renamed.columns:
             raise ValueError(f"Chunk column '{chunk_column}' missing in WITS Pref after rename.")
 
+        # Conform our T's to be the same type.
+
         logger.info("Base LazyFrames defined with consistent chunk column name 't'.")
         logger.debug(f"BACI base schema (post-rename): {baci_lazy_base.collect_schema()}")
         logger.debug(
@@ -215,6 +218,12 @@ def run_chunked_matching_pipeline(
             wits_pref_chunk_lazy = wits_pref_lazy_base_renamed.filter(
                 pl.col(chunk_column) == chunk_value
             )
+
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(">>>--- POST FILTER SAMPLES OF CHUNKS ---<<<")
+                logger.debug(f"BACI chunk sample:\n{baci_chunk_lazy.fetch(5)}")
+                logger.debug(f"WITS MFN chunk sample:\n{wits_mfn_chunk_lazy.fetch(5)}")
+                logger.debug(f"WITS PREF chunk sample:\n{wits_pref_chunk_lazy.fetch(5)}")
 
             # --- Apply core logic (NO renaming needed here anymore) ---
             logger.debug("Expanding preferential tariffs for chunk...")
@@ -296,7 +305,7 @@ def run_chunked_matching_pipeline(
             logger.error(f"Polars compute error processing chunk {chunk_value}: {e}", exc_info=True)
             # Explain might fail if the lazy frame itself is problematic after error
             try:
-                logger.error(f"Query plan that failed:\n{final_table_lazy.explain(streaming=True)}")
+                logger.error(f"Query plan that failed:\n{final_table_lazy.explain(streaming=True)}")  # type: ignore
             except Exception as explain_e:
                 logger.error(f"Could not explain query plan after error: {explain_e}")
         except Exception as e:
@@ -307,11 +316,11 @@ def run_chunked_matching_pipeline(
         finally:
             # Explicitly trigger garbage collection after each chunk
             try:
-                del chunk_df
+                del chunk_df  # type: ignore
             except NameError:
                 pass
             try:
-                del table
+                del table  # type: ignore
             except NameError:
                 pass
             gc.collect()

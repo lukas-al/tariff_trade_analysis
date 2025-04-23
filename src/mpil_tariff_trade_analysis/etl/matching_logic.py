@@ -125,8 +125,18 @@ def expand_preferential_tariffs(
     logger.debug(f"Input renamed_avepref schema: {renamed_avepref.collect_schema()}")
     logger.debug(f"Input pref_group_mapping schema: {pref_group_mapping.collect_schema()}")
 
+    if logger.isEnabledFor(logging.DEBUG):
+        try:
+            logger.debug(
+                f"Head(5) BEFORE joining avepref with group mapping:\n{renamed_avepref.fetch(5)}"  #!EMPTY
+            )
+            logger.debug(
+                f"Head(5) BEFORE joining preferential group mapping:\n{pref_group_mapping.fetch(5)}"
+            )
+        except Exception as e:
+            logger.warning(f"Could not fetch(5) from renamed_avepref: {e}")
+
     # --- Explicit Type Casting for Join Keys ---
-    # Adjust pl.Utf8 if your codes are numeric (e.g., pl.Int64)
     logger.debug("Casting join keys to pl.Utf8 (adjust if needed).")
     try:
         renamed_avepref = renamed_avepref.with_columns(pl.col("j").cast(pl.Utf8))
@@ -156,10 +166,10 @@ def expand_preferential_tariffs(
     if logger.isEnabledFor(logging.DEBUG):
         try:
             logger.debug(
-                f"Head(1) after joining avepref with group mapping:\n{joined_pref_mapping.fetch(1)}"
+                f"Head(5) after joining avepref with group mapping:\n{joined_pref_mapping.fetch(5)}"
             )
         except Exception as e:
-            logger.warning(f"Could not fetch(1) from joined_pref_mapping: {e}")
+            logger.warning(f"Could not fetch(5) from joined_pref_mapping: {e}")
 
     # --- Create the final partner list ---
     logger.debug("Creating final partner list using coalesce logic.")

@@ -172,7 +172,7 @@ def load_wits_tariff_data(
     if tariff_type == "AVEMFN":
         combined_df = combined_df.select(
             [
-                pl.col("Year").alias("year"),
+                pl.col("Year").cast(pl.Utf8, strict=False).alias("year"),
                 pl.col("Reporter_ISO_N").alias("reporter_country"),
                 pl.col("ProductCode").alias("product_code"),
                 pl.col("NomenCode").alias("hs_revision"),
@@ -185,30 +185,24 @@ def load_wits_tariff_data(
                 # pl.col("Max_Rate").cast(pl.Float64, strict=False).alias("max_rate"),
             ]
         )
-        # .with_columns(
-        #     pl.struct(["product_code", "hs_revision"]).map_elements(
-        #         lambda row: translator.translate(row["product_code"], row["hs_revision"]),
-        #         return_dtype=pl.Utf8
-        #     ).alias("product_code_h0")
-        # )
 
         logger.info("Translating HS codes...")
         combined_df = vectorized_hs_translation(combined_df)
     elif tariff_type == "AVEPref":
         combined_df = combined_df.select(
             [
-                pl.col("Year").alias("year"),
+                pl.col("Year").cast(pl.Utf8, strict=False).alias("year"),
                 pl.col("Reporter_ISO_N").alias("reporter_country"),
                 pl.col("Partner").alias("partner_country"),
                 pl.col("ProductCode").alias("product_code"),
                 pl.col("NomenCode").alias("hs_revision"),
                 # pl.col("SimpleAverage").cast(pl.Float64, strict=False).alias("tariff_rate"),
                 pl.col("SimpleAverage").alias("tariff_rate"),
-                pl.col("tariff_type"),
                 # pl.col("Min_Rate").cast(pl.Float64, strict=False).alias("min_rate"),
                 pl.col("Min_Rate").alias("min_rate"),
                 # pl.col("Max_Rate").cast(pl.Float64, strict=False).alias("max_rate"),
                 pl.col("Max_Rate").alias("max_rate"),
+                pl.col("tariff_type"),
             ]
         )
 
@@ -246,7 +240,8 @@ def load_wits_tariff_data(
             )
 
     logger.info("Finished loading and processing WITS tariff data with country remapping.")
-    return combined_df
+
+    return combined_df  # ✅ VALIDATED
 
 
 def process_and_save_wits_data(
