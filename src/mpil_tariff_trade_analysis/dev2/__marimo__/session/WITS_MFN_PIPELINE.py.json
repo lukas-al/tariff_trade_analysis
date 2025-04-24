@@ -6,7 +6,7 @@
   "cells": [
     {
       "id": "Hbol",
-      "code_hash": "ce4194fff5fe8b0eebb7a09769bc0473",
+      "code_hash": "c840ae2031395edcb9d01aeab20c653d",
       "outputs": [
         {
           "type": "data",
@@ -18,13 +18,367 @@
       "console": []
     },
     {
-      "id": "aAFS",
-      "code_hash": "13ebfdb945f1bcf7355c1440c2c7e9ea",
+      "id": "MJUe",
+      "code_hash": "fb9451baea463f8566911c3c42034d43",
       "outputs": [
         {
           "type": "data",
           "data": {
-            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"wits-pipeline\">WITS PIPELINE</h1>\n<span class=\"paragraph\">Implement the WITS pipeline from start to finish</span>\n<ol>\n<li></li>\n</ol></span>"
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"wits-pipeline\">WITS PIPELINE</h1>\n<span class=\"paragraph\">Implement the WITS MFN &amp; PREF pipeline from start to finish</span>\n<ol>\n<li>Load and consolidate</li>\n<li>Vectorised H0 translation</li>\n<li>Explode partner codes</li>\n<li>Remap country codes</li>\n</ol></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "vblA",
+      "code_hash": null,
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "e0e3a7763cb4a5318c3faa3d59a79ca5",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Found 1918 subdirectories in data/raw/WITS_tariff/AVEMFN\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Found 1916 CSV files for AVEMFN\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Successfully scanned 1916 files, failed to scan 0 files\nCombining all scanned dfs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Found 1521 subdirectories in data/raw/WITS_tariff/AVEPref\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Found 1520 CSV files for AVEPref\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Successfully scanned 1520 files, failed to scan 0 files\nCombining all scanned dfs\n"
+        }
+      ]
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "7d4f282c0d263dfa5013d6a4ea3c0087",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='lEQa-0' random-id='e4fff4dc-acad-fc8f-f4b5-8ac6b3484c7d'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/911-11954467-ujKoiILF.json&quot;' data-total-rows='5' data-total-columns='8' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;year&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;reporter_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;hs_revision&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;tariff_rate&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;min_rate&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;max_rate&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;tariff_type&quot;, [&quot;string&quot;, &quot;str&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "PKri",
+      "code_hash": "6e70290e33b85fe8482a6b53baefa9ea",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"translate-hs-codes\">Translate HS codes</h1></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Xref",
+      "code_hash": "a84e35f56170304a80bb62eb0f1bf95a",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Starting HS code translation to H0 (HS92).\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "DF non H0 before join: shape: (5, 9)\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502 year \u2506 reporter_c \u2506 product_co \u2506 hs_revisio \u2506 \u2026 \u2506 min_rate   \u2506 max_rate  \u2506 tariff_ty \u2506 target_co \u2502\n\u2502 ---  \u2506 ountry     \u2506 de         \u2506 n          \u2506   \u2506 ---        \u2506 ---       \u2506 pe        \u2506 de        \u2502\n\u2502 str  \u2506 ---        \u2506 ---        \u2506 ---        \u2506   \u2506 str        \u2506 str       \u2506 ---       \u2506 ---       \u2502\n\u2502      \u2506 str        \u2506 str        \u2506 str        \u2506   \u2506            \u2506           \u2506 str       \u2506 str       \u2502\n\u255e\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2561\n\u2502 2001 \u2506 748        \u2506 010111     \u2506 H1         \u2506 \u2026 \u2506       0.00 \u2506 0.00      \u2506 AVEMFN    \u2506 010111    \u2502\n\u2502 2001 \u2506 748        \u2506 010119     \u2506 H1         \u2506 \u2026 \u2506       0.00 \u2506 0.00      \u2506 AVEMFN    \u2506 010119    \u2502\n\u2502 2001 \u2506 748        \u2506 010120     \u2506 H1         \u2506 \u2026 \u2506       0.00 \u2506 0.00      \u2506 AVEMFN    \u2506 010120    \u2502\n\u2502 2001 \u2506 748        \u2506 010210     \u2506 H1         \u2506 \u2026 \u2506       0.00 \u2506 0.00      \u2506 AVEMFN    \u2506 010210    \u2502\n\u2502 2001 \u2506 748        \u2506 010290     \u2506 H1         \u2506 \u2026 \u2506       0.00 \u2506 0.00      \u2506 AVEMFN    \u2506 010290    \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "DF non H0 after join: shape: (5, 8)\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502 year \u2506 reporter_co \u2506 hs_revisio \u2506 tariff_rat \u2506 min_rate   \u2506 max_rate   \u2506 tariff_typ \u2506 product_co \u2502\n\u2502 ---  \u2506 untry       \u2506 n          \u2506 e          \u2506 ---        \u2506 ---        \u2506 e          \u2506 de         \u2502\n\u2502 str  \u2506 ---         \u2506 ---        \u2506 ---        \u2506 str        \u2506 str        \u2506 ---        \u2506 ---        \u2502\n\u2502      \u2506 str         \u2506 str        \u2506 str        \u2506            \u2506            \u2506 str        \u2506 str        \u2502\n\u255e\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2561\n\u2502 2001 \u2506 748         \u2506 H1         \u2506       0.00 \u2506       0.00 \u2506       0.00 \u2506 AVEMFN     \u2506 010111     \u2502\n\u2502 2001 \u2506 748         \u2506 H1         \u2506       0.00 \u2506       0.00 \u2506       0.00 \u2506 AVEMFN     \u2506 010119     \u2502\n\u2502 2001 \u2506 748         \u2506 H1         \u2506       0.00 \u2506       0.00 \u2506       0.00 \u2506 AVEMFN     \u2506 010120     \u2502\n\u2502 2001 \u2506 748         \u2506 H1         \u2506       0.00 \u2506       0.00 \u2506       0.00 \u2506 AVEMFN     \u2506 010210     \u2502\n\u2502 2001 \u2506 748         \u2506 H1         \u2506       0.00 \u2506       0.00 \u2506       0.00 \u2506 AVEMFN     \u2506 010290     \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\nStarting HS code translation to H0 (HS92).\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "DF non H0 before join: shape: (5, 10)\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502 year \u2506 reporter_c \u2506 partner_co \u2506 product_co \u2506 \u2026 \u2506 min_rate   \u2506 max_rate  \u2506 tariff_ty \u2506 target_co \u2502\n\u2502 ---  \u2506 ountry     \u2506 untry      \u2506 de         \u2506   \u2506 ---        \u2506 ---       \u2506 pe        \u2506 de        \u2502\n\u2502 str  \u2506 ---        \u2506 ---        \u2506 ---        \u2506   \u2506 str        \u2506 str       \u2506 ---       \u2506 ---       \u2502\n\u2502      \u2506 str        \u2506 str        \u2506 str        \u2506   \u2506            \u2506           \u2506 str       \u2506 str       \u2502\n\u255e\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2561\n\u2502 2011 \u2506 404        \u2506 P21        \u2506 010190     \u2506 \u2026 \u2506       0.00 \u2506 0.00      \u2506 AVEPref   \u2506 010120    \u2502\n\u2502 2011 \u2506 404        \u2506 M12        \u2506 010190     \u2506 \u2026 \u2506       0.00 \u2506 0.00      \u2506 AVEPref   \u2506 010120    \u2502\n\u2502 2011 \u2506 404        \u2506 M16        \u2506 010190     \u2506 \u2026 \u2506       2.50 \u2506 2.50      \u2506 AVEPref   \u2506 010120    \u2502\n\u2502 2011 \u2506 404        \u2506 M16        \u2506 010290     \u2506 \u2026 \u2506       2.50 \u2506 2.50      \u2506 AVEPref   \u2506 010290    \u2502\n\u2502 2011 \u2506 404        \u2506 M12        \u2506 010290     \u2506 \u2026 \u2506       0.00 \u2506 0.00      \u2506 AVEPref   \u2506 010290    \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "DF non H0 after join: shape: (5, 9)\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502 year \u2506 reporter_c \u2506 partner_co \u2506 hs_revisio \u2506 \u2026 \u2506 min_rate   \u2506 max_rate  \u2506 tariff_ty \u2506 product_c \u2502\n\u2502 ---  \u2506 ountry     \u2506 untry      \u2506 n          \u2506   \u2506 ---        \u2506 ---       \u2506 pe        \u2506 ode       \u2502\n\u2502 str  \u2506 ---        \u2506 ---        \u2506 ---        \u2506   \u2506 str        \u2506 str       \u2506 ---       \u2506 ---       \u2502\n\u2502      \u2506 str        \u2506 str        \u2506 str        \u2506   \u2506            \u2506           \u2506 str       \u2506 str       \u2502\n\u255e\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2561\n\u2502 2011 \u2506 404        \u2506 P21        \u2506 H3         \u2506 \u2026 \u2506       0.00 \u2506 0.00      \u2506 AVEPref   \u2506 010120    \u2502\n\u2502 2011 \u2506 404        \u2506 M12        \u2506 H3         \u2506 \u2026 \u2506       0.00 \u2506 0.00      \u2506 AVEPref   \u2506 010120    \u2502\n\u2502 2011 \u2506 404        \u2506 M16        \u2506 H3         \u2506 \u2026 \u2506       2.50 \u2506 2.50      \u2506 AVEPref   \u2506 010120    \u2502\n\u2502 2011 \u2506 404        \u2506 M16        \u2506 H3         \u2506 \u2026 \u2506       2.50 \u2506 2.50      \u2506 AVEPref   \u2506 010290    \u2502\n\u2502 2011 \u2506 404        \u2506 M12        \u2506 H3         \u2506 \u2026 \u2506       0.00 \u2506 0.00      \u2506 AVEPref   \u2506 010290    \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n"
+        }
+      ]
+    },
+    {
+      "id": "SFPL",
+      "code_hash": "55f19e4fc71a23700af8de1fa65054f0",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='SFPL-0' random-id='20b3c2da-261d-0779-99eb-072af90ec28c'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/1036-11954467-EmDCpnHe.json&quot;' data-total-rows='5' data-total-columns='9' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;year&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;reporter_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;partner_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;hs_revision&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;tariff_rate&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;min_rate&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;max_rate&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;tariff_type&quot;, [&quot;string&quot;, &quot;str&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "BYtC",
+      "code_hash": "ffbf8ecb49b2e318400afcecddfe2d60",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"remap-partner-codes-for-avepref\">Remap partner codes for AVEPref</h1></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "RGSE",
+      "code_hash": "b04bde1fcc902135a363c895657ffd60",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='RGSE-0' random-id='87ee06fa-83b8-cae8-eb16-319b8d7e86b8'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/1036-11954467-JZ2ntRQj.json&quot;' data-total-rows='5' data-total-columns='9' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;year&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;reporter_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;partner_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;hs_revision&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;tariff_rate&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;min_rate&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;max_rate&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;tariff_type&quot;, [&quot;string&quot;, &quot;str&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Kclp",
+      "code_hash": "0482f1a75faa6f1f334268ab9c3d6f9c",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"translate-country-codes\">Translate country codes</h1>\n<span class=\"paragraph\">Now we have everything in ISO Numeric 3 digit space, we need to remap the WITS codes to our ISO ones.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "emfo",
+      "code_hash": "cd438c2891824a8c4aa4e18ebaedb3ce",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Hstk",
+      "code_hash": "a7ba93104e7ec01432502b93097f622b",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Mapped 496 to ['496']\nMapped 566 to ['566']\nMapped 643 to ['643']\nMapped 426 to ['426']\nMapped 051 to ['051']\nMapped 360 to ['360']\nMapped 670 to ['670']\nMapped 324 to ['324']\nMapped 050 to ['050']\nMapped 400 to ['400']\nMapped 158 to ['158']\nMapped 860 to ['860']\nMapped 702 to ['702']\nMapped 036 to ['036']\nMapped 422 to ['422']\nMapped 624 to ['624']\nMapped 760 to ['760']\nMapped 096 to ['096']\nMapped 918 to ['040', '056', '100', '191', '196', '203', '208', '233', '246', '250', '276', '300', '348', '372', '380', '428', '440', '442', '470', '528', '616', '620', '642', '703', '705', '724', '752', '492']\nMapped 600 to ['600']\nMapped 616 to ['616']\nMapped 004 to ['004']\nMapped 826 to ['826']\nMapped 548 to ['548']\nMapped 268 to ['268']\nMapped 072 to ['072']\nMapped 031 to ['031']\nMapped 659 to ['659']\nMapped 798 to ['798']\nMapped 044 to ['044']\nMapped 156 to ['156']\nMapped 178 to ['178']\nMapped 170 to ['170']\nMapped 500 to ['500']\nMapped 148 to ['148']\nMapped 100 to ['100']\nMapped 308 to ['308']\nMapped 682 to ['682']\nMapped 662 to ['662']\nDirect pycountry lookup for code '412' failed. Trying name and iso3 alpha lookup.\nFailed to match entirely. Returning original code.\nMapped 608 to ['608']\nMapped 646 to ['646']\nMapped 450 to ['450']\nMapped 440 to ['440']\nMapped 586 to ['586']\nMapped 504 to ['504']\nMapped 417 to ['417']\nMapped 204 to ['204']\nMapped 894 to ['894']\nMapped 558 to ['558']\nMapped 212 to ['212']\nMapped 064 to ['064']\nMapped 120 to ['120']\nMapped 666 to ['666']\nMapped 266 to ['266']\nMapped 876 to ['876']\nMapped 384 to ['384']\nMapped 854 to ['854']\nMapped 214 to ['214']\nMapped 498 to ['498']\nMapped 328 to ['328']\nMapped 340 to ['340']\nMapped 554 to ['554']\nMapped 598 to ['598']\nMapped 704 to ['704']\nMapped 196 to ['196']\nMapped 218 to ['218']\nMapped 124 to ['124']\nMapped 188 to ['188']\nMapped 862 to ['862']\nMapped 191 to ['191']\nMapped 052 to ['052']\nMapped 356 to ['356']\nMapped 068 to ['068']\nMapped 076 to ['076']\nMapped 116 to ['116']\nMapped 270 to ['270']\nMapped 104 to ['104']\nMapped 288 to ['288']\nMapped 174 to ['174']\nMapped 048 to ['048']\nMapped 690 to ['690']\nMapped 705 to ['705']\nMapped 834 to ['834']\nMapped 438 to ['438']\nMapped 040 to ['040']\nMapped 070 to ['070']\nMapped 762 to ['762']\nMapped 508 to ['508']\nMapped 524 to ['524']\nMapped 634 to ['634']\nMapped 398 to ['398']\nMapped 275 to ['275']\nMapped 376 to ['376']\nMapped 784 to ['784']\nMapped 140 to ['140']\nMapped 112 to ['112']\nMapped 484 to ['484']\nMapped 512 to ['512']\nMapped 840 to ['840']\nMapped 462 to ['462']\nMapped 768 to ['768']\nMapped 499 to ['499']\nMapped 578 to ['578']\nMapped 740 to ['740']\nMapped 012 to ['012']\nMapped 818 to ['818']\nDirect pycountry lookup for code '736' failed. Trying name and iso3 alpha lookup.\nUnable to fuzzy find a match for Sudan (...2011). Code 736.\nTrying ISO3 alpha code for country 736.\nMapped 736 to ['729'] using iso3 alpha lookup\nMapped 184 to ['184']\nMapped 748 to ['748']\nMapped 242 to ['242']\nMapped 756 to ['756']\nMapped 258 to ['258']\nMapped 226 to ['226']\nMapped 132 to ['132']\nMapped 780 to ['780']\nMapped 032 to ['032']\nMapped 516 to ['516']\nMapped 434 to ['434']\nMapped 414 to ['414']\nMapped 792 to ['792']\nMapped 144 to ['144']\nMapped 858 to ['858']\nMapped 418 to ['418']\nMapped 694 to ['694']\nMapped 480 to ['480']\nMapped 084 to ['084']\nMapped 466 to ['466']\nMapped 392 to ['392']\nMapped 008 to ['008']\nMapped 562 to ['562']\nMapped 404 to ['404']\nMapped 458 to ['458']\nMapped 108 to ['108']\nMapped 028 to ['028']\nMapped 320 to ['320']\nMapped 152 to ['152']\nMapped 430 to ['430']\nMapped 388 to ['388']\nDirect pycountry lookup for code '891' failed. Trying name and iso3 alpha lookup.\nUnable to fuzzy find a match for Serbia and Montenegro (...2005). Code 891.\nTrying ISO3 alpha code for country 891.\nUnable to find any ISO alpha 3 code match for 891\nFailed to match entirely. Returning original code.\nMapped 231 to ['231']\nMapped 686 to ['686']\nMapped 604 to ['604']\nMapped 222 to ['222']\nMapped 807 to ['807']\nMapped 352 to ['352']\nMapped 800 to ['800']\nMapped 804 to ['804']\nMapped 764 to ['764']\nMapped 710 to ['710']\nMapped 716 to ['716']\nMapped 410 to ['410']\nMapped 454 to ['454']\nMapped 090 to ['090']\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Mapped 690 to ['690']\nMapped 744 to ['744']\nMapped 534 to ['534']\nMapped 116 to ['116']\nMapped 756 to ['756']\nMapped 512 to ['512']\nMapped 585 to ['585']\nMapped 624 to ['624']\nMapped 470 to ['470']\nMapped 276 to ['276']\nMapped 630 to ['630']\nMapped 348 to ['348']\nDirect pycountry lookup for code '582' failed. Trying name and iso3 alpha lookup.\nUnable to fuzzy find a match for Pacific Islands. Code 582.\nTrying ISO3 alpha code for country 582.\nUnable to find any ISO alpha 3 code match for 582\nFailed to match entirely. Returning original code.\nMapped 417 to ['417']\nMapped 642 to ['642']\nMapped 584 to ['584']\nMapped 826 to ['826']\nMapped 016 to ['016']\nMapped 704 to ['704']\nMapped 478 to ['478']\nDirect pycountry lookup for code '396' failed. Trying name and iso3 alpha lookup.\nUnable to fuzzy find a match for Jhonston Island. Code 396.\nTrying ISO3 alpha code for country 396.\nUnable to find any ISO alpha 3 code match for 396\nFailed to match entirely. Returning original code.\nMapped 086 to ['086']\nMapped 792 to ['792']\nMapped 414 to ['414']\nMapped 604 to ['604']\nDirect pycountry lookup for code '895' failed. Trying name and iso3 alpha lookup.\nFailed to match entirely. Returning original code.\nMapped 203 to ['203']\nDirect pycountry lookup for code '898' failed. Trying name and iso3 alpha lookup.\nUnable to fuzzy find a match for Unspecified. Code 898.\nTrying ISO3 alpha code for country 898.\nUnable to find any ISO alpha 3 code match for 898\nFailed to match entirely. Returning original code.\nMapped 120 to ['120']\nMapped 524 to ['524']\nMapped 204 to ['204']\nMapped 562 to ['562']\nMapped 404 to ['404']\nMapped 356 to ['356']\nMapped 008 to ['008']\nDirect pycountry lookup for code '251' failed. Trying name and iso3 alpha lookup.\nMapped 251 to ['250'] using country name\nMapped 266 to ['266']\nMapped 834 to ['834']\nMapped 242 to ['242']\nMapped 796 to ['796']\nMapped 332 to ['332']\nMapped 580 to ['580']\nMapped 434 to ['434']\nMapped 598 to ['598']\nMapped 850 to ['850']\nDirect pycountry lookup for code '891' failed. Trying name and iso3 alpha lookup.\nUnable to fuzzy find a match for Serbia and Montenegro (...2005). Code 891.\nTrying ISO3 alpha code for country 891.\nUnable to find any ISO alpha 3 code match for 891\nFailed to match entirely. Returning original code.\nMapped 250 to ['250']\nMapped 334 to ['334']\nMapped 156 to ['156']\nMapped 364 to ['364']\nMapped 140 to ['140']\nMapped 566 to ['566']\nMapped 090 to ['090']\nMapped 175 to ['175']\nMapped 238 to ['238']\nMapped 788 to ['788']\nMapped 398 to ['398']\nMapped 070 to ['070']\nMapped 292 to ['292']\nMapped 533 to ['533']\nMapped 096 to ['096']\nMapped 162 to ['162']\nMapped 234 to ['234']\nMapped 275 to ['275']\nMapped 499 to ['499']\nMapped 454 to ['454']\nMapped 652 to ['652']\nMapped 600 to ['600']\nMapped 480 to ['480']\nMapped 882 to ['882']\nDirect pycountry lookup for code '412' failed. Trying name and iso3 alpha lookup.\nFailed to match entirely. Returning original code.\nMapped 422 to ['422']\nMapped 408 to ['408']\nMapped 438 to ['438']\nMapped 858 to ['858']\nMapped 798 to ['798']\nDirect pycountry lookup for code '872' failed. Trying name and iso3 alpha lookup.\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Mapped 872 to ['581'] using country name *fuzzy*\nMapped 260 to ['260']\nDirect pycountry lookup for code '711' failed. Trying name and iso3 alpha lookup.\nUnable to fuzzy find a match for Southern African Customs Union (...1999). Code 711.\nTrying ISO3 alpha code for country 711.\nUnable to find any ISO alpha 3 code match for 711\nFailed to match entirely. Returning original code.\nMapped 246 to ['246']\nMapped 108 to ['108']\nMapped 620 to ['620']\nMapped 776 to ['776']\nMapped 051 to ['051']\nMapped 638 to ['638']\nMapped 004 to ['004']\nDirect pycountry lookup for code '849' failed. Trying name and iso3 alpha lookup.\nUnable to fuzzy find a match for US Misc. Pacific Isds. Code 849.\nTrying ISO3 alpha code for country 849.\nUnable to find any ISO alpha 3 code match for 849\nFailed to match entirely. Returning original code.\nMapped 132 to ['132']\nMapped 092 to ['092']\nMapped 591 to ['591']\nMapped 795 to ['795']\nMapped 316 to ['316']\nMapped 208 to ['208']\nMapped 807 to ['807']\nMapped 308 to ['308']\nMapped 654 to ['654']\nMapped 500 to ['500']\nMapped 581 to ['581']\nMapped 548 to ['548']\nMapped 784 to ['784']\nMapped 646 to ['646']\nMapped 388 to ['388']\nMapped 818 to ['818']\nMapped 586 to ['586']\nMapped 166 to ['166']\nMapped 372 to ['372']\nMapped 694 to ['694']\nMapped 616 to ['616']\nMapped 268 to ['268']\nMapped 626 to ['626']\nMapped 504 to ['504']\nMapped 100 to ['100']\nMapped 024 to ['024']\nMapped 300 to ['300']\nMapped 484 to ['484']\nMapped 558 to ['558']\nMapped 752 to ['752']\nMapped 583 to ['583']\nMapped 762 to ['762']\nMapped 044 to ['044']\nMapped 678 to ['678']\nMapped 010 to ['010']\nMapped 728 to ['728']\nMapped 466 to ['466']\nMapped 508 to ['508']\nMapped 052 to ['052']\nDirect pycountry lookup for code '886' failed. Trying name and iso3 alpha lookup.\nFailed to match entirely. Returning original code.\nDirect pycountry lookup for code '590' failed. Trying name and iso3 alpha lookup.\nFailed to match entirely. Returning original code.\nMapped 352 to ['352']\nMapped 768 to ['768']\nMapped 040 to ['040']\nMapped 148 to ['148']\nMapped 706 to ['706']\nMapped 520 to ['520']\nMapped 214 to ['214']\nDirect pycountry lookup for code '736' failed. Trying name and iso3 alpha lookup.\nUnable to fuzzy find a match for Sudan (...2011). Code 736.\nTrying ISO3 alpha code for country 736.\nMapped 736 to ['729'] using iso3 alpha lookup\nMapped 031 to ['031']\nMapped 710 to ['710']\nDirect pycountry lookup for code '080' failed. Trying name and iso3 alpha lookup.\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Unable to fuzzy find a match for Br. Antr. Terr. Code 080.\nTrying ISO3 alpha code for country 080.\nUnable to find any ISO alpha 3 code match for 080\nFailed to match entirely. Returning original code.\nMapped 192 to ['192']\nMapped 716 to ['716']\nMapped 840 to ['840']\nMapped 376 to ['376']\nMapped 442 to ['442']\nMapped 887 to ['887']\nMapped 780 to ['780']\nDirect pycountry lookup for code '274' failed. Trying name and iso3 alpha lookup.\nUnable to fuzzy find a match for Gaza Strip. Code 274.\nTrying ISO3 alpha code for country 274.\nUnable to find any ISO alpha 3 code match for 274\nFailed to match entirely. Returning original code.\nMapped 239 to ['239']\nMapped 666 to ['666']\nMapped 076 to ['076']\nMapped 498 to ['498']\nMapped 136 to ['136']\nMapped 659 to ['659']\nMapped 231 to ['231']\nMapped 705 to ['705']\nMapped 686 to ['686']\nMapped 232 to ['232']\nMapped 060 to ['060']\nMapped 428 to ['428']\nMapped 458 to ['458']\nMapped 072 to ['072']\nMapped 368 to ['368']\nMapped 380 to ['380']\nMapped 304 to ['304']\nMapped 540 to ['540']\nMapped 104 to ['104']\nMapped 612 to ['612']\nMapped 462 to ['462']\nMapped 384 to ['384']\nDirect pycountry lookup for code '532' failed. Trying name and iso3 alpha lookup.\nFailed to match entirely. Returning original code.\nMapped 643 to ['643']\nDirect pycountry lookup for code '326' failed. Trying name and iso3 alpha lookup.\nFailed to match entirely. Returning original code.\nMapped 410 to ['410']\nMapped 320 to ['320']\nMapped 854 to ['854']\nMapped 528 to ['528']\nMapped 064 to ['064']\nMapped 724 to ['724']\nMapped 036 to ['036']\nMapped 112 to ['112']\nMapped 554 to ['554']\nMapped 430 to ['430']\nMapped 212 to ['212']\nDirect pycountry lookup for code '890' failed. Trying name and iso3 alpha lookup.\nUnable to fuzzy find a match for Yugoslavia, FR (Serbia/Montene. Code 890.\nTrying ISO3 alpha code for country 890.\nUnable to find any ISO alpha 3 code match for 890\nFailed to match entirely. Returning original code.\nMapped 124 to ['124']\nMapped 740 to ['740']\nMapped 531 to ['531']\nDirect pycountry lookup for code '699' failed. Trying name and iso3 alpha lookup.\nMapped 699 to ['356'] using country name\nMapped 516 to ['516']\nMapped 574 to ['574']\nMapped 418 to ['418']\nMapped 068 to ['068']\nMapped 392 to ['392']\nMapped 074 to ['074']\nMapped 028 to ['028']\nMapped 222 to ['222']\nMapped 729 to ['729']\nMapped 764 to ['764']\nMapped 324 to ['324']\nMapped 270 to ['270']\nMapped 440 to ['440']\nMapped 804 to ['804']\nMapped 496 to ['496']\nMapped 670 to ['670']\nMapped 196 to ['196']\nMapped 344 to ['344']\nDirect pycountry lookup for code '530' failed. Trying name and iso3 alpha lookup.\nUnable to fuzzy find a match for Netherlands Antilles (...2010). Code 530.\nTrying ISO3 alpha code for country 530.\nUnable to find any ISO alpha 3 code match for 530\nFailed to match entirely. Returning original code.\nMapped 180 to ['180']\nMapped 144 to ['144']\nMapped 688 to ['688']\nDirect pycountry lookup for code '230' failed. Trying name and iso3 alpha lookup.\nUnable to fuzzy find a match for Ethiopia (includes Eritrea). Code 230.\nTrying ISO3 alpha code for country 230.\nUnable to find any ISO alpha 3 code match for 230\nFailed to match entirely. Returning original code.\nMapped 400 to ['400']\nMapped 191 to ['191']\nDirect pycountry lookup for code '588' failed. Trying name and iso3 alpha lookup.\nFailed to match entirely. Returning original code.\nMapped 446 to ['446']\nMapped 170 to ['170']\nMapped 012 to ['012']\nMapped 226 to ['226']\nMapped 570 to ['570']\nMapped 474 to ['474']\nDirect pycountry lookup for code '720' failed. Trying name and iso3 alpha lookup.\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Unable to fuzzy find a match for Yemen Democratic. Code 720.\nTrying ISO3 alpha code for country 720.\nUnable to find any ISO alpha 3 code match for 720\nFailed to match entirely. Returning original code.\nMapped 450 to ['450']\nMapped 328 to ['328']\nMapped 050 to ['050']\nMapped 862 to ['862']\nMapped 084 to ['084']\nMapped 732 to ['732']\nMapped 772 to ['772']\nMapped 860 to ['860']\nMapped 218 to ['218']\nMapped 233 to ['233']\nMapped 048 to ['048']\nMapped 876 to ['876']\nMapped 184 to ['184']\nMapped 702 to ['702']\nMapped 760 to ['760']\nDirect pycountry lookup for code '488' failed. Trying name and iso3 alpha lookup.\nMapped 488 to ['581'] using country name *fuzzy*\nMapped 158 to ['158']\nMapped 312 to ['312']\nMapped 660 to ['660']\nMapped 578 to ['578']\nMapped 634 to ['634']\nMapped 800 to ['800']\nMapped 254 to ['254']\nMapped 262 to ['262']\nMapped 608 to ['608']\nMapped 152 to ['152']\nMapped 703 to ['703']\nMapped 178 to ['178']\nMapped 296 to ['296']\nMapped 258 to ['258']\nMapped 492 to ['492']\nMapped 662 to ['662']\nMapped 340 to ['340']\nMapped 894 to ['894']\nMapped 188 to ['188']\nMapped 426 to ['426']\nMapped 020 to ['020']\nMapped 682 to ['682']\nMapped 174 to ['174']\nMapped 032 to ['032']\nMapped 748 to ['748']\nMapped 288 to ['288']\nMapped 360 to ['360']\nMapped 056 to ['056']\nMapped 674 to ['674']\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Mapped 442 to ['442']\nMapped 840 to ['840']\nMapped 144 to ['144']\nMapped 414 to ['414']\nMapped 554 to ['554']\nMapped 060 to ['060']\nMapped 583 to ['583']\nMapped 598 to ['598']\nDirect pycountry lookup for code '530' failed. Trying name and iso3 alpha lookup.\nUnable to fuzzy find a match for Netherlands Antilles (...2010). Code 530.\nTrying ISO3 alpha code for country 530.\nUnable to find any ISO alpha 3 code match for 530\nFailed to match entirely. Returning original code.\nMapped 480 to ['480']\nMapped 191 to ['191']\nMapped 660 to ['660']\nMapped 124 to ['124']\nMapped 040 to ['040']\nMapped 036 to ['036']\nMapped 100 to ['100']\nMapped 662 to ['662']\nMapped 702 to ['702']\nMapped 512 to ['512']\nMapped 826 to ['826']\nMapped 376 to ['376']\nMapped 834 to ['834']\nMapped 724 to ['724']\nMapped 308 to ['308']\nMapped 090 to ['090']\nMapped 292 to ['292']\nMapped 051 to ['051']\nMapped 246 to ['246']\nMapped 148 to ['148']\nMapped 578 to ['578']\nMapped 348 to ['348']\nMapped 250 to ['250']\nMapped 528 to ['528']\nMapped 548 to ['548']\nMapped 400 to ['400']\nMapped 788 to ['788']\nMapped 196 to ['196']\nMapped 116 to ['116']\nMapped 426 to ['426']\nMapped 218 to ['218']\nMapped 800 to ['800']\nMapped 462 to ['462']\nMapped 764 to ['764']\nMapped 428 to ['428']\nMapped 440 to ['440']\nMapped 499 to ['499']\nMapped 798 to ['798']\nMapped 585 to ['585']\nMapped 795 to ['795']\nMapped 438 to ['438']\nMapped 356 to ['356']\nMapped 780 to ['780']\nMapped 498 to ['498']\nMapped 070 to ['070']\nMapped 028 to ['028']\nMapped 158 to ['158']\nMapped 422 to ['422']\nMapped 242 to ['242']\nMapped 136 to ['136']\nMapped 516 to ['516']\nMapped 140 to ['140']\nMapped 642 to ['642']\nMapped 156 to ['156']\nMapped 392 to ['392']\nMapped 360 to ['360']\nMapped 500 to ['500']\nMapped 894 to ['894']\nMapped 804 to ['804']\nMapped 233 to ['233']\nMapped 882 to ['882']\nMapped 670 to ['670']\nMapped 056 to ['056']\nMapped 434 to ['434']\nMapped 703 to ['703']\nMapped 716 to ['716']\nMapped 682 to ['682']\nMapped 410 to ['410']\nMapped 096 to ['096']\nMapped 170 to ['170']\nMapped 616 to ['616']\nMapped 275 to ['275']\nMapped 792 to ['792']\nMapped 520 to ['520']\nMapped 270 to ['270']\nMapped 031 to ['031']\nMapped 430 to ['430']\nMapped 608 to ['608']\nMapped 470 to ['470']\nMapped 048 to ['048']\nMapped 404 to ['404']\nMapped 533 to ['533']\nMapped 050 to ['050']\nMapped 566 to ['566']\nMapped 705 to ['705']\nMapped 380 to ['380']\nMapped 112 to ['112']\nMapped 748 to ['748']\nMapped 620 to ['620']\nMapped 184 to ['184']\nMapped 634 to ['634']\nMapped 586 to ['586']\nMapped 659 to ['659']\nMapped 862 to ['862']\nMapped 860 to ['860']\nMapped 262 to ['262']\nMapped 300 to ['300']\nMapped 710 to ['710']\nMapped 756 to ['756']\nMapped 032 to ['032']\nMapped 752 to ['752']\nMapped 276 to ['276']\nMapped 458 to ['458']\nMapped 762 to ['762']\nMapped 807 to ['807']\nMapped 784 to ['784']\nMapped 084 to ['084']\nMapped 484 to ['484']\nMapped 072 to ['072']\nMapped 646 to ['646']\nMapped 052 to ['052']\nMapped 108 to ['108']\nMapped 918 to ['040', '056', '100', '191', '196', '203', '208', '233', '246', '250', '276', '300', '348', '372', '380', '428', '440', '442', '470', '528', '616', '620', '642', '703', '705', '724', '752', '492']\nMapped 524 to ['524']\nMapped 352 to ['352']\nMapped 372 to ['372']\nMapped 591 to ['591']\nMapped 012 to ['012']\nMapped 643 to ['643']\nMapped 203 to ['203']\nMapped 208 to ['208']\nMapped 268 to ['268']\nMapped 076 to ['076']\nMapped 064 to ['064']\nMapped 818 to ['818']\nMapped 690 to ['690']\nMapped 417 to ['417']\nMapped 398 to ['398']\nMapped 296 to ['296']\n"
+        }
+      ]
+    },
+    {
+      "id": "nWHF",
+      "code_hash": "d08a00d68638da3f4dd26ace662909b3",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='nWHF-0' random-id='f7d4d600-3d07-ebe8-d9d2-5236106b7209'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/471-11954467-wd6iJ9Fk.json&quot;' data-total-rows='154' data-total-columns='2' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;original_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;iso_num_list&quot;, [&quot;unknown&quot;, &quot;list[str]&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='true' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "iLit",
+      "code_hash": "d53a253d9aff4aed85f6b2bbfe93f7c9",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ZHCJ",
+      "code_hash": "845f13a7cd7c3e7fb8a57c6aa9283b29",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ROlb",
+      "code_hash": "7ed18577991a5d23fc6495671ccdcf03",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "YynR",
+      "code_hash": "c91270dc2863684eb4e2d0ee4c8ffd26",
+      "outputs": [
+        {
+          "type": "error",
+          "ename": "exception",
+          "evalue": "name 'test_lf_mapped' is not defined",
+          "traceback": []
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "<span class=\"codehilite\"><div class=\"highlight\"><pre><span></span><span class=\"gt\">Traceback (most recent call last):</span>\n  File <span class=\"nb\">&quot;/Users/lukasalemu/Documents/00. Bank of England/03. MPIL/tariff_trade_analysis/.venv/lib/python3.13/site-packages/marimo/_runtime/executor.py&quot;</span>, line <span class=\"m\">142</span>, in <span class=\"n\">execute_cell</span>\n<span class=\"w\">    </span><span class=\"k\">return</span> <span class=\"nb\">eval</span><span class=\"p\">(</span><span class=\"n\">cell</span><span class=\"o\">.</span><span class=\"n\">last_expr</span><span class=\"p\">,</span> <span class=\"n\">glbls</span><span class=\"p\">)</span>\n  File <span class=\"nb\">&quot;/var/folders/df/j998nyn11sdf0w5cf48pny6m0000gn/T/marimo_89237/__marimo__cell_YynR_.py&quot;</span>, line <span class=\"m\">1</span>, in <span class=\"n\">&lt;module&gt;</span>\n<span class=\"w\">    </span><span class=\"n\">test_lf_mapped</span><span class=\"o\">.</span><span class=\"n\">collect</span><span class=\"p\">(</span><span class=\"n\">engine</span><span class=\"o\">=</span><span class=\"s1\">&#39;streaming&#39;</span><span class=\"p\">)</span>\n<span class=\"w\">    </span><span class=\"pm\">^^^^^^^^^^^^^^</span>\n<span class=\"gr\">NameError</span>: <span class=\"n\">name &#39;test_lf_mapped&#39; is not defined</span>\n</pre></div>\n</span>"
+        }
+      ]
+    },
+    {
+      "id": "FOSF",
+      "code_hash": "90b4276537e1a69519354ed86a679b65",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"sink-the-results\">Sink the results</h1></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "fiuI",
+      "code_hash": "c30c54ace7b6886f273e76fca0679f8f",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='fiuI-0' random-id='6b2e9b32-16b9-92b6-3f1f-798f295411c0'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/911-11954467-kPwZhRtz.json&quot;' data-total-rows='5' data-total-columns='8' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;year&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;reporter_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;hs_revision&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;tariff_rate&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;min_rate&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;max_rate&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;tariff_type&quot;, [&quot;string&quot;, &quot;str&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "aDFv",
+      "code_hash": "1a9a8d76082fa370c5f036c5e4f06e9f",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "sbri",
+      "code_hash": "8a681c342715739c4ce04399d55d9c3b",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
           }
         }
       ],

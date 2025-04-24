@@ -1,0 +1,327 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.12.8"
+  },
+  "cells": [
+    {
+      "id": "Hbol",
+      "code_hash": "78f693167cf9c64f76e1483f8410b960",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "cBbP",
+      "code_hash": "e4f41ed6746d9c39f47cffa17349dff6",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"create-unified-dataset\">CREATE UNIFIED DATASET</h1>\n<span class=\"paragraph\">Join trade values and volumes with tariff amounts. Left join on BACI. Simple operation.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Hera",
+      "code_hash": "33f7af050d03bdf136bc1359d5306089",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ACgY",
+      "code_hash": "6817532e62179180720d4e8e1f21dcfe",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='ACgY-0' random-id='5367dda2-9061-0ed4-1238-52097ad05e81'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/768-12029092-JlW4tPxU.json&quot;' data-total-rows='5' data-total-columns='7' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;year&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;reporter_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;partner_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;tariff_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;min_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;max_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "gjQa",
+      "code_hash": "11c4c4ff50c69f9c1567731cd0c15694",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='gjQa-0' random-id='2650d6bc-b049-caf9-ecf8-46581720a371'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/626-12029092-NokBXMSW.json&quot;' data-total-rows='5' data-total-columns='6' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;year&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;reporter_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;tariff_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;min_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;max_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "rLxl",
+      "code_hash": "e5395f29573e48542417e76a3df4ac14",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='rLxl-0' random-id='bf11db94-b6bf-5781-5be8-e942060d94ae'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/605-12029092-L3MSFf4f.json&quot;' data-total-rows='5' data-total-columns='6' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;year&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;reporter_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;partner_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;volume&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;quantity&quot;, [&quot;number&quot;, &quot;f64&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "tOwB",
+      "code_hash": "0336257ab7cbac53590a271f1d2c894e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h2 id=\"format-the-datasets-to-make-them-joinable\">Format the datasets to make them joinable</h2></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Nhbd",
+      "code_hash": "513a14ce7e57c87383ecf4c2f4ae8432",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='Nhbd-0' random-id='580615cc-4c3d-ea59-9044-8b1bf4f39f66'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/911-12029092-oKA4FXsd.json&quot;' data-total-rows='5' data-total-columns='8' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;year&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;reporter_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;hs_revision&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;tariff_rate&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;min_rate&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;max_rate&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;tariff_type&quot;, [&quot;string&quot;, &quot;str&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "wxhi",
+      "code_hash": "e38d33696026d6c0732ff442957fde89",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"operate-over-the-baci-dataset-in-chunks\">Operate over the BACI dataset in chunks</h1></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Fzib",
+      "code_hash": "0a737ab893c5e288825ad1f2cb8efa6a",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 1/29: Year = 1995 ---\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 2/29: Year = 1996 ---\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 3/29: Year = 1997 ---\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 4/29: Year = 1998 ---\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 5/29: Year = 1999 ---\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 6/29: Year = 2000 ---\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 7/29: Year = 2001 ---\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 8/29: Year = 2002 ---\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 9/29: Year = 2003 ---\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 10/29: Year = 2004 ---\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 11/29: Year = 2005 ---\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 12/29: Year = 2006 ---\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 13/29: Year = 2007 ---\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 14/29: Year = 2008 ---\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 15/29: Year = 2009 ---\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 16/29: Year = 2010 ---\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 17/29: Year = 2011 ---\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 18/29: Year = 2012 ---\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 19/29: Year = 2013 ---\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 20/29: Year = 2014 ---\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 21/29: Year = 2015 ---\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 22/29: Year = 2016 ---\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 23/29: Year = 2017 ---\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 24/29: Year = 2018 ---\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 25/29: Year = 2019 ---\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 26/29: Year = 2020 ---\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 27/29: Year = 2021 ---\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 28/29: Year = 2022 ---\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 29/29: Year = 2023 ---\n"
+        }
+      ]
+    },
+    {
+      "id": "dDBw",
+      "code_hash": "e448ed34dabec8218456069ea79e170b",
+      "outputs": [
+        {
+          "type": "error",
+          "ename": "exception",
+          "evalue": "'pyarrow.lib.Table' object has no attribute 'tail'",
+          "traceback": []
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "<span class=\"codehilite\"><div class=\"highlight\"><pre><span></span><span class=\"gt\">Traceback (most recent call last):</span>\n  File <span class=\"nb\">&quot;/Users/lukasalemu/Documents/00. Bank of England/03. MPIL/tariff_trade_analysis/.venv/lib/python3.13/site-packages/marimo/_runtime/executor.py&quot;</span>, line <span class=\"m\">142</span>, in <span class=\"n\">execute_cell</span>\n<span class=\"w\">    </span><span class=\"k\">return</span> <span class=\"nb\">eval</span><span class=\"p\">(</span><span class=\"n\">cell</span><span class=\"o\">.</span><span class=\"n\">last_expr</span><span class=\"p\">,</span> <span class=\"n\">glbls</span><span class=\"p\">)</span>\n  File <span class=\"nb\">&quot;/var/folders/df/j998nyn11sdf0w5cf48pny6m0000gn/T/marimo_90494/__marimo__cell_dDBw_.py&quot;</span>, line <span class=\"m\">1</span>, in <span class=\"n\">&lt;module&gt;</span>\n<span class=\"w\">    </span><span class=\"n\">unified_baci</span><span class=\"o\">.</span><span class=\"n\">tail</span><span class=\"p\">(</span><span class=\"mi\">10000000</span><span class=\"p\">)</span><span class=\"o\">.</span><span class=\"n\">describe</span><span class=\"p\">()</span>\n<span class=\"w\">    </span><span class=\"pm\">^^^^^^^^^^^^^^^^^</span>\n<span class=\"gr\">AttributeError</span>: <span class=\"n\">&#39;pyarrow.lib.Table&#39; object has no attribute &#39;tail&#39;</span>\n</pre></div>\n</span>"
+        }
+      ]
+    },
+    {
+      "id": "jPBC",
+      "code_hash": "dbbcb07f6477b07b4a188b072932d640",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "<pyarrow._parquet.ParquetSchema object at 0x86b340e80>\nrequired group field_id=-1 schema {\n  required binary field_id=-1 reporter_country (String);\n  required binary field_id=-1 partner_country (String);\n  required binary field_id=-1 product_code (String);\n  optional double field_id=-1 volume;\n  optional double field_id=-1 quantity;\n  optional float field_id=-1 tariff_rate_pref;\n  optional float field_id=-1 min_rate_pref;\n  optional float field_id=-1 max_rate_pref;\n  optional float field_id=-1 tariff_rate_mfn;\n  optional float field_id=-1 min_rate_mfn;\n  optional float field_id=-1 max_rate_mfn;\n  optional float field_id=-1 effective_tariff;\n}\n\n---------------------------------------------------------------------------------------------------------------\n\n--- Schema 4 for: data/final/unified_trade_tariff_partitioned/year=1999/67937e4b588c49b696a1daa23e7d4064-0.parquet ---\n<pyarrow._parquet.ParquetSchema object at 0x136bbb3c0>\nrequired group field_id=-1 schema {\n  required binary field_id=-1 reporter_country (String);\n  required binary field_id=-1 partner_country (String);\n  required binary field_id=-1 product_code (String);\n  optional double field_id=-1 volume;\n  optional double field_id=-1 quantity;\n  optional float field_id=-1 tariff_rate_pref;\n  optional float field_id=-1 min_rate_pref;\n  optional float field_id=-1 max_rate_pref;\n  optional float field_id=-1 tariff_rate_mfn;\n  optional float field_id=-1 min_rate_mfn;\n  optional float field_id=-1 max_rate_mfn;\n  optional float field_id=-1 effective_tariff;\n}\n\n---------------------------------------------------------------------------------------------------------------\n\n--- Schema 5 for: data/final/unified_trade_tariff_partitioned/year=2003/b4aa8e41202e48c8b7c603b294ccb96c-0.parquet ---\n<pyarrow._parquet.ParquetSchema object at 0x140d65480>\nrequired group field_id=-1 schema {\n  required binary field_id=-1 reporter_country (String);\n  required binary field_id=-1 partner_country (String);\n  required binary field_id=-1 product_code (String);\n  optional double field_id=-1 volume;\n  optional double field_id=-1 quantity;\n  optional float field_id=-1 tariff_rate_pref;\n  optional float field_id=-1 min_rate_pref;\n  optional float field_id=-1 max_rate_pref;\n  optional float field_id=-1 tariff_rate_mfn;\n  optional float field_id=-1 min_rate_mfn;\n  optional float field_id=-1 max_rate_mfn;\n  optional float field_id=-1 effective_tariff;\n}\n\n---------------------------------------------------------------------------------------------------------------\nInspecting schemas in: data/final/unified_trade_tariff_partitioned/\nChecking schemas for 5 files:\n\n--- Schema 1 for: data/final/unified_trade_tariff_partitioned/year=1998/f9130ae49c5e46338139904cdb8c97e5-0.parquet ---\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "<pyarrow._parquet.ParquetSchema object at 0x68457cec0>\nrequired group field_id=-1 schema {\n  required binary field_id=-1 reporter_country (String);\n  required binary field_id=-1 partner_country (String);\n  required binary field_id=-1 product_code (String);\n  optional double field_id=-1 volume;\n  optional double field_id=-1 quantity;\n  optional float field_id=-1 tariff_rate_pref;\n  optional float field_id=-1 min_rate_pref;\n  optional float field_id=-1 max_rate_pref;\n  optional float field_id=-1 tariff_rate_mfn;\n  optional float field_id=-1 min_rate_mfn;\n  optional float field_id=-1 max_rate_mfn;\n  optional float field_id=-1 effective_tariff;\n}\n\n---------------------------------------------------------------------------------------------------------------\n\n--- Schema 2 for: data/final/unified_trade_tariff_partitioned/year=1996/3065162437f24159b7c22b0db4e284af-0.parquet ---\n<pyarrow._parquet.ParquetSchema object at 0x83e5f5300>\nrequired group field_id=-1 schema {\n  required binary field_id=-1 reporter_country (String);\n  required binary field_id=-1 partner_country (String);\n  required binary field_id=-1 product_code (String);\n  optional double field_id=-1 volume;\n  optional double field_id=-1 quantity;\n  optional float field_id=-1 tariff_rate_pref;\n  optional float field_id=-1 min_rate_pref;\n  optional float field_id=-1 max_rate_pref;\n  optional float field_id=-1 tariff_rate_mfn;\n  optional float field_id=-1 min_rate_mfn;\n  optional float field_id=-1 max_rate_mfn;\n  optional float field_id=-1 effective_tariff;\n}\n\n---------------------------------------------------------------------------------------------------------------\n\n--- Schema 3 for: data/final/unified_trade_tariff_partitioned/year=1997/7dadf5b44a0c40a5889d8d53edd5346c-0.parquet ---\n<pyarrow._parquet.ParquetSchema object at 0x150dad2c0>\nrequired group field_id=-1 schema {\n  required binary field_id=-1 reporter_country (String);\n  required binary field_id=-1 partner_country (String);\n  required binary field_id=-1 product_code (String);\n  optional double field_id=-1 volume;\n  optional double field_id=-1 quantity;\n  optional float field_id=-1 tariff_rate_pref;\n  optional float field_id=-1 min_rate_pref;\n  optional float field_id=-1 max_rate_pref;\n  optional float field_id=-1 tariff_rate_mfn;\n  optional float field_id=-1 min_rate_mfn;\n  optional float field_id=-1 max_rate_mfn;\n  optional float field_id=-1 effective_tariff;\n}\n\n---------------------------------------------------------------------------------------------------------------\n\n--- Schema 4 for: data/final/unified_trade_tariff_partitioned/year=1999/67937e4b588c49b696a1daa23e7d4064-0.parquet ---\n<pyarrow._parquet.ParquetSchema object at 0x83e7c6d40>\nrequired group field_id=-1 schema {\n  required binary field_id=-1 reporter_country (String);\n  required binary field_id=-1 partner_country (String);\n  required binary field_id=-1 product_code (String);\n  optional double field_id=-1 volume;\n  optional double field_id=-1 quantity;\n  optional float field_id=-1 tariff_rate_pref;\n  optional float field_id=-1 min_rate_pref;\n  optional float field_id=-1 max_rate_pref;\n  optional float field_id=-1 tariff_rate_mfn;\n  optional float field_id=-1 min_rate_mfn;\n  optional float field_id=-1 max_rate_mfn;\n  optional float field_id=-1 effective_tariff;\n}\n\n---------------------------------------------------------------------------------------------------------------\n\n--- Schema 5 for: data/final/unified_trade_tariff_partitioned/year=2003/b4aa8e41202e48c8b7c603b294ccb96c-0.parquet ---\n<pyarrow._parquet.ParquetSchema object at 0x83e8b7bc0>\nrequired group field_id=-1 schema {\n  required binary field_id=-1 reporter_country (String);\n  required binary field_id=-1 partner_country (String);\n  required binary field_id=-1 product_code (String);\n  optional double field_id=-1 volume;\n  optional double field_id=-1 quantity;\n  optional float field_id=-1 tariff_rate_pref;\n  optional float field_id=-1 min_rate_pref;\n  optional float field_id=-1 max_rate_pref;\n  optional float field_id=-1 tariff_rate_mfn;\n  optional float field_id=-1 min_rate_mfn;\n  optional float field_id=-1 max_rate_mfn;\n  optional float field_id=-1 effective_tariff;\n}\n\n---------------------------------------------------------------------------------------------------------------\n"
+        }
+      ]
+    }
+  ]
+}

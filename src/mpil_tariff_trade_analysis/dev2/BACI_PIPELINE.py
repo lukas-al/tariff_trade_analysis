@@ -354,12 +354,7 @@ def _(joined_lf):
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
-        # Write output
-
-        """
-    )
+    mo.md(r"""# Write output""")
     return
 
 

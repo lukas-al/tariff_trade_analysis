@@ -1,0 +1,73 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.12.8"
+  },
+  "cells": [
+    {
+      "id": "Hbol",
+      "code_hash": "3d34b1d141700dd1a549e220e7d1dddd",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "dMAi",
+      "code_hash": "d2ee3a5af55c9d4144dc644bfd805449",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"explore-our-unified-dataset\">Explore our unified dataset</h1></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "xjdo",
+      "code_hash": "3515235067aa359c19146650fe63c576",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "AYpp",
+      "code_hash": "d40840ebe29f5d63b1ba3d59a101bd1e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='AYpp-0' random-id='8f6954d0-74f0-a1e9-9b9e-ec04d9458d94'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/2993-12131737-dkWASCOb.json&quot;' data-total-rows='9' data-total-columns='14' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;statistic&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;reporter_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;partner_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;volume&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;quantity&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;tariff_rate_pref&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;min_rate_pref&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;max_rate_pref&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;tariff_rate_mfn&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;min_rate_mfn&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;max_rate_mfn&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;effective_tariff&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;year&quot;, [&quot;number&quot;, &quot;f64&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "LLUq",
+      "code_hash": null,
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    }
+  ]
+}
