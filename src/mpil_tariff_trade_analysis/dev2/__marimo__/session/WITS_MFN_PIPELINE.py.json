@@ -1,0 +1,34 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.12.8"
+  },
+  "cells": [
+    {
+      "id": "Hbol",
+      "code_hash": "ce4194fff5fe8b0eebb7a09769bc0473",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "aAFS",
+      "code_hash": "13ebfdb945f1bcf7355c1440c2c7e9ea",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"wits-pipeline\">WITS PIPELINE</h1>\n<span class=\"paragraph\">Implement the WITS pipeline from start to finish</span>\n<ol>\n<li></li>\n</ol></span>"
+          }
+        }
+      ],
+      "console": []
+    }
+  ]
+}

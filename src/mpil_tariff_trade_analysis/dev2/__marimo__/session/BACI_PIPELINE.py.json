@@ -1,0 +1,398 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.12.8"
+  },
+  "cells": [
+    {
+      "id": "Hbol",
+      "code_hash": "073647bbf6639eb0e770eb753bc6fd16",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "MJUe",
+      "code_hash": "9bd1d4e20579a95c8f89c1223a8ae42c",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"implement-the-baci-pipeline\">IMPLEMENT THE BACI PIPELINE</h1>\n<span class=\"paragraph\">Start to finish - implement the BACI cleaning pipeline</span>\n<h2 id=\"structure\">Structure:</h2>\n<ol>\n<li>Load incrememntally and convert from CSV into a Parquet</li>\n<li>Explode any country codes which refer to regions.</li>\n<li>Remap the country codes.</li>\n</ol></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "vblA",
+      "code_hash": "2ce3a46f5692f4829a1e1ac747720023",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "287c4534d34c7b914710898e4526cd2b",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "/Users/lukasalemu/Documents/00. Bank of England/03. MPIL/tariff_trade_analysis/data/intermediate/BACI_HS92_V202501\n"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\rProcessing CSV files: 0it [00:00, ?it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\rProcessing CSV files: 1it [00:00,  1.23it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\rProcessing CSV files: 2it [00:01,  1.58it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\rProcessing CSV files: 3it [00:02,  1.33it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\rProcessing CSV files: 4it [00:02,  1.32it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\rProcessing CSV files: 5it [00:03,  1.27it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\rProcessing CSV files: 6it [00:04,  1.35it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\rProcessing CSV files: 7it [00:05,  1.43it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\rProcessing CSV files: 8it [00:05,  1.55it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\rProcessing CSV files: 9it [00:06,  1.42it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\rProcessing CSV files: 10it [00:07,  1.41it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\rProcessing CSV files: 11it [00:07,  1.37it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\rProcessing CSV files: 12it [00:08,  1.31it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\rProcessing CSV files: 13it [00:09,  1.28it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\rProcessing CSV files: 14it [00:10,  1.50it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\rProcessing CSV files: 15it [00:10,  1.49it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\rProcessing CSV files: 16it [00:11,  1.46it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\rProcessing CSV files: 17it [00:12,  1.26it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\rProcessing CSV files: 18it [00:13,  1.23it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\rProcessing CSV files: 19it [00:14,  1.20it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\rProcessing CSV files: 20it [00:14,  1.39it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\rProcessing CSV files: 21it [00:15,  1.41it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\rProcessing CSV files: 22it [00:15,  1.44it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\rProcessing CSV files: 23it [00:16,  1.35it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\rProcessing CSV files: 24it [00:17,  1.28it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\rProcessing CSV files: 25it [00:18,  1.26it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\rProcessing CSV files: 26it [00:19,  1.27it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\rProcessing CSV files: 27it [00:19,  1.42it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\rProcessing CSV files: 28it [00:20,  1.33it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\rProcessing CSV files: 29it [00:21,  1.37it/s]\rProcessing CSV files: 29it [00:21,  1.36it/s]\n"
+        }
+      ]
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "34de7b4c7253d10d8092c7a2c0f90c11",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='lEQa-0' random-id='773ea63b-1765-21af-0575-730d4d58cdb3'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/568-11696033-Hvgg0NmK.json&quot;' data-total-rows='100' data-total-columns='6' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;t&quot;, [&quot;integer&quot;, &quot;i64&quot;]], [&quot;i&quot;, [&quot;integer&quot;, &quot;i64&quot;]], [&quot;j&quot;, [&quot;integer&quot;, &quot;i64&quot;]], [&quot;k&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;v&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;q&quot;, [&quot;number&quot;, &quot;f64&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='true' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "PKri",
+      "code_hash": "2a64b96192831e7f7bd5abe39c1b158f",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"remap-country-codes\">Remap country codes</h1>\n<ol>\n<li>Minor recast and padding</li>\n<li>Create a mapping table of these codes to ISO</li>\n</ol></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Xref",
+      "code_hash": "252af734e1c134e1f6f24eaec6cae85f",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='Xref-0' random-id='1fbb9be0-c224-7c33-f96f-0aebe084806a'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/638-11696033-gFEO9a73.json&quot;' data-total-rows='10' data-total-columns='6' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;t&quot;, [&quot;integer&quot;, &quot;i64&quot;]], [&quot;i&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;j&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;k&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;v&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;q&quot;, [&quot;number&quot;, &quot;f64&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "SFPL",
+      "code_hash": "b7458674a195812074f0e3e45c1d147a",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "BYtC",
+      "code_hash": "40b1a4b50f6f125af3fe0f785d6074bb",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Mapped 044 to ['044']\nMapped 858 to ['858']\nMapped 688 to ['688']\nMapped 470 to ['470']\nDirect pycountry lookup for code '757' failed. Trying name and iso3 alpha lookup.\nMapped 757 to ['756'] using country name\nMapped 788 to ['788']\nMapped 090 to ['090']\nMapped 570 to ['570']\nMapped 586 to ['586']\nMapped 702 to ['702']\nMapped 218 to ['218']\nMapped 031 to ['031']\nMapped 024 to ['024']\nDirect pycountry lookup for code '058' failed. Trying name and iso3 alpha lookup.\nUnable to fuzzy find a match for Belgium-Luxembourg (...1998). Code 058.\nTrying ISO3 alpha code for country 058.\nMapped 058 to ['056'] using iso3 alpha lookup\nMapped 144 to ['144']\nMapped 148 to ['148']\nMapped 710 to ['710']\nMapped 740 to ['740']\nMapped 807 to ['807']\nMapped 528 to ['528']\nMapped 512 to ['512']\nMapped 004 to ['004']\nMapped 646 to ['646']\nMapped 508 to ['508']\nMapped 414 to ['414']\nMapped 704 to ['704']\nMapped 196 to ['196']\nMapped 096 to ['096']\nMapped 520 to ['520']\nMapped 834 to ['834']\nMapped 184 to ['184']\nMapped 288 to ['288']\nMapped 296 to ['296']\nMapped 792 to ['792']\nMapped 380 to ['380']\nMapped 584 to ['584']\nMapped 724 to ['724']\nMapped 238 to ['238']\nMapped 100 to ['100']\nMapped 426 to ['426']\nDirect pycountry lookup for code '736' failed. Trying name and iso3 alpha lookup.\nUnable to fuzzy find a match for Sudan (...2011). Code 736.\nTrying ISO3 alpha code for country 736.\nMapped 736 to ['729'] using iso3 alpha lookup\nMapped 652 to ['652']\nMapped 104 to ['104']\nMapped 500 to ['500']\nDirect pycountry lookup for code '842' failed. Trying name and iso3 alpha lookup.\nMapped 842 to ['840'] using country name\nDirect pycountry lookup for code '251' failed. Trying name and iso3 alpha lookup.\nMapped 251 to ['250'] using country name\nMapped 784 to ['784']\nMapped 434 to ['434']\nMapped 860 to ['860']\nMapped 162 to ['162']\nMapped 760 to ['760']\nMapped 694 to ['694']\nMapped 324 to ['324']\nMapped 484 to ['484']\nMapped 682 to ['682']\nMapped 678 to ['678']\nMapped 446 to ['446']\nMapped 620 to ['620']\nMapped 690 to ['690']\nMapped 392 to ['392']\nMapped 120 to ['120']\nMapped 352 to ['352']\nMapped 008 to ['008']\nMapped 634 to ['634']\nMapped 894 to ['894']\nMapped 780 to ['780']\nMapped 052 to ['052']\nMapped 124 to ['124']\nMapped 462 to ['462']\nMapped 112 to ['112']\nMapped 798 to ['798']\nMapped 762 to ['762']\nMapped 642 to ['642']\nMapped 360 to ['360']\nMapped 716 to ['716']\nMapped 404 to ['404']\nMapped 304 to ['304']\nMapped 498 to ['498']\nMapped 332 to ['332']\nMapped 068 to ['068']\nMapped 344 to ['344']\nMapped 258 to ['258']\nMapped 566 to ['566']\nMapped 659 to ['659']\nMapped 531 to ['531']\nMapped 136 to ['136']\nMapped 480 to ['480']\nMapped 384 to ['384']\nMapped 862 to ['862']\nMapped 204 to ['204']\nDirect pycountry lookup for code '891' failed. Trying name and iso3 alpha lookup.\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Unable to fuzzy find a match for Serbia and Montenegro (...2005). Code 891.\nTrying ISO3 alpha code for country 891.\nUnable to find any ISO alpha 3 code match for 891\nFailed to match entirely. Returning original code.\nDirect pycountry lookup for code '711' failed. Trying name and iso3 alpha lookup.\nUnable to fuzzy find a match for Southern African Customs Union (...1999). Code 711.\nTrying ISO3 alpha code for country 711.\nUnable to find any ISO alpha 3 code match for 711\nFailed to match entirely. Returning original code.\nMapped 116 to ['116']\nMapped 226 to ['226']\nMapped 242 to ['242']\nMapped 316 to ['316']\nMapped 072 to ['072']\nMapped 706 to ['706']\nMapped 876 to ['876']\nMapped 060 to ['060']\nMapped 246 to ['246']\nMapped 132 to ['132']\nMapped 499 to ['499']\nMapped 818 to ['818']\nMapped 156 to ['156']\nMapped 608 to ['608']\nDirect pycountry lookup for code '699' failed. Trying name and iso3 alpha lookup.\nMapped 699 to ['356'] using country name\nMapped 548 to ['548']\nMapped 604 to ['604']\nMapped 180 to ['180']\nMapped 108 to ['108']\nMapped 016 to ['016']\nMapped 398 to ['398']\nMapped 140 to ['140']\nMapped 070 to ['070']\nMapped 772 to ['772']\nMapped 478 to ['478']\nMapped 208 to ['208']\nDirect pycountry lookup for code '849' failed. Trying name and iso3 alpha lookup.\nUnable to fuzzy find a match for US Misc. Pacific Isds. Code 849.\nTrying ISO3 alpha code for country 849.\nUnable to find any ISO alpha 3 code match for 849\nFailed to match entirely. Returning original code.\nMapped 752 to ['752']\nMapped 064 to ['064']\nMapped 175 to ['175']\nMapped 308 to ['308']\nMapped 400 to ['400']\nMapped 076 to ['076']\nMapped 524 to ['524']\nMapped 050 to ['050']\nMapped 882 to ['882']\nMapped 320 to ['320']\nMapped 422 to ['422']\nMapped 430 to ['430']\nMapped 276 to ['276']\nMapped 600 to ['600']\nMapped 558 to ['558']\nMapped 268 to ['268']\nMapped 887 to ['887']\nMapped 340 to ['340']\nMapped 233 to ['233']\nMapped 504 to ['504']\nMapped 562 to ['562']\nMapped 574 to ['574']\nMapped 490 to ['158']\nMapped 583 to ['583']\nMapped 728 to ['728']\nMapped 612 to ['612']\nDirect pycountry lookup for code '579' failed. Trying name and iso3 alpha lookup.\nMapped 579 to ['578'] using country name\nMapped 260 to ['260']\nMapped 854 to ['854']\nMapped 174 to ['174']\nMapped 368 to ['368']\nMapped 826 to ['826']\nMapped 768 to ['768']\nMapped 364 to ['364']\nMapped 214 to ['214']\nMapped 580 to ['580']\nMapped 666 to ['666']\nMapped 654 to ['654']\nMapped 040 to ['040']\nMapped 292 to ['292']\nMapped 624 to ['624']\nMapped 212 to ['212']\nMapped 092 to ['092']\nMapped 232 to ['232']\nMapped 222 to ['222']\nMapped 660 to ['660']\nMapped 166 to ['166']\nMapped 554 to ['554']\nMapped 804 to ['804']\nMapped 028 to ['028']\nMapped 051 to ['051']\nMapped 192 to ['192']\nMapped 626 to ['626']\nMapped 262 to ['262']\nMapped 535 to ['535']\nMapped 496 to ['496']\nMapped 410 to ['410']\nMapped 170 to ['170']\nMapped 764 to ['764']\nMapped 643 to ['643']\nMapped 275 to ['275']\nMapped 348 to ['348']\nMapped 534 to ['534']\nMapped 012 to ['012']\nMapped 388 to ['388']\nMapped 418 to ['418']\nMapped 454 to ['454']\nMapped 796 to ['796']\nMapped 533 to ['533']\nMapped 729 to ['729']\nMapped 036 to ['036']\nMapped 191 to ['191']\nMapped 703 to ['703']\nMapped 048 to ['048']\nMapped 376 to ['376']\nMapped 686 to ['686']\nMapped 598 to ['598']\nMapped 428 to ['428']\nMapped 674 to ['674']\nMapped 662 to ['662']\nMapped 408 to ['408']\nMapped 705 to ['705']\nMapped 440 to ['440']\nMapped 458 to ['458']\nMapped 178 to ['178']\nMapped 084 to ['084']\nMapped 540 to ['540']\nMapped 466 to ['466']\nMapped 616 to ['616']\nMapped 591 to ['591']\nMapped 795 to ['795']\nMapped 266 to ['266']\nMapped 417 to ['417']\nMapped 516 to ['516']\nMapped 270 to ['270']\nMapped 800 to ['800']\nMapped 372 to ['372']\nMapped 776 to ['776']\nMapped 450 to ['450']\nMapped 056 to ['056']\nMapped 231 to ['231']\nMapped 086 to ['086']\nMapped 748 to ['748']\nDirect pycountry lookup for code '530' failed. Trying name and iso3 alpha lookup.\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Unable to fuzzy find a match for Netherlands Antilles (...2010). Code 530.\nTrying ISO3 alpha code for country 530.\nUnable to find any ISO alpha 3 code match for 530\nFailed to match entirely. Returning original code.\nMapped 328 to ['328']\nMapped 152 to ['152']\nMapped 020 to ['020']\nMapped 670 to ['670']\nMapped 188 to ['188']\nMapped 032 to ['032']\nMapped 203 to ['203']\nMapped 585 to ['585']\nMapped 442 to ['442']\nMapped 300 to ['300']\nMapped 697 to ['352', '438', '578', '756']\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Mapped 450 to ['450']\nMapped 662 to ['662']\nMapped 060 to ['060']\nMapped 446 to ['446']\nMapped 156 to ['156']\nMapped 031 to ['031']\nMapped 772 to ['772']\nMapped 533 to ['533']\nMapped 834 to ['834']\nMapped 422 to ['422']\nMapped 112 to ['112']\nMapped 580 to ['580']\nMapped 233 to ['233']\nMapped 740 to ['740']\nMapped 660 to ['660']\nMapped 807 to ['807']\nMapped 535 to ['535']\nMapped 612 to ['612']\nMapped 072 to ['072']\nMapped 496 to ['496']\nMapped 882 to ['882']\nDirect pycountry lookup for code '757' failed. Trying name and iso3 alpha lookup.\nMapped 757 to ['756'] using country name\nMapped 016 to ['016']\nMapped 430 to ['430']\nMapped 558 to ['558']\nMapped 012 to ['012']\nMapped 246 to ['246']\nMapped 586 to ['586']\nMapped 226 to ['226']\nMapped 048 to ['048']\nMapped 748 to ['748']\nMapped 768 to ['768']\nMapped 196 to ['196']\nMapped 380 to ['380']\nMapped 258 to ['258']\nMapped 417 to ['417']\nMapped 434 to ['434']\nMapped 762 to ['762']\nMapped 238 to ['238']\nMapped 372 to ['372']\nMapped 784 to ['784']\nMapped 428 to ['428']\nMapped 498 to ['498']\nMapped 178 to ['178']\nMapped 584 to ['584']\nMapped 070 to ['070']\nDirect pycountry lookup for code '711' failed. Trying name and iso3 alpha lookup.\nUnable to fuzzy find a match for Southern African Customs Union (...1999). Code 711.\nTrying ISO3 alpha code for country 711.\nUnable to find any ISO alpha 3 code match for 711\nFailed to match entirely. Returning original code.\nMapped 040 to ['040']\nMapped 270 to ['270']\nMapped 392 to ['392']\nMapped 598 to ['598']\nMapped 231 to ['231']\nMapped 032 to ['032']\nMapped 716 to ['716']\nMapped 204 to ['204']\nDirect pycountry lookup for code '699' failed. Trying name and iso3 alpha lookup.\nMapped 699 to ['356'] using country name\nMapped 388 to ['388']\nMapped 410 to ['410']\nMapped 203 to ['203']\nMapped 894 to ['894']\nDirect pycountry lookup for code '251' failed. Trying name and iso3 alpha lookup.\nMapped 251 to ['250'] using country name\nMapped 348 to ['348']\nMapped 454 to ['454']\nMapped 052 to ['052']\nMapped 360 to ['360']\nMapped 218 to ['218']\nMapped 499 to ['499']\nDirect pycountry lookup for code '736' failed. Trying name and iso3 alpha lookup.\nUnable to fuzzy find a match for Sudan (...2011). Code 736.\nTrying ISO3 alpha code for country 736.\nMapped 736 to ['729'] using iso3 alpha lookup\nMapped 050 to ['050']\nDirect pycountry lookup for code '579' failed. Trying name and iso3 alpha lookup.\nMapped 579 to ['578'] using country name\nMapped 860 to ['860']\nMapped 702 to ['702']\nMapped 184 to ['184']\nMapped 144 to ['144']\nMapped 208 to ['208']\nMapped 414 to ['414']\nMapped 796 to ['796']\nMapped 600 to ['600']\nMapped 776 to ['776']\nMapped 520 to ['520']\nMapped 780 to ['780']\nMapped 162 to ['162']\nMapped 104 to ['104']\nMapped 056 to ['056']\nMapped 166 to ['166']\nMapped 132 to ['132']\nMapped 703 to ['703']\nMapped 152 to ['152']\nMapped 440 to ['440']\nMapped 008 to ['008']\nMapped 175 to ['175']\nMapped 384 to ['384']\nMapped 044 to ['044']\nMapped 524 to ['524']\nMapped 642 to ['642']\nMapped 534 to ['534']\nMapped 686 to ['686']\nMapped 332 to ['332']\nMapped 064 to ['064']\nDirect pycountry lookup for code '530' failed. Trying name and iso3 alpha lookup.\nUnable to fuzzy find a match for Netherlands Antilles (...2010). Code 530.\nTrying ISO3 alpha code for country 530.\nUnable to find any ISO alpha 3 code match for 530\nFailed to match entirely. Returning original code.\nMapped 724 to ['724']\nMapped 490 to ['158']\nMapped 404 to ['404']\nMapped 591 to ['591']\nMapped 826 to ['826']\nMapped 090 to ['090']\nMapped 858 to ['858']\nMapped 798 to ['798']\nMapped 242 to ['242']\nMapped 682 to ['682']\nMapped 076 to ['076']\nMapped 694 to ['694']\nMapped 697 to ['352', '438', '578', '756']\nMapped 462 to ['462']\nMapped 028 to ['028']\nMapped 624 to ['624']\nMapped 574 to ['574']\nMapped 887 to ['887']\nMapped 516 to ['516']\nDirect pycountry lookup for code '891' failed. Trying name and iso3 alpha lookup.\nUnable to fuzzy find a match for Serbia and Montenegro (...2005). Code 891.\nTrying ISO3 alpha code for country 891.\nUnable to find any ISO alpha 3 code match for 891\nFailed to match entirely. Returning original code.\nMapped 728 to ['728']\nMapped 818 to ['818']\nMapped 036 to ['036']\nMapped 666 to ['666']\nDirect pycountry lookup for code '842' failed. Trying name and iso3 alpha lookup.\nMapped 842 to ['840'] using country name\nMapped 368 to ['368']\nMapped 674 to ['674']\nMapped 086 to ['086']\nMapped 458 to ['458']\nMapped 788 to ['788']\nMapped 752 to ['752']\nMapped 140 to ['140']\nMapped 504 to ['504']\nMapped 654 to ['654']\nMapped 344 to ['344']\nMapped 862 to ['862']\nMapped 608 to ['608']\nMapped 710 to ['710']\nMapped 688 to ['688']\nMapped 192 to ['192']\nMapped 800 to ['800']\nMapped 400 to ['400']\nMapped 604 to ['604']\nMapped 275 to ['275']\nMapped 304 to ['304']\nMapped 108 to ['108']\nMapped 092 to ['092']\nMapped 466 to ['466']\nMapped 876 to ['876']\nMapped 854 to ['854']\nMapped 268 to ['268']\nMapped 442 to ['442']\nMapped 804 to ['804']\nMapped 051 to ['051']\nMapped 232 to ['232']\nMapped 352 to ['352']\nMapped 340 to ['340']\nMapped 262 to ['262']\nMapped 170 to ['170']\nMapped 620 to ['620']\nMapped 292 to ['292']\nMapped 548 to ['548']\nMapped 500 to ['500']\nMapped 148 to ['148']\nMapped 308 to ['308']\nDirect pycountry lookup for code '058' failed. Trying name and iso3 alpha lookup.\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Unable to fuzzy find a match for Belgium-Luxembourg (...1998). Code 058.\nTrying ISO3 alpha code for country 058.\nMapped 058 to ['056'] using iso3 alpha lookup\nMapped 562 to ['562']\nMapped 024 to ['024']\nMapped 324 to ['324']\nMapped 266 to ['266']\nMapped 320 to ['320']\nMapped 212 to ['212']\nMapped 540 to ['540']\nMapped 398 to ['398']\nMapped 764 to ['764']\nMapped 068 to ['068']\nMapped 484 to ['484']\nMapped 116 to ['116']\nMapped 634 to ['634']\nMapped 583 to ['583']\nMapped 616 to ['616']\nMapped 124 to ['124']\nMapped 528 to ['528']\nMapped 328 to ['328']\nMapped 678 to ['678']\nMapped 100 to ['100']\nMapped 120 to ['120']\nMapped 222 to ['222']\nDirect pycountry lookup for code '849' failed. Trying name and iso3 alpha lookup.\nUnable to fuzzy find a match for US Misc. Pacific Isds. Code 849.\nTrying ISO3 alpha code for country 849.\nUnable to find any ISO alpha 3 code match for 849\nFailed to match entirely. Returning original code.\nMapped 174 to ['174']\nMapped 296 to ['296']\nMapped 512 to ['512']\nMapped 646 to ['646']\nMapped 585 to ['585']\nMapped 554 to ['554']\nMapped 426 to ['426']\nMapped 191 to ['191']\nMapped 084 to ['084']\nMapped 531 to ['531']\nMapped 659 to ['659']\nMapped 643 to ['643']\nMapped 478 to ['478']\nMapped 792 to ['792']\nMapped 729 to ['729']\nMapped 705 to ['705']\nMapped 096 to ['096']\nMapped 020 to ['020']\nMapped 260 to ['260']\nMapped 408 to ['408']\nMapped 004 to ['004']\nMapped 188 to ['188']\nMapped 180 to ['180']\nMapped 626 to ['626']\nMapped 508 to ['508']\nMapped 704 to ['704']\nMapped 480 to ['480']\nMapped 570 to ['570']\nMapped 566 to ['566']\nMapped 760 to ['760']\nMapped 214 to ['214']\nMapped 136 to ['136']\nMapped 288 to ['288']\nMapped 795 to ['795']\nMapped 690 to ['690']\nMapped 300 to ['300']\nMapped 470 to ['470']\nMapped 376 to ['376']\nMapped 276 to ['276']\nMapped 316 to ['316']\nMapped 652 to ['652']\nMapped 706 to ['706']\nMapped 670 to ['670']\nMapped 364 to ['364']\nMapped 418 to ['418']\nMapped 697 to ['352', '438', '578', '756']\n"
+        }
+      ]
+    },
+    {
+      "id": "RGSE",
+      "code_hash": "3c948ee26b25651b4d4c73b261a31f09",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='RGSE-0' random-id='4fabd2f9-99e0-226a-163e-f2262f896804'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/471-11696033-3Dv4orrV.json&quot;' data-total-rows='234' data-total-columns='2' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;original_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;iso_num_list&quot;, [&quot;unknown&quot;, &quot;list[str]&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='true' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Kclp",
+      "code_hash": "473ffc7988843c7cb8b47bbd505e1530",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "emfo",
+      "code_hash": "64c1c806caed27e1ccaa45221d53aada",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='emfo-0' random-id='2cb65369-8891-a732-0c90-e145ef19392a'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/680-11696033-Enxavkm4.json&quot;' data-total-rows='100' data-total-columns='6' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;t&quot;, [&quot;integer&quot;, &quot;i64&quot;]], [&quot;i&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;j&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;k&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;v&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;q&quot;, [&quot;number&quot;, &quot;f64&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='true' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "CtZW",
+      "code_hash": "2e30cba2dc1f3b257f287e8da3783926",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ESZp",
+      "code_hash": "dbebb20f3e5b6da6e623ce581e4f9f76",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='ESZp-1' random-id='ddd60c57-c100-66f2-5271-987f365c61fb'><marimo-tabs data-initial-value='&quot;&quot;' data-label='null' data-tabs='[&quot;&lt;span class=&#92;&quot;markdown prose dark:prose-invert&#92;&quot;&gt;&lt;span class=&#92;&quot;paragraph&#92;&quot;&gt;Table&lt;/span&gt;&lt;/span&gt;&quot;, &quot;&lt;span class=&#92;&quot;markdown prose dark:prose-invert&#92;&quot;&gt;&lt;span class=&#92;&quot;paragraph&#92;&quot;&gt;Query plan&lt;/span&gt;&lt;/span&gt;&quot;]'><div data-kind='tab'><marimo-ui-element object-id='ESZp-0' random-id='694e5487-dd16-47c2-e7bf-894b2064508f'><marimo-table data-initial-value='[]' data-label='null' data-data='[]' data-total-rows='&quot;too_many&quot;' data-total-columns='0' data-banner-text='&quot;Previewing only the first 10 rows.&quot;' data-pagination='false' data-page-size='10' data-show-filters='true' data-show-download='false' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='true' data-preload='false'></marimo-table></marimo-ui-element></div><div data-kind='tab'><span class=\"markdown prose dark:prose-invert\"><span class=\"paragraph\"><i>naive plan: (run <b>LazyFrame.explain(optimized=True)</b> to see the optimized plan)</i></span>\n<span class=\"paragraph\"></span>\n<div> WITH_COLUMNS:<span class=\"paragraph\"></span> [col(\"i\").strict_cast(String).str.zfill([dyn int: 3]), col(\"j\").strict_cast(String).str.zfill([dyn int: 3])] <span class=\"paragraph\"></span>  Parquet SCAN [/Users/lukasalemu/Documents/00. Bank of England/03. MPIL/tariff_trade_analysis/data/intermediate/BACI_HS92_V202501/partition_col=0/019246da-ee4c-43a4-9f22-3da9ec8794cd.parquet, ... 28 other sources]<span class=\"paragraph\"></span>  PROJECT */7 COLUMNS</div></span></div></marimo-tabs></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "koFM",
+      "code_hash": "0f131fbe866acfb17d26d639cd5a3603",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"write-output\">Write output</h1></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "mDSM",
+      "code_hash": "eb83a6e34c2968de2ae699fd04b3e7c1",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    }
+  ]
+}

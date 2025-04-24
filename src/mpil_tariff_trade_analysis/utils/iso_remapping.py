@@ -16,15 +16,7 @@ DEFAULT_WITS_COUNTRY_CODES_PATH = Path("data/raw/WITS_country_codes.csv")
 
 # --- Hardcoded Mappings ---
 # Map specific input codes directly to lists of ISO numeric codes
-HARDCODED_CODE_MAP = {
-    "697": [
-        "352",
-        "438",
-        "578",
-        "756",
-    ],  # Europe EFTA, nes -> Iceland, Liechtenstein, Norway, Switzerland
-    "490": ["158"],  # Other Asia, nes -> Taiwan (ISO 3166-1 numeric is 158)
-}
+i
 
 
 def load_reference_map(file_path: str | Path, code_col: str, name_col: str) -> Dict[str, str]:
