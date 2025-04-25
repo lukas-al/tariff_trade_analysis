@@ -212,7 +212,7 @@ def _(glob, os, pl, re):
 
 @app.cell
 def _(consolidated_lf_AVEMFN):
-    consolidated_lf_AVEMFN.head().collect()
+    print(f"Consolidated lf avemfn:\n{consolidated_lf_AVEMFN.head().collect()}")
     return
 
 
@@ -330,7 +330,7 @@ def _(Path, consolidated_lf_AVEMFN, consolidated_lf_AVEPref, pd, pl):
 
 @app.cell
 def _(translated_lf_AVEPref):
-    translated_lf_AVEPref.head().collect()
+    print(f"Translated lf avepref head, post H0 translation:\n{translated_lf_AVEPref.head().collect()}")
     return
 
 
@@ -368,7 +368,7 @@ def _(pd, pl, translated_lf_AVEPref):
         pl.col('country_iso_num').alias('partner_country')
     ).drop('country_iso_num')
 
-    joined_pref_lf_AVEPref.head().collect(engine='streaming')
+    print(f"Joine Pref LF head:\n{joined_pref_lf_AVEPref.head().collect(engine='streaming')}")
     return joined_pref_lf_AVEPref, pref_group_mapping, pref_group_mapping_lf
 
 
@@ -560,7 +560,7 @@ def _(
 
 @app.cell
 def _(mapping_df_AVEPref_reporter):
-    mapping_df_AVEPref_reporter
+    print(f"Mapping df for AVEPRef Reporter col:\n{mapping_df_AVEPref_reporter}")
     return
 
 
@@ -599,7 +599,7 @@ def _(
 
 @app.cell
 def _(AVEMFN_lf_clean):
-    AVEMFN_lf_clean.head().collect()
+    print(f"AVEMFN lf head, collected:\n{AVEMFN_lf_clean.head().collect(engine='streaming')}")
     return
 
 
@@ -611,6 +611,7 @@ def _(mo):
 
 @app.cell
 def _(AVEMFN_lf_clean):
+    print("Sinking AVEMFN")
     AVEMFN_lf_clean.sink_parquet(
         "data/intermediate/WITS_AVEMFN_CLEAN.parquet",
         compression='zstd'
@@ -620,6 +621,7 @@ def _(AVEMFN_lf_clean):
 
 @app.cell
 def _(AVEPref_lf_clean):
+    print("Sinking AVEPREF")
     AVEPref_lf_clean.sink_parquet(
         "data/intermediate/WITS_AVEPref_CLEAN.parquet",
         compression='zstd'

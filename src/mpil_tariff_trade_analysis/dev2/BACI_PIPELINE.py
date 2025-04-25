@@ -49,9 +49,6 @@ def _(Path):
     final_data_dir = base_data_dir / "final"
 
     baci_input_folder = raw_data_dir # Parent dir of BACI_HSXX_VYYYYYY CSVs
-    # wits_raw_dir = raw_data_dir / "WITS_tariff" # Parent dir of AVEMFN/AVEPref folders
-    # pref_groups_path = raw_data_dir / "WITS_pref_groups" / "WITS_pref_groups.csv"
-    # hs_mapping_dir = raw_data_dir / "hs_reference"
 
     # --- Intermediate & Output Paths ---
     # BACI Paths
@@ -139,7 +136,7 @@ def _(baci_path, pl):
 
     raw_lf = raw_lf.drop("partition_col")
 
-    raw_lf.head(100).collect()
+    print(f"Raw LF head:\n{raw_lf.head().collect()}")
     return (raw_lf,)
 
 
@@ -163,8 +160,6 @@ def _(pl, raw_lf):
         pl.col('i').cast(pl.Utf8).str.zfill(3),
         pl.col('j').cast(pl.Utf8).str.zfill(3)
     )
-
-    recast_lf.head(10).collect()
     return (recast_lf,)
 
 
@@ -182,13 +177,45 @@ def _():
     ) -> List[str]:
         # Try find the matching code in our ISO set
         hardcoded_code_map = {
-        "697": [
+            "697": [
                 "352",
                 "438",
                 "578",
                 "756",
             ],  # Europe EFTA, nes -> Iceland, Liechtenstein, Norway, Switzerland
-            "490": ["158"],  # Other Asia, nes -> Taiwan (ISO 3166-1 numeric is 158)
+            "490": [
+                "158"
+            ],  # Other Asia, nes -> Taiwan (ISO 3166-1 numeric is 158)
+            "918": [
+                "040",
+                "056",
+                "100",
+                "191",
+                "196",
+                "203",
+                "208",
+                "233",
+                "246",
+                "250",
+                "276",
+                "300",
+                "348",
+                "372",
+                "380",
+                "428",
+                "440",
+                "442",
+                "470",
+                "528",
+                "616",
+                "620",
+                "642",
+                "703",
+                "705",
+                "724",
+                "752",
+                "492", # Monaco
+            ], # European Customs Union incl. Monaco
         }
 
         # Check our hardcoded ccs first
@@ -258,7 +285,7 @@ def _(Path, identify_iso_code, pl, recast_lf):
         unique_codes = lf.select(pl.col(col_name).unique()).collect().to_series().to_list()
 
         #! FOR TESTING ONLY!
-        unique_codes.append("697")
+        # unique_codes.append("697")
         # print(unique_codes)
 
         # Load our reference data - this is marginally inefficient but feels cleaner
@@ -302,26 +329,26 @@ def _(Path, identify_iso_code, pl, recast_lf):
 
 @app.cell
 def _(mapping_df_i):
-    mapping_df_i
+    print(f"Mapping df for col I head:\n{mapping_df_i.head()}")
     return
 
 
 @app.cell
-def _(pl, recast_lf):
-    # Create a test dataset
-    height = recast_lf.select(pl.len()).collect().item()
-    sample_sz = 100000
-    test_df = recast_lf.gather_every(height // sample_sz).collect()
-    test_lf = test_df.lazy()
-    return height, sample_sz, test_df, test_lf
+def _():
+    # # Create a test dataset
+    # height = recast_lf.select(pl.len()).collect().item()
+    # sample_sz = 100000
+    # test_df = recast_lf.gather_every(height // sample_sz).collect()
+    # test_lf = test_df.lazy()
+    return
 
 
 @app.cell
-def _(mapping_df_i, mapping_df_j, pl, test_lf):
+def _(mapping_df_i, mapping_df_j, pl, recast_lf):
     # Apply the iso mapping to the table to correct for the incorrect codes efficiently
 
     # --- i
-    joined_lf = test_lf.join(
+    joined_lf = recast_lf.join(
         mapping_df_i.lazy(),
         left_on='i',
         right_on="original_code",
@@ -348,20 +375,42 @@ def _(mapping_df_i, mapping_df_j, pl, test_lf):
 
 @app.cell
 def _(joined_lf):
-    joined_lf.head(100).collect()
+    print(f"Final joined_lf.head:\n{joined_lf.head().collect(engine='streaming')}")
+    return
+
+
+@app.cell
+def _():
+    # joined_lf.select(pl.len()).collect().item() # 258605611 -> Takes 28 mins to calculate...
     return
 
 
 @app.cell
 def _(mo):
-    mo.md(r"""# Write output""")
+    mo.md(
+        r"""
+        # Write output
+        This crashes when run as a marimo notebook - probably a thread / MP worker timeout
+        """
+    )
     return
 
 
 @app.cell
 def _(baci_intermediate_parquet_path, joined_lf):
+    print(f'Sinking Parquet output to {baci_intermediate_parquet_path}')
     joined_lf.sink_parquet(baci_intermediate_parquet_path)
     return
+
+
+@app.cell
+def _():
+    print(f"Deleting intermediate intermediate folder (from duckdb aggregation)")
+    import shutil
+
+    try: shutil.rmtree("data/intermediate/BACI_HS92_V202501")
+    except FileNotFoundError: print("File doensn't exist")
+    return (shutil,)
 
 
 if __name__ == "__main__":

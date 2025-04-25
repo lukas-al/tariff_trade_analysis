@@ -1,6 +1,8 @@
+
+
 import marimo
 
-__generated_with = "0.12.8"
+__generated_with = "0.13.2"
 app = marimo.App(width="medium")
 
 
@@ -10,7 +12,7 @@ def _():
     import polars as pl
     import pyarrow.parquet as pq
     import pyarrow as pa
-    return mo, pa, pl, pq
+    return mo, pl
 
 
 @app.cell
@@ -100,28 +102,32 @@ def _(baci, pl):
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
-        # Operate over the BACI dataset in chunks
-
-        """
-    )
+    mo.md(r"""# Operate over the BACI dataset in chunks""")
     return
 
 
 @app.cell
-def _(ave_mfn_clean, ave_pref_clean, baci_clean, pl, pq):
+def _(ave_mfn_clean, ave_pref_clean, baci_clean, pl):
     # First get the chunk values
     from tqdm.auto import tqdm
     import time
+    import gc
 
-    unique_years = baci_clean.select("year").unique().collect().to_series().to_list()
-    unique_years.sort()
+    start_time = time.time()
+
+    # unique_years = baci_clean.select("year").unique().collect().to_series().to_list()
+    # unique_years.sort()
+
+    # MANUAL OVERRIDE
+    unique_years = ['1995', '1996', '1997', '1997', '1998', '1999', '2000', '2001', '2002', '2003', '2004', '2005', '2006', '2007', '2008', '2009', '2010', '2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023']
+    # unique_years = ['2013']
+
+    print(f"Unique years in dataset:\n{unique_years}")
 
     schema = None
     for i, year in enumerate(unique_years):
         print(f"--- Processing Chunk {i + 1}/{len(unique_years)}: Year = {year} ---")
-    
+
         filtered_baci = baci_clean.filter(pl.col('year')==year)
         filtered_avepref = ave_pref_clean.filter(pl.col('year')==year).select(
             'partner_country',
@@ -160,12 +166,17 @@ def _(ave_mfn_clean, ave_pref_clean, baci_clean, pl, pq):
             .otherwise(pl.col('tariff_rate_mfn'))
             .alias('effective_tariff')
         )
-    
-        # Collect the chunk
-        unified_baci = unified_baci_lf.collect(engine="streaming")
-        
-        # Convert to pyarrow
-        unified_baci = unified_baci.to_arrow()
+
+        print(f"    Joining WITS to BACI")
+        print(f"    Coalescing AVEPref and MFN tariffs")
+
+        # ---------------------- OLD VERSION USING PYARROW ----------------------s
+        # # Collect the chunk
+        # unified_baci = unified_baci_lf.collect(engine="streaming")
+        # unified_baci = unified_baci_lf.collect()
+
+        # # Convert to pyarrow
+        # unified_baci = unified_baci.to_arrow()
 
         # # Set a single schema so pyarrow doesn't write chunks idiosyncratically
         # expected_schema = pa.schema([
@@ -184,30 +195,36 @@ def _(ave_mfn_clean, ave_pref_clean, baci_clean, pl, pq):
         #     pa.field('effective_tariff', pa.float32(), nullable=True),
         # ])
         # unified_baci = unified_baci.cast(expected_schema, safe=False)
-        
-        # Write to parquet
-        pq.write_to_dataset(
-            table=unified_baci,
-            root_path='data/final/unified_trade_tariff_partitioned/',  # PyArrow might prefer string paths
-            partition_cols=['year'],  # Use 'Year' or configured column
-            existing_data_behavior="delete_matching",  # Safer than delete_matching if run concurrently
-            compression='zstd',
+
+        # # Write to parquet
+        # print(f"    Sinking chunk for {year}")
+        # pq.write_to_dataset(
+        #     table=unified_baci,
+        #     root_path='data/final/unified_trade_tariff_partitioned/',  # PyArrow might prefer string paths
+        #     partition_cols=['year'],  # Use 'Year' or configured column
+        #     existing_data_behavior="delete_matching",  # Safer than delete_matching if run concurrently
+        #     compression='ZSTD',
+        #     compression_level=9
+        # )
+    
+        # # IDK if this makes any difference. I think something is going on to kill it silently
+        # del unified_baci
+        # gc.collect()
+
+
+        # ---------------------- NEW VERSION USING POLARS ONLY ----------------------
+        unified_baci_lf.sink_parquet(
+            pl.PartitionByKey(
+                base_path='data/final/unified_trade_tariff_partitioned/',
+                by=pl.col('year'),
+            ),
+            mkdir=True,
         )
-    return (
-        baci_all,
-        baci_avepref,
-        filtered_avemfn,
-        filtered_avepref,
-        filtered_baci,
-        i,
-        schema,
-        time,
-        tqdm,
-        unified_baci,
-        unified_baci_lf,
-        unique_years,
-        year,
-    )
+
+    
+    print(f"Time elapsed = {(time.time() - start_time)/60} mins")
+    print('-----COMPLETE-----')
+    return
 
 
 if __name__ == "__main__":
