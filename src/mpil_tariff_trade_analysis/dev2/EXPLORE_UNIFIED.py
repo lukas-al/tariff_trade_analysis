@@ -155,14 +155,14 @@ def _(mo):
 
 
 @app.cell
-def _(sample_lf):
-    if False: # TESTING ONLY
-        sample_df = sample_lf.collect(engine='streaming')
+def _():
+    # if False: # TESTING ONLY
+    #     sample_df = sample_lf.collect(engine='streaming')
 
-    try: 
-        sample_df.sample(n=10, seed=69)
-    except NameError:
-        pass
+    # try: 
+    #     sample_df.sample(n=10, seed=69)
+    # except NameError:
+    #     pass
 
     return
 
@@ -212,7 +212,7 @@ def _(lf, pl, pycountry):
     ).with_columns(
         (pl.col('total_value') * 1000)
     ).collect(engine='streaming')
-    return (aggregated_df,)
+    return aggregated_df, get_alpha_3
 
 
 @app.cell
@@ -315,6 +315,225 @@ def _(aggregated_df, go, make_subplots):
 
     bar_fig.show()
     bar_fig.write_html("src/mpil_tariff_trade_analysis/dev2/Bar_plot.html")
+    return
+
+
+@app.cell
+def _(get_alpha_3, go, lf, make_subplots, pl):
+    def _():
+        # IN FOCUS - US TRADE PARTNERS
+
+        US_NUMERIC_CODE_STR = "840"
+        TOP_N_PARTNERS = 20
+
+        us_partner_agg_lf = lf.filter(
+            pl.col("reporter_country") == US_NUMERIC_CODE_STR
+        ).group_by("partner_country").agg(
+            pl.sum("volume").alias("total_value"),
+            pl.len().alias("record_count")
+        ).with_columns(
+            (pl.col('total_value') * 1000)
+        )
+
+        us_partner_df = us_partner_agg_lf.collect(engine='streaming')
+
+        # --- Convert Partner Numeric Codes to Alpha-3 ---
+        print("Converting partner country codes to ISO alpha-3...")
+        us_partner_df = us_partner_df.with_columns(
+            pl.col("partner_country")
+              .map_elements(get_alpha_3, return_dtype=pl.Utf8, skip_nulls=False) # Apply conversion
+              .alias("partner_country_alpha3")
+        )
+
+        # --- Prepare Data for Plotting ---
+        print("Preparing data for bar charts...")
+
+        # Use alpha-3 code for labels if available and not null, otherwise fallback
+        label_col = "partner_country_alpha3"
+        # Check if the column exists and has non-null values
+        if label_col not in us_partner_df.columns or us_partner_df[label_col].is_null().all():
+             print(f"Warning: Column '{label_col}' is missing or all null. Falling back to 'partner_country'.")
+             label_col = "partner_country" # Fallback to original numeric code
+
+        # Filter out rows where the chosen label column is null
+        us_partner_df = us_partner_df.filter(pl.col(label_col).is_not_null())
+        if us_partner_df.is_empty():
+            print(f"Error: No data remaining after attempting to map partner country codes.")
+            exit()
+
+        # Sort by Total Value and get top N partners
+        top_value_partners_df = us_partner_df.sort("total_value", descending=True).head(TOP_N_PARTNERS)
+
+        # Sort by Record Count and get top N partners
+        top_count_partners_df = us_partner_df.sort("record_count", descending=True).head(TOP_N_PARTNERS)
+
+        print(f"Top {TOP_N_PARTNERS} US partners by Value:\n{top_value_partners_df.head()}")
+        print(f"\nTop {TOP_N_PARTNERS} US partners by Count:\n{top_count_partners_df.head()}")
+
+        # --- Create Bar Charts for US Partners ---
+        print("\n--- Generating US Partner Bar Charts ---")
+
+        fig = make_subplots(
+            rows=1, cols=2,
+            subplot_titles=(f"Top {TOP_N_PARTNERS} US Partners by Total Export Value",
+                            f"Top {TOP_N_PARTNERS} US Partners by Record Count")
+        )
+
+        # Bar Chart for Top Value Partners
+        fig.add_trace(
+            go.Bar(
+                y=top_value_partners_df[label_col].to_list(),
+                x=top_value_partners_df["total_value"].to_list(),
+                name="Total Value to Partner",
+                orientation='h',
+                marker_color='rgb(0, 150, 136)' # Teal color
+            ),
+            row=1, col=1
+        )
+
+        # Bar Chart for Top Count Partners
+        fig.add_trace(
+            go.Bar(
+                y=top_count_partners_df[label_col].to_list(),
+                x=top_count_partners_df["record_count"].to_list(),
+                name="Record Count to Partner",
+                orientation='h',
+                marker_color='rgb(255, 152, 0)' # Orange color
+            ),
+            row=1, col=2
+        )
+
+        # Update layout
+        fig.update_layout(
+            title_text=f"US Exports: Top {TOP_N_PARTNERS} Partners by Value and Record Count",
+            height=max(600, TOP_N_PARTNERS * 30), # Adjust height
+            showlegend=False,
+            yaxis1=dict(autorange="reversed"),
+            yaxis2=dict(autorange="reversed"),
+            bargap=0.15
+        )
+        fig.update_xaxes(title_text="Total Export Value ($)", row=1, col=1)
+        fig.update_xaxes(title_text="Number of Records", row=1, col=2)
+        fig.update_yaxes(title_text="Partner Country", row=1, col=1)
+        fig.update_yaxes(title_text="Partner Country", row=1, col=2)
+
+        fig.write_html("src/mpil_tariff_trade_analysis/dev2/US_exports.html")
+        return fig.show()
+
+
+    _()
+    return
+
+
+@app.cell
+def _(get_alpha_3, go, lf, make_subplots, pl):
+    def _():
+        US_NUMERIC_CODE_STR = '840'
+        TOP_N_SOURCES = 20
+
+        us_import_agg_lf = lf.filter(
+            pl.col("partner_country") == US_NUMERIC_CODE_STR # Filter where US is the partner
+        ).group_by("reporter_country").agg( # Group by the reporting country (source of import)
+            pl.sum("volume").alias("total_value"),
+            pl.len().alias("record_count")
+        ).with_columns(
+            (pl.col('total_value') * 1000)
+        )
+
+        # 3. Collect results
+        print("Starting US import source aggregation...")
+        us_import_source_df = us_import_agg_lf.collect()
+        print("US import source aggregation complete.")
+
+        if us_import_source_df.is_empty():
+            print(f"Warning: No data found for partner country code {US_NUMERIC_CODE_STR} (US Imports).")
+            exit() # Exit if no US import data
+
+        # --- Convert Reporter (Source) Numeric Codes to Alpha-3 ---
+        print("Converting source country codes to ISO alpha-3...")
+        us_import_source_df = us_import_source_df.with_columns(
+            pl.col("reporter_country") # Convert the reporter code now
+              .map_elements(get_alpha_3, return_dtype=pl.Utf8, skip_nulls=False)
+              .alias("reporter_country_alpha3")
+        )
+
+        # --- Prepare Data for Plotting ---
+        print("Preparing data for bar charts...")
+
+        # Use alpha-3 code for labels if available and not null, otherwise fallback
+        label_col = "reporter_country_alpha3"
+        if label_col not in us_import_source_df.columns or us_import_source_df[label_col].is_null().all():
+             print(f"Warning: Column '{label_col}' is missing or all null. Falling back to 'reporter_country'.")
+             label_col = "reporter_country" # Fallback to original numeric code
+
+        # Filter out rows where the chosen label column is null
+        us_import_source_df = us_import_source_df.filter(pl.col(label_col).is_not_null())
+        if us_import_source_df.is_empty():
+            print(f"Error: No data remaining after attempting to map source country codes.")
+            exit()
+
+
+        # Sort by Total Value and get top N sources
+        top_value_sources_df = us_import_source_df.sort("total_value", descending=True).head(TOP_N_SOURCES)
+
+        # Sort by Record Count and get top N sources
+        top_count_sources_df = us_import_source_df.sort("record_count", descending=True).head(TOP_N_SOURCES)
+
+        print(f"Top {TOP_N_SOURCES} US import sources by Value:\n{top_value_sources_df.head()}")
+        print(f"\nTop {TOP_N_SOURCES} US import sources by Count:\n{top_count_sources_df.head()}")
+
+        # --- Create Bar Charts for US Import Sources ---
+        print("\n--- Generating US Import Source Bar Charts ---")
+
+        fig = make_subplots(
+            rows=1, cols=2,
+            subplot_titles=(f"Top {TOP_N_SOURCES} Sources of US Imports by Total Value",
+                            f"Top {TOP_N_SOURCES} Sources of US Imports by Record Count")
+        )
+
+        # Bar Chart for Top Value Sources
+        fig.add_trace(
+            go.Bar(
+                y=top_value_sources_df[label_col].to_list(), # Source Country on Y-axis
+                x=top_value_sources_df["total_value"].to_list(), # Value on X-axis
+                name="Total Import Value from Source",
+                orientation='h',
+                marker_color='rgb(142, 68, 173)' # Purple color
+            ),
+            row=1, col=1
+        )
+
+        # Bar Chart for Top Count Sources
+        fig.add_trace(
+            go.Bar(
+                y=top_count_sources_df[label_col].to_list(), # Source Country on Y-axis
+                x=top_count_sources_df["record_count"].to_list(), # Count on X-axis
+                name="Record Count from Source",
+                orientation='h',
+                marker_color='rgb(231, 76, 60)' # Red color
+            ),
+            row=1, col=2
+        )
+
+        # Update layout
+        fig.update_layout(
+            title_text=f"US Imports: Top {TOP_N_SOURCES} Source Countries by Value and Record Count",
+            height=max(600, TOP_N_SOURCES * 30), # Adjust height
+            showlegend=False,
+            yaxis1=dict(autorange="reversed"),
+            yaxis2=dict(autorange="reversed"),
+            bargap=0.15
+        )
+        fig.update_xaxes(title_text="Total Import Value ($)", row=1, col=1)
+        fig.update_xaxes(title_text="Number of Records", row=1, col=2)
+        fig.update_yaxes(title_text="Source Country", row=1, col=1)
+        fig.update_yaxes(title_text="Source Country", row=1, col=2)
+
+        fig.write_html("src/mpil_tariff_trade_analysis/dev2/US_imports.html")
+        return fig.show()
+
+
+    _()
     return
 
 
