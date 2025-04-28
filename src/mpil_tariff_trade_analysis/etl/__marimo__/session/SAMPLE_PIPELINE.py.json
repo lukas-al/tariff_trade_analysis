@@ -1,0 +1,60 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.13.2"
+  },
+  "cells": [
+    {
+      "id": "Hbol",
+      "code_hash": "3b03eadcc8b9cbe717a8423de80625ee",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "SKnw",
+      "code_hash": "947c57fb10275c296bda3685fc3ed942",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"sample-pipeline\">Sample Pipeline</h1>\n<span class=\"paragraph\">Create some sub-samples of the data to develop and experiment with</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Olmg",
+      "code_hash": "0e7489ca74543273e9818c666f750f48",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"print-some-summary-stats-and-create-smaller-filters\">Print some summary stats, and create smaller filters</h1></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ZbUG",
+      "code_hash": "4d6c7cf501fae4e387510f3bab8f3bca",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"write-an-even-smaller-sample\">Write an even smaller sample</h1></span>"
+          }
+        }
+      ],
+      "console": []
+    }
+  ]
+}

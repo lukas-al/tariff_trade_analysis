@@ -6,7 +6,7 @@
   "cells": [
     {
       "id": "Hbol",
-      "code_hash": "3d34b1d141700dd1a549e220e7d1dddd",
+      "code_hash": "e007a73bd940b05c8dbf7c4ac135e852",
       "outputs": [
         {
           "type": "data",
@@ -32,7 +32,7 @@
     },
     {
       "id": "vblA",
-      "code_hash": "e05c97c389549ebf98439e3d577b57bc",
+      "code_hash": "73d5bdc4d31f4ca97d21dadb3712ea4c",
       "outputs": [
         {
           "type": "data",
@@ -41,10 +41,35 @@
           }
         }
       ],
-      "console": []
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Loading data\n"
+        }
+      ]
     },
     {
       "id": "bkHC",
+      "code_hash": "1bad8ec8350113b8f44620d22f76255b",
+      "outputs": [
+        {
+          "type": "error",
+          "ename": "exception",
+          "evalue": "name 'unified_data' is not defined",
+          "traceback": []
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "<span class=\"codehilite\"><div class=\"highlight\"><pre><span></span><span class=\"gt\">Traceback (most recent call last):</span>\n  File <span class=\"nb\">&quot;/Users/lukasalemu/Documents/00. Bank of England/03. MPIL/tariff_trade_analysis/.venv/lib/python3.13/site-packages/marimo/_runtime/executor.py&quot;</span>, line <span class=\"m\">142</span>, in <span class=\"n\">execute_cell</span>\n<span class=\"w\">    </span><span class=\"k\">return</span> <span class=\"nb\">eval</span><span class=\"p\">(</span><span class=\"n\">cell</span><span class=\"o\">.</span><span class=\"n\">last_expr</span><span class=\"p\">,</span> <span class=\"n\">glbls</span><span class=\"p\">)</span>\n  File <span class=\"nb\">&quot;/var/folders/df/j998nyn11sdf0w5cf48pny6m0000gn/T/marimo_53654/__marimo__cell_bkHC_.py&quot;</span>, line <span class=\"m\">1</span>, in <span class=\"n\">&lt;module&gt;</span>\n<span class=\"w\">    </span><span class=\"nb\">print</span><span class=\"p\">(</span><span class=\"n\">unified_data</span><span class=\"o\">.</span><span class=\"n\">head</span><span class=\"p\">()</span><span class=\"o\">.</span><span class=\"n\">collect</span><span class=\"p\">())</span>\n<span class=\"w\">          </span><span class=\"pm\">^^^^^^^^^^^^</span>\n<span class=\"gr\">NameError</span>: <span class=\"n\">name &#39;unified_data&#39; is not defined</span>\n</pre></div>\n</span>"
+        }
+      ]
+    },
+    {
+      "id": "lEQa",
       "code_hash": "a75167bbd691f8d7a94a572fc7c996c8",
       "outputs": [
         {
@@ -57,7 +82,7 @@
       "console": []
     },
     {
-      "id": "lEQa",
+      "id": "PKri",
       "code_hash": "5d495aa7894270199c4cda1955542108",
       "outputs": [
         {
@@ -70,27 +95,132 @@
       "console": []
     },
     {
-      "id": "PKri",
-      "code_hash": "523a0362ec9b36c8eb664ef34d1e1fed",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/plain": ""
-          }
-        }
-      ],
-      "console": []
-    },
-    {
       "id": "Xref",
-      "code_hash": "a9721acad44bc1fd300c4a82d128e16d",
+      "code_hash": "9f1e5d7d4c6333bcb1134b31142b8836",
       "outputs": [],
       "console": []
     },
     {
-      "id": "tGdm",
-      "code_hash": "9f1e5d7d4c6333bcb1134b31142b8836",
+      "id": "SFPL",
+      "code_hash": "d62fb397532eaee0ce21c33715c58db5",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "BYtC",
+      "code_hash": "919070f02269e9fb8f97183eaa26f504",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "RGSE",
+      "code_hash": "9350420dccf189f3669d587640fae3c9",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h2 id=\"reduce-the-size-of-the-dataset\">Reduce the size of the dataset...</h2>\n<span class=\"paragraph\">We can either:</span>\n<ul>\n<li>Only consider a subset of countries</li>\n<li>Remove sub-scale trade volumes</li>\n<li>Do both.</li>\n</ul>\n<span class=\"paragraph\">Lets limit our analysis to the top 100 countries by trading volume</span>\n<span class=\"paragraph\">We also discard any trades worth less than $100.000 (BACI is denonomited in thousands)</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Kclp",
+      "code_hash": "d41ddc05d79da30f6c5c10ac73228bc4",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "emfo",
+      "code_hash": "e8391d4ee63b2e7e357aa572210b26e8",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "Hstk",
+      "code_hash": null,
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "nWHF",
+      "code_hash": "9cfad50228be6048021032a36b3d5e98",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "iLit",
+      "code_hash": "cddd79a7bd1aeba709ff45f0fdac5da7",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "ZHCJ",
+      "code_hash": "e7b351f7dc4385f9e6c387a424496707",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "ROlb",
+      "code_hash": "4dff04b66f3cc5ce2d2ee4ec1ad3198f",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='ROlb-0' random-id='5f1330c4-2bfb-348c-7332-25f464e67f27'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/2974-1472805-nCG1IgBK.json&quot;' data-total-rows='9' data-total-columns='14' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;statistic&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;year&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;reporter_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;partner_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;volume&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;quantity&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;tariff_rate_pref&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;min_rate_pref&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;max_rate_pref&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;tariff_rate_mfn&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;min_rate_mfn&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;max_rate_mfn&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;effective_tariff&quot;, [&quot;number&quot;, &quot;f64&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "qnkX",
+      "code_hash": null,
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "TqIu",
+      "code_hash": "544ab530a03a8f662061ec43b1f0d98b",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "Vxnm",
+      "code_hash": "f9d55c91f3b9361be0331c05f83fba5c",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "hkwx",
+      "code_hash": "56896e5d75dd85631ebe6d954882b34d",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='hkwx-0' random-id='dd7f1e31-e479-9969-0580-084a90a1db31'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/1374-1472805-aJ5RrRRF.json&quot;' data-total-rows='5' data-total-columns='13' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;year&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;reporter_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;partner_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;volume&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;quantity&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;tariff_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;min_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;max_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;tariff_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;min_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;max_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;effective_tariff&quot;, [&quot;number&quot;, &quot;f32&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "fVhk",
+      "code_hash": "db98e62c168e422286cae7a3177c25e7",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"validate\">Validate</h1></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "HpAn",
+      "code_hash": "e9a1654428d5d65181958279bb3dc323",
       "outputs": [
         {
           "type": "data",
@@ -100,6 +230,160 @@
         }
       ],
       "console": []
+    },
+    {
+      "id": "NSJu",
+      "code_hash": "91667c98947956877f7ab4999e60d08d",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><ol>\n<li>Germany to Belgium. Lead and such, 2017. Value matches, in EU so tariff 0 matches.</li>\n<li>Russia to Austria. Oils petroleum. Can't find value in Comtrade. Tariff matches</li>\n<li>Netherlands to Belgium. 2020. Crabs. -&gt; <strong>Can't find this. This is an intra-EU trade, but it's being picked up as 19%. I can't find evidence to support that.</strong></li>\n<li>Morocco to Italy. 2018. Crabs. Tariff matches (Morocco pref. agreement). Can't find the value / volume.</li>\n</ol>\n<span class=\"paragraph\">WTO groups the EU...</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "OvGj",
+      "code_hash": "8e45d80502b22e4b5e9c22ac73d68cd9",
+      "outputs": [
+        {
+          "type": "error",
+          "ename": "exception",
+          "evalue": "name 'sample_lf' is not defined",
+          "traceback": []
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "<span class=\"codehilite\"><div class=\"highlight\"><pre><span></span><span class=\"gt\">Traceback (most recent call last):</span>\n  File <span class=\"nb\">&quot;/Users/lukasalemu/Documents/00. Bank of England/03. MPIL/tariff_trade_analysis/.venv/lib/python3.13/site-packages/marimo/_runtime/executor.py&quot;</span>, line <span class=\"m\">142</span>, in <span class=\"n\">execute_cell</span>\n<span class=\"w\">    </span><span class=\"k\">return</span> <span class=\"nb\">eval</span><span class=\"p\">(</span><span class=\"n\">cell</span><span class=\"o\">.</span><span class=\"n\">last_expr</span><span class=\"p\">,</span> <span class=\"n\">glbls</span><span class=\"p\">)</span>\n  File <span class=\"nb\">&quot;/var/folders/df/j998nyn11sdf0w5cf48pny6m0000gn/T/marimo_53654/__marimo__cell_OvGj_.py&quot;</span>, line <span class=\"m\">1</span>, in <span class=\"n\">&lt;module&gt;</span>\n<span class=\"w\">    </span><span class=\"n\">sample_lf</span><span class=\"o\">.</span><span class=\"n\">collect_schema</span><span class=\"p\">()</span><span class=\"o\">.</span><span class=\"n\">names</span><span class=\"p\">()</span>\n<span class=\"w\">    </span><span class=\"pm\">^^^^^^^^^</span>\n<span class=\"gr\">NameError</span>: <span class=\"n\">name &#39;sample_lf&#39; is not defined</span>\n</pre></div>\n</span>"
+        }
+      ]
+    },
+    {
+      "id": "EOjr",
+      "code_hash": "0e07ddb061a4b7ae92f75f00e054dfba",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"visualisation\">Visualisation</h1></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "qIcL",
+      "code_hash": "0ca262b0a6735158858fb3c94eb5b7d6",
+      "outputs": [
+        {
+          "type": "error",
+          "ename": "syntax",
+          "evalue": "line 22\n    )\n    ^\nSyntaxError: closing parenthesis ')' does not match opening parenthesis '{' on line 12\n",
+          "traceback": []
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "\nGenerating Plotly map...\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "<marimo-plotly data-figure='{&quot;data&quot;: [{&quot;customdata&quot;: [[&quot;IDN&quot;, &quot;360&quot;, 96762, 6585306151620.421], [&quot;GRC&quot;, &quot;300&quot;, 61618, 3384308765316.0215], [&quot;CYP&quot;, &quot;196&quot;, 7005, 365595952091.9955], [&quot;IRN&quot;, &quot;364&quot;, 3346, 244294187865.99997], [&quot;KEN&quot;, &quot;404&quot;, 4078, 335772925128.0009], [&quot;KAZ&quot;, &quot;398&quot;, 12192, 770472719732.0013], [&quot;BWA&quot;, &quot;072&quot;, 130, 17104595026.0], [&quot;FIN&quot;, &quot;246&quot;, 75903, 4198918100536.2163], [&quot;CAN&quot;, &quot;124&quot;, 51806, 2535862974536.9624], [&quot;AUS&quot;, &quot;036&quot;, 14415, 523166669906.9991], [&quot;BGD&quot;, &quot;050&quot;, 9260, 457729845538.00116], [&quot;LKA&quot;, &quot;144&quot;, 16951, 298350390251.00073], [&quot;OMN&quot;, &quot;512&quot;, 6424, 465078625075.9994], [&quot;TZA&quot;, &quot;834&quot;, 4742, 86736675398.99963], [&quot;NGA&quot;, &quot;566&quot;, 3689, 433191638465.0003], [&quot;MUS&quot;, &quot;480&quot;, 3628, 62909314304.99959], [&quot;ZMB&quot;, &quot;894&quot;, 697, 23968738729.999973], [&quot;SWZ&quot;, &quot;748&quot;, 8170, 430640976732.0056], [&quot;SEN&quot;, &quot;686&quot;, 16208, 387482046593.9963], [&quot;MRT&quot;, &quot;478&quot;, 22597, 1449451751861.0044], [&quot;UGA&quot;, &quot;800&quot;, 6479, 107275209014.99939], [&quot;KOR&quot;, &quot;410&quot;, 194244, 34365296462492.92], [&quot;IND&quot;, &quot;356&quot;, 118001, 8202312078136.9], [&quot;NOR&quot;, &quot;578&quot;, 142482, 10589911956503.377], [&quot;ISL&quot;, &quot;352&quot;, 50936, 2343273017588.057], [&quot;UKR&quot;, &quot;804&quot;, 14877, 640112407832.0004], [&quot;BGR&quot;, &quot;100&quot;, 170150, 12659846712416.225], [&quot;TUR&quot;, &quot;792&quot;, 173136, 7170946879729.326], [&quot;HUN&quot;, &quot;348&quot;, 159912, 8926381520430.754], [&quot;EGY&quot;, &quot;818&quot;, 13772, 694577815460.9996], [&quot;CRI&quot;, &quot;188&quot;, 4839, 230809612788.0], [&quot;SAU&quot;, &quot;682&quot;, 18554, 4270488358183.0283], [&quot;LUX&quot;, &quot;442&quot;, 18673, 409029968718.9961], [&quot;USA&quot;, &quot;840&quot;, 473317, 47854378477698.18], [&quot;CHE&quot;, &quot;756&quot;, 146762, 9833902026731.248], [&quot;FRA&quot;, &quot;250&quot;, 469903, 37835644121013.68], [&quot;NLD&quot;, &quot;528&quot;, 599490, 118417828444915.5], [&quot;BEL&quot;, &quot;056&quot;, 407110, 71756443899682.7], [&quot;PAN&quot;, &quot;591&quot;, 1533, 65034035163.99999], [&quot;VNM&quot;, &quot;704&quot;, 120375, 8492102387624.323], [&quot;DZA&quot;, &quot;012&quot;, 9167, 1129326589037.0007], [&quot;NZL&quot;, &quot;554&quot;, 18415, 543192866594.9955], [&quot;SVK&quot;, &quot;703&quot;, 127198, 7813130520232.317], [&quot;MLT&quot;, &quot;470&quot;, 13170, 366569323088.0038], [&quot;EST&quot;, &quot;233&quot;, 22525, 1134796838308.9373], [&quot;MMR&quot;, &quot;104&quot;, 5772, 141482698855.00055], [&quot;NAM&quot;, &quot;516&quot;, 34430, 1320911151417.0146], [&quot;DOM&quot;, &quot;214&quot;, 2847, 86732941714.00003], [&quot;SWE&quot;, &quot;752&quot;, 212268, 9690650702009.404], [&quot;ARG&quot;, &quot;032&quot;, 70128, 15566420211124.535], [&quot;THA&quot;, &quot;764&quot;, 73564, 5532151716872.069], [&quot;HRV&quot;, &quot;191&quot;, 32418, 944879421938.0127], [&quot;CHL&quot;, &quot;152&quot;, 53320, 1968376410173.9468], [&quot;PER&quot;, &quot;604&quot;, 17543, 635720997625.0084], [&quot;SVN&quot;, &quot;705&quot;, 61642, 2015464988841.01], [&quot;ARE&quot;, &quot;784&quot;, 33101, 4432923631651.057], [&quot;KHM&quot;, &quot;116&quot;, 3390, 103632910035.00003], [&quot;IRQ&quot;, &quot;368&quot;, 1005, 321725871672.9998], [&quot;ZAF&quot;, &quot;710&quot;, 49336, 1881268259901.9834], [&quot;HKG&quot;, &quot;344&quot;, 45830, 2791357943045.065], [&quot;CHN&quot;, &quot;156&quot;, 742613, 98397009174582.75], [&quot;MYS&quot;, &quot;458&quot;, 146478, 17966329757329.21], [&quot;TUN&quot;, &quot;788&quot;, 13503, 585393480197.0017], [&quot;PRT&quot;, &quot;620&quot;, 98134, 3452103827104.873], [&quot;KWT&quot;, &quot;414&quot;, 11147, 1871078360319.0032], [&quot;PAK&quot;, &quot;586&quot;, 12147, 295392672458.00824], [&quot;PHL&quot;, &quot;608&quot;, 20179, 2282838948254.0083], [&quot;DNK&quot;, &quot;208&quot;, 227899, 8077304333294.724], [&quot;SRB&quot;, &quot;688&quot;, 7597, 225051352896.00018], [&quot;BRA&quot;, &quot;076&quot;, 38727, 2222967900939.994], [&quot;ITA&quot;, &quot;380&quot;, 481040, 31956473017708.52], [&quot;RUS&quot;, &quot;643&quot;, 69715, 17969776477108.242], [&quot;DEU&quot;, &quot;276&quot;, 893850, 129124748839027.1], [&quot;AUT&quot;, &quot;040&quot;, 203583, 12299940259192.51], [&quot;IRL&quot;, &quot;372&quot;, 250918, 36007899009035.2], [&quot;GBR&quot;, &quot;826&quot;, 426745, 29302694504243.5], [&quot;ISR&quot;, &quot;376&quot;, 37722, 2450983904050.904], [&quot;COL&quot;, &quot;170&quot;, 7373, 356475415161.9986], [&quot;CZE&quot;, &quot;203&quot;, 217351, 13352951392969.725], [&quot;SGP&quot;, &quot;702&quot;, 75451, 8882451814511.307], [&quot;TTO&quot;, &quot;780&quot;, 1483, 81289920656.99998], [&quot;GTM&quot;, &quot;320&quot;, 863, 22190186819.000008], [&quot;BHR&quot;, &quot;048&quot;, 5298, 534039690618.9979], [&quot;QAT&quot;, &quot;634&quot;, 6705, 1015594664954.0042], [&quot;VEN&quot;, &quot;862&quot;, 2328, 272527864922.00024], [&quot;ROU&quot;, &quot;642&quot;, 69029, 2729717342699.986], [&quot;ECU&quot;, &quot;218&quot;, 10051, 419452610417.99976], [&quot;NPL&quot;, &quot;524&quot;, 300, 8764874420.999996], [&quot;JPN&quot;, &quot;392&quot;, 238319, 19259173578844.28], [&quot;POL&quot;, &quot;616&quot;, 334785, 20236085424024.27], [&quot;ESP&quot;, &quot;724&quot;, 366381, 46617465756530.32], [&quot;TWN&quot;, &quot;158&quot;, 109493, 9728306397469.598], [&quot;MAR&quot;, &quot;504&quot;, 33751, 3519759599363.94], [&quot;MEX&quot;, &quot;484&quot;, 60381, 2986628674339.968], [&quot;LTU&quot;, &quot;440&quot;, 83174, 4747303813124.981], [&quot;BLR&quot;, &quot;112&quot;, 10691, 1388778205222.005], [&quot;AGO&quot;, &quot;024&quot;, 878, 88932665511.99995], [&quot;JOR&quot;, &quot;400&quot;, 749, 24079828944.99999], [&quot;LVA&quot;, &quot;428&quot;, 68358, 2043612835493.2622], [&quot;LBY&quot;, &quot;434&quot;, 3576, 389020650078.0006]], &quot;geo&quot;: &quot;geo&quot;, &quot;hovertemplate&quot;: &quot;&lt;b&gt;%{hovertext}&lt;/b&gt;&lt;br&gt;&lt;br&gt;record_count=%{customdata[2]:,}&lt;br&gt;reporter_country_alpha3=%{customdata[0]}&lt;br&gt;reporter_country=%{customdata[1]}&lt;br&gt;total_value=%{marker.color:,.2f}&lt;extra&gt;&lt;/extra&gt;&quot;, &quot;hovertext&quot;: [&quot;Indonesia&quot;, &quot;Greece&quot;, &quot;Cyprus&quot;, &quot;Iran, Islamic Republic of&quot;, &quot;Kenya&quot;, &quot;Kazakhstan&quot;, &quot;Botswana&quot;, &quot;Finland&quot;, &quot;Canada&quot;, &quot;Australia&quot;, &quot;Bangladesh&quot;, &quot;Sri Lanka&quot;, &quot;Oman&quot;, &quot;Tanzania, United Republic of&quot;, &quot;Nigeria&quot;, &quot;Mauritius&quot;, &quot;Zambia&quot;, &quot;Eswatini&quot;, &quot;Senegal&quot;, &quot;Mauritania&quot;, &quot;Uganda&quot;, &quot;Korea, Republic of&quot;, &quot;India&quot;, &quot;Norway&quot;, &quot;Iceland&quot;, &quot;Ukraine&quot;, &quot;Bulgaria&quot;, &quot;T&#92;u00fcrkiye&quot;, &quot;Hungary&quot;, &quot;Egypt&quot;, &quot;Costa Rica&quot;, &quot;Saudi Arabia&quot;, &quot;Luxembourg&quot;, &quot;United States&quot;, &quot;Switzerland&quot;, &quot;France&quot;, &quot;Netherlands&quot;, &quot;Belgium&quot;, &quot;Panama&quot;, &quot;Viet Nam&quot;, &quot;Algeria&quot;, &quot;New Zealand&quot;, &quot;Slovakia&quot;, &quot;Malta&quot;, &quot;Estonia&quot;, &quot;Myanmar&quot;, &quot;Namibia&quot;, &quot;Dominican Republic&quot;, &quot;Sweden&quot;, &quot;Argentina&quot;, &quot;Thailand&quot;, &quot;Croatia&quot;, &quot;Chile&quot;, &quot;Peru&quot;, &quot;Slovenia&quot;, &quot;United Arab Emirates&quot;, &quot;Cambodia&quot;, &quot;Iraq&quot;, &quot;South Africa&quot;, &quot;Hong Kong&quot;, &quot;China&quot;, &quot;Malaysia&quot;, &quot;Tunisia&quot;, &quot;Portugal&quot;, &quot;Kuwait&quot;, &quot;Pakistan&quot;, &quot;Philippines&quot;, &quot;Denmark&quot;, &quot;Serbia&quot;, &quot;Brazil&quot;, &quot;Italy&quot;, &quot;Russian Federation&quot;, &quot;Germany&quot;, &quot;Austria&quot;, &quot;Ireland&quot;, &quot;United Kingdom&quot;, &quot;Israel&quot;, &quot;Colombia&quot;, &quot;Czechia&quot;, &quot;Singapore&quot;, &quot;Trinidad and Tobago&quot;, &quot;Guatemala&quot;, &quot;Bahrain&quot;, &quot;Qatar&quot;, &quot;Venezuela, Bolivarian Republic of&quot;, &quot;Romania&quot;, &quot;Ecuador&quot;, &quot;Nepal&quot;, &quot;Japan&quot;, &quot;Poland&quot;, &quot;Spain&quot;, &quot;Taiwan, Province of China&quot;, &quot;Morocco&quot;, &quot;Mexico&quot;, &quot;Lithuania&quot;, &quot;Belarus&quot;, &quot;Angola&quot;, &quot;Jordan&quot;, &quot;Latvia&quot;, &quot;Libya&quot;], &quot;legendgroup&quot;: &quot;&quot;, &quot;locationmode&quot;: &quot;ISO-3&quot;, &quot;locations&quot;: [&quot;IDN&quot;, &quot;GRC&quot;, &quot;CYP&quot;, &quot;IRN&quot;, &quot;KEN&quot;, &quot;KAZ&quot;, &quot;BWA&quot;, &quot;FIN&quot;, &quot;CAN&quot;, &quot;AUS&quot;, &quot;BGD&quot;, &quot;LKA&quot;, &quot;OMN&quot;, &quot;TZA&quot;, &quot;NGA&quot;, &quot;MUS&quot;, &quot;ZMB&quot;, &quot;SWZ&quot;, &quot;SEN&quot;, &quot;MRT&quot;, &quot;UGA&quot;, &quot;KOR&quot;, &quot;IND&quot;, &quot;NOR&quot;, &quot;ISL&quot;, &quot;UKR&quot;, &quot;BGR&quot;, &quot;TUR&quot;, &quot;HUN&quot;, &quot;EGY&quot;, &quot;CRI&quot;, &quot;SAU&quot;, &quot;LUX&quot;, &quot;USA&quot;, &quot;CHE&quot;, &quot;FRA&quot;, &quot;NLD&quot;, &quot;BEL&quot;, &quot;PAN&quot;, &quot;VNM&quot;, &quot;DZA&quot;, &quot;NZL&quot;, &quot;SVK&quot;, &quot;MLT&quot;, &quot;EST&quot;, &quot;MMR&quot;, &quot;NAM&quot;, &quot;DOM&quot;, &quot;SWE&quot;, &quot;ARG&quot;, &quot;THA&quot;, &quot;HRV&quot;, &quot;CHL&quot;, &quot;PER&quot;, &quot;SVN&quot;, &quot;ARE&quot;, &quot;KHM&quot;, &quot;IRQ&quot;, &quot;ZAF&quot;, &quot;HKG&quot;, &quot;CHN&quot;, &quot;MYS&quot;, &quot;TUN&quot;, &quot;PRT&quot;, &quot;KWT&quot;, &quot;PAK&quot;, &quot;PHL&quot;, &quot;DNK&quot;, &quot;SRB&quot;, &quot;BRA&quot;, &quot;ITA&quot;, &quot;RUS&quot;, &quot;DEU&quot;, &quot;AUT&quot;, &quot;IRL&quot;, &quot;GBR&quot;, &quot;ISR&quot;, &quot;COL&quot;, &quot;CZE&quot;, &quot;SGP&quot;, &quot;TTO&quot;, &quot;GTM&quot;, &quot;BHR&quot;, &quot;QAT&quot;, &quot;VEN&quot;, &quot;ROU&quot;, &quot;ECU&quot;, &quot;NPL&quot;, &quot;JPN&quot;, &quot;POL&quot;, &quot;ESP&quot;, &quot;TWN&quot;, &quot;MAR&quot;, &quot;MEX&quot;, &quot;LTU&quot;, &quot;BLR&quot;, &quot;AGO&quot;, &quot;JOR&quot;, &quot;LVA&quot;, &quot;LBY&quot;], &quot;marker&quot;: {&quot;color&quot;: {&quot;dtype&quot;: &quot;f8&quot;, &quot;bdata&quot;: &quot;rxHrVQv1l0IsIJQsxJ+IQrb/9uDNR1VC//+svYhwTEIPADIPaItTQguArhZ4bGZCAACQQhvcD0K7wbEsGI2OQrNHwrFpc4JC8b8Ud8pzXkITgEjKtKRaQgzA+mrEXVFC9v/MKDYSW0Lo/0ai6DE0QgVAcPUON1lCyv8B6l9LLUL5/6e2l1IWQlwA1/QMEVlCw38gtO6NVkISUJvooBd1Qtj/NskZ+jhC7JzKSUtBv0Ka40yX/9adQsEueOFPQ6NCdaCHpa8MgUIDAKOGNaFiQnPAGFUzB6dCTsVD93YWmkKCXWyZqzygQv2f9AsCN2RCAAD6mKneSkI6OGmIZxKPQsC/04AFz1dCF0F0nfvCxUJ/1l95ROOhQtfaVxCmNMFC4LxeJtPs2kKtyFVWxlDQQv//tz+pSC5CS6Ee/OLknkID0EbDEW9wQra/yFc0nl9CRaEaeotsnEI+AJT+TlZVQv9OWplyg3BCEoAzVIN4QEI8kBMKxzhzQgIAkqmvMTRCz3LhlY+goUISaevkrVCsQkcgcMA3IJRCaEA+eeZ/a0Im3wMHxqR8QkUgX5N9gGJCKZAKMjFUfUI6jIBaeyCQQgIA07YAIThC/T+OzRa6UkK838M4RWB7QoUoaDBPT4RCsA3YsXVf1kI2kf6zHFewQg6gQHSFCWFC/Ab1YAseiUIN8E9gTzp7QoeAsp6xMVFCEfDMbx6cgELlug9sk2KdQgYAoI8NM0pC9F9YspksgEKFbPU4chC9Qj60wyTqV7BCxhxSsgxc3UIF8cojm1+mQpoFyAPfX8BCgDNnspCmukI7lxkzUNWBQul/nsrlv1RCc5NV2fNJqEKd3jDFNiigQv//kMBB7TJCAgAMhY2qFELev16/zxVfQiJAfxjFjm1CCAAtmva5T0LjXw+pftyDQvx/3LlUalhC/v+n9WpTAEJIXCgzIISxQkWY766UZ7JCKblNvvwyxUIyO4J+GLKhQoUfOCoQnIlCvh+Zhwe7hULtEwBuRUWRQhRgAhuaNXRC/f+nyMy0NEL9/0MfFG0WQjJU6hINvX1CCoCXAtykVkI=&quot;}, &quot;coloraxis&quot;: &quot;coloraxis&quot;, &quot;size&quot;: {&quot;dtype&quot;: &quot;u4&quot;, &quot;bdata&quot;: &quot;+nkBALLwAABdGwAAEg0AAO4PAACgLwAAggAAAH8oAQBeygAATzgAACwkAAA3QgAAGBkAAIYSAABpDgAALA4AALkCAADqHwAAUD8AAEVYAABPGQAAxPYCAPHMAQCSLAIA+MYAAB06AACmmAIAUKQCAKhwAgDMNQAA5xIAAHpIAADxSAAA5TgHAEo9AgCPKwcAwiUJAEY2BgD9BQAAN9YBAM8jAADvRwAA3vABAHIzAAD9VwAAjBYAAH6GAAAfCwAALD0DAPARAQBcHwEAon4AAEjQAACHRAAAyvAAAE2BAAA+DQAA7QMAALjAAAAGswAA1VQLAC48AgC/NAAAVn8BAIsrAABzLwAA004AADt6AwCtHQAAR5cAABBXBwBTEAEAmqMNAD8bAwAm1AMA+YIGAFqTAADNHAAAB1EDALsmAQDLBQAAXwMAALIUAAAxGgAAGAkAAKUNAQBDJwAALAEAAO+iAwDBGwUALZcFALWrAQDXgwAA3esAAOZEAQDDKQAAbgMAAO0CAAAGCwEA+A0AAA==&quot;}, &quot;sizemode&quot;: &quot;area&quot;, &quot;sizeref&quot;: 357.54, &quot;symbol&quot;: &quot;circle&quot;}, &quot;mode&quot;: &quot;markers&quot;, &quot;name&quot;: &quot;&quot;, &quot;showlegend&quot;: false, &quot;type&quot;: &quot;scattergeo&quot;}], &quot;layout&quot;: {&quot;template&quot;: {&quot;data&quot;: {&quot;histogram2dcontour&quot;: [{&quot;type&quot;: &quot;histogram2dcontour&quot;, &quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}, &quot;colorscale&quot;: [[0.0, &quot;#0d0887&quot;], [0.1111111111111111, &quot;#46039f&quot;], [0.2222222222222222, &quot;#7201a8&quot;], [0.3333333333333333, &quot;#9c179e&quot;], [0.4444444444444444, &quot;#bd3786&quot;], [0.5555555555555556, &quot;#d8576b&quot;], [0.6666666666666666, &quot;#ed7953&quot;], [0.7777777777777778, &quot;#fb9f3a&quot;], [0.8888888888888888, &quot;#fdca26&quot;], [1.0, &quot;#f0f921&quot;]]}], &quot;choropleth&quot;: [{&quot;type&quot;: &quot;choropleth&quot;, &quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}}], &quot;histogram2d&quot;: [{&quot;type&quot;: &quot;histogram2d&quot;, &quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}, &quot;colorscale&quot;: [[0.0, &quot;#0d0887&quot;], [0.1111111111111111, &quot;#46039f&quot;], [0.2222222222222222, &quot;#7201a8&quot;], [0.3333333333333333, &quot;#9c179e&quot;], [0.4444444444444444, &quot;#bd3786&quot;], [0.5555555555555556, &quot;#d8576b&quot;], [0.6666666666666666, &quot;#ed7953&quot;], [0.7777777777777778, &quot;#fb9f3a&quot;], [0.8888888888888888, &quot;#fdca26&quot;], [1.0, &quot;#f0f921&quot;]]}], &quot;heatmap&quot;: [{&quot;type&quot;: &quot;heatmap&quot;, &quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}, &quot;colorscale&quot;: [[0.0, &quot;#0d0887&quot;], [0.1111111111111111, &quot;#46039f&quot;], [0.2222222222222222, &quot;#7201a8&quot;], [0.3333333333333333, &quot;#9c179e&quot;], [0.4444444444444444, &quot;#bd3786&quot;], [0.5555555555555556, &quot;#d8576b&quot;], [0.6666666666666666, &quot;#ed7953&quot;], [0.7777777777777778, &quot;#fb9f3a&quot;], [0.8888888888888888, &quot;#fdca26&quot;], [1.0, &quot;#f0f921&quot;]]}], &quot;contourcarpet&quot;: [{&quot;type&quot;: &quot;contourcarpet&quot;, &quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}}], &quot;contour&quot;: [{&quot;type&quot;: &quot;contour&quot;, &quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}, &quot;colorscale&quot;: [[0.0, &quot;#0d0887&quot;], [0.1111111111111111, &quot;#46039f&quot;], [0.2222222222222222, &quot;#7201a8&quot;], [0.3333333333333333, &quot;#9c179e&quot;], [0.4444444444444444, &quot;#bd3786&quot;], [0.5555555555555556, &quot;#d8576b&quot;], [0.6666666666666666, &quot;#ed7953&quot;], [0.7777777777777778, &quot;#fb9f3a&quot;], [0.8888888888888888, &quot;#fdca26&quot;], [1.0, &quot;#f0f921&quot;]]}], &quot;surface&quot;: [{&quot;type&quot;: &quot;surface&quot;, &quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}, &quot;colorscale&quot;: [[0.0, &quot;#0d0887&quot;], [0.1111111111111111, &quot;#46039f&quot;], [0.2222222222222222, &quot;#7201a8&quot;], [0.3333333333333333, &quot;#9c179e&quot;], [0.4444444444444444, &quot;#bd3786&quot;], [0.5555555555555556, &quot;#d8576b&quot;], [0.6666666666666666, &quot;#ed7953&quot;], [0.7777777777777778, &quot;#fb9f3a&quot;], [0.8888888888888888, &quot;#fdca26&quot;], [1.0, &quot;#f0f921&quot;]]}], &quot;mesh3d&quot;: [{&quot;type&quot;: &quot;mesh3d&quot;, &quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}}], &quot;scatter&quot;: [{&quot;fillpattern&quot;: {&quot;fillmode&quot;: &quot;overlay&quot;, &quot;size&quot;: 10, &quot;solidity&quot;: 0.2}, &quot;type&quot;: &quot;scatter&quot;}], &quot;parcoords&quot;: [{&quot;type&quot;: &quot;parcoords&quot;, &quot;line&quot;: {&quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}}}], &quot;scatterpolargl&quot;: [{&quot;type&quot;: &quot;scatterpolargl&quot;, &quot;marker&quot;: {&quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}}}], &quot;bar&quot;: [{&quot;error_x&quot;: {&quot;color&quot;: &quot;#2a3f5f&quot;}, &quot;error_y&quot;: {&quot;color&quot;: &quot;#2a3f5f&quot;}, &quot;marker&quot;: {&quot;line&quot;: {&quot;color&quot;: &quot;#E5ECF6&quot;, &quot;width&quot;: 0.5}, &quot;pattern&quot;: {&quot;fillmode&quot;: &quot;overlay&quot;, &quot;size&quot;: 10, &quot;solidity&quot;: 0.2}}, &quot;type&quot;: &quot;bar&quot;}], &quot;scattergeo&quot;: [{&quot;type&quot;: &quot;scattergeo&quot;, &quot;marker&quot;: {&quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}}}], &quot;scatterpolar&quot;: [{&quot;type&quot;: &quot;scatterpolar&quot;, &quot;marker&quot;: {&quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}}}], &quot;histogram&quot;: [{&quot;marker&quot;: {&quot;pattern&quot;: {&quot;fillmode&quot;: &quot;overlay&quot;, &quot;size&quot;: 10, &quot;solidity&quot;: 0.2}}, &quot;type&quot;: &quot;histogram&quot;}], &quot;scattergl&quot;: [{&quot;type&quot;: &quot;scattergl&quot;, &quot;marker&quot;: {&quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}}}], &quot;scatter3d&quot;: [{&quot;type&quot;: &quot;scatter3d&quot;, &quot;line&quot;: {&quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}}, &quot;marker&quot;: {&quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}}}], &quot;scattermap&quot;: [{&quot;type&quot;: &quot;scattermap&quot;, &quot;marker&quot;: {&quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}}}], &quot;scattermapbox&quot;: [{&quot;type&quot;: &quot;scattermapbox&quot;, &quot;marker&quot;: {&quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}}}], &quot;scatterternary&quot;: [{&quot;type&quot;: &quot;scatterternary&quot;, &quot;marker&quot;: {&quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}}}], &quot;scattercarpet&quot;: [{&quot;type&quot;: &quot;scattercarpet&quot;, &quot;marker&quot;: {&quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}}}], &quot;carpet&quot;: [{&quot;aaxis&quot;: {&quot;endlinecolor&quot;: &quot;#2a3f5f&quot;, &quot;gridcolor&quot;: &quot;white&quot;, &quot;linecolor&quot;: &quot;white&quot;, &quot;minorgridcolor&quot;: &quot;white&quot;, &quot;startlinecolor&quot;: &quot;#2a3f5f&quot;}, &quot;baxis&quot;: {&quot;endlinecolor&quot;: &quot;#2a3f5f&quot;, &quot;gridcolor&quot;: &quot;white&quot;, &quot;linecolor&quot;: &quot;white&quot;, &quot;minorgridcolor&quot;: &quot;white&quot;, &quot;startlinecolor&quot;: &quot;#2a3f5f&quot;}, &quot;type&quot;: &quot;carpet&quot;}], &quot;table&quot;: [{&quot;cells&quot;: {&quot;fill&quot;: {&quot;color&quot;: &quot;#EBF0F8&quot;}, &quot;line&quot;: {&quot;color&quot;: &quot;white&quot;}}, &quot;header&quot;: {&quot;fill&quot;: {&quot;color&quot;: &quot;#C8D4E3&quot;}, &quot;line&quot;: {&quot;color&quot;: &quot;white&quot;}}, &quot;type&quot;: &quot;table&quot;}], &quot;barpolar&quot;: [{&quot;marker&quot;: {&quot;line&quot;: {&quot;color&quot;: &quot;#E5ECF6&quot;, &quot;width&quot;: 0.5}, &quot;pattern&quot;: {&quot;fillmode&quot;: &quot;overlay&quot;, &quot;size&quot;: 10, &quot;solidity&quot;: 0.2}}, &quot;type&quot;: &quot;barpolar&quot;}], &quot;pie&quot;: [{&quot;automargin&quot;: true, &quot;type&quot;: &quot;pie&quot;}]}, &quot;layout&quot;: {&quot;autotypenumbers&quot;: &quot;strict&quot;, &quot;colorway&quot;: [&quot;#636efa&quot;, &quot;#EF553B&quot;, &quot;#00cc96&quot;, &quot;#ab63fa&quot;, &quot;#FFA15A&quot;, &quot;#19d3f3&quot;, &quot;#FF6692&quot;, &quot;#B6E880&quot;, &quot;#FF97FF&quot;, &quot;#FECB52&quot;], &quot;font&quot;: {&quot;color&quot;: &quot;#2a3f5f&quot;}, &quot;hovermode&quot;: &quot;closest&quot;, &quot;hoverlabel&quot;: {&quot;align&quot;: &quot;left&quot;}, &quot;paper_bgcolor&quot;: &quot;white&quot;, &quot;plot_bgcolor&quot;: &quot;#E5ECF6&quot;, &quot;polar&quot;: {&quot;bgcolor&quot;: &quot;#E5ECF6&quot;, &quot;angularaxis&quot;: {&quot;gridcolor&quot;: &quot;white&quot;, &quot;linecolor&quot;: &quot;white&quot;, &quot;ticks&quot;: &quot;&quot;}, &quot;radialaxis&quot;: {&quot;gridcolor&quot;: &quot;white&quot;, &quot;linecolor&quot;: &quot;white&quot;, &quot;ticks&quot;: &quot;&quot;}}, &quot;ternary&quot;: {&quot;bgcolor&quot;: &quot;#E5ECF6&quot;, &quot;aaxis&quot;: {&quot;gridcolor&quot;: &quot;white&quot;, &quot;linecolor&quot;: &quot;white&quot;, &quot;ticks&quot;: &quot;&quot;}, &quot;baxis&quot;: {&quot;gridcolor&quot;: &quot;white&quot;, &quot;linecolor&quot;: &quot;white&quot;, &quot;ticks&quot;: &quot;&quot;}, &quot;caxis&quot;: {&quot;gridcolor&quot;: &quot;white&quot;, &quot;linecolor&quot;: &quot;white&quot;, &quot;ticks&quot;: &quot;&quot;}}, &quot;coloraxis&quot;: {&quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}}, &quot;colorscale&quot;: {&quot;sequential&quot;: [[0.0, &quot;#0d0887&quot;], [0.1111111111111111, &quot;#46039f&quot;], [0.2222222222222222, &quot;#7201a8&quot;], [0.3333333333333333, &quot;#9c179e&quot;], [0.4444444444444444, &quot;#bd3786&quot;], [0.5555555555555556, &quot;#d8576b&quot;], [0.6666666666666666, &quot;#ed7953&quot;], [0.7777777777777778, &quot;#fb9f3a&quot;], [0.8888888888888888, &quot;#fdca26&quot;], [1.0, &quot;#f0f921&quot;]], &quot;sequentialminus&quot;: [[0.0, &quot;#0d0887&quot;], [0.1111111111111111, &quot;#46039f&quot;], [0.2222222222222222, &quot;#7201a8&quot;], [0.3333333333333333, &quot;#9c179e&quot;], [0.4444444444444444, &quot;#bd3786&quot;], [0.5555555555555556, &quot;#d8576b&quot;], [0.6666666666666666, &quot;#ed7953&quot;], [0.7777777777777778, &quot;#fb9f3a&quot;], [0.8888888888888888, &quot;#fdca26&quot;], [1.0, &quot;#f0f921&quot;]], &quot;diverging&quot;: [[0, &quot;#8e0152&quot;], [0.1, &quot;#c51b7d&quot;], [0.2, &quot;#de77ae&quot;], [0.3, &quot;#f1b6da&quot;], [0.4, &quot;#fde0ef&quot;], [0.5, &quot;#f7f7f7&quot;], [0.6, &quot;#e6f5d0&quot;], [0.7, &quot;#b8e186&quot;], [0.8, &quot;#7fbc41&quot;], [0.9, &quot;#4d9221&quot;], [1, &quot;#276419&quot;]]}, &quot;xaxis&quot;: {&quot;gridcolor&quot;: &quot;white&quot;, &quot;linecolor&quot;: &quot;white&quot;, &quot;ticks&quot;: &quot;&quot;, &quot;title&quot;: {&quot;standoff&quot;: 15}, &quot;zerolinecolor&quot;: &quot;white&quot;, &quot;automargin&quot;: true, &quot;zerolinewidth&quot;: 2}, &quot;yaxis&quot;: {&quot;gridcolor&quot;: &quot;white&quot;, &quot;linecolor&quot;: &quot;white&quot;, &quot;ticks&quot;: &quot;&quot;, &quot;title&quot;: {&quot;standoff&quot;: 15}, &quot;zerolinecolor&quot;: &quot;white&quot;, &quot;automargin&quot;: true, &quot;zerolinewidth&quot;: 2}, &quot;scene&quot;: {&quot;xaxis&quot;: {&quot;backgroundcolor&quot;: &quot;#E5ECF6&quot;, &quot;gridcolor&quot;: &quot;white&quot;, &quot;linecolor&quot;: &quot;white&quot;, &quot;showbackground&quot;: true, &quot;ticks&quot;: &quot;&quot;, &quot;zerolinecolor&quot;: &quot;white&quot;, &quot;gridwidth&quot;: 2}, &quot;yaxis&quot;: {&quot;backgroundcolor&quot;: &quot;#E5ECF6&quot;, &quot;gridcolor&quot;: &quot;white&quot;, &quot;linecolor&quot;: &quot;white&quot;, &quot;showbackground&quot;: true, &quot;ticks&quot;: &quot;&quot;, &quot;zerolinecolor&quot;: &quot;white&quot;, &quot;gridwidth&quot;: 2}, &quot;zaxis&quot;: {&quot;backgroundcolor&quot;: &quot;#E5ECF6&quot;, &quot;gridcolor&quot;: &quot;white&quot;, &quot;linecolor&quot;: &quot;white&quot;, &quot;showbackground&quot;: true, &quot;ticks&quot;: &quot;&quot;, &quot;zerolinecolor&quot;: &quot;white&quot;, &quot;gridwidth&quot;: 2}}, &quot;shapedefaults&quot;: {&quot;line&quot;: {&quot;color&quot;: &quot;#2a3f5f&quot;}}, &quot;annotationdefaults&quot;: {&quot;arrowcolor&quot;: &quot;#2a3f5f&quot;, &quot;arrowhead&quot;: 0, &quot;arrowwidth&quot;: 1}, &quot;geo&quot;: {&quot;bgcolor&quot;: &quot;white&quot;, &quot;landcolor&quot;: &quot;#E5ECF6&quot;, &quot;subunitcolor&quot;: &quot;white&quot;, &quot;showland&quot;: true, &quot;showlakes&quot;: true, &quot;lakecolor&quot;: &quot;white&quot;}, &quot;title&quot;: {&quot;x&quot;: 0.05}, &quot;mapbox&quot;: {&quot;style&quot;: &quot;light&quot;}}}, &quot;geo&quot;: {&quot;domain&quot;: {&quot;x&quot;: [0.0, 1.0], &quot;y&quot;: [0.0, 1.0]}, &quot;projection&quot;: {&quot;type&quot;: &quot;natural earth&quot;}, &quot;center&quot;: {}, &quot;showland&quot;: true, &quot;landcolor&quot;: &quot;rgb(217, 217, 217)&quot;, &quot;subunitcolor&quot;: &quot;rgb(255, 255, 255)&quot;}, &quot;coloraxis&quot;: {&quot;colorbar&quot;: {&quot;title&quot;: {&quot;text&quot;: &quot;total_value&quot;}}, &quot;colorscale&quot;: [[0.0, &quot;#440154&quot;], [0.1111111111111111, &quot;#482878&quot;], [0.2222222222222222, &quot;#3e4989&quot;], [0.3333333333333333, &quot;#31688e&quot;], [0.4444444444444444, &quot;#26828e&quot;], [0.5555555555555556, &quot;#1f9e89&quot;], [0.6666666666666666, &quot;#35b779&quot;], [0.7777777777777778, &quot;#6ece58&quot;], [0.8888888888888888, &quot;#b5de2b&quot;], [1.0, &quot;#fde725&quot;]]}, &quot;legend&quot;: {&quot;tracegroupgap&quot;: 0, &quot;itemsizing&quot;: &quot;constant&quot;}, &quot;title&quot;: {&quot;text&quot;: &quot;Global Exports: Record Count (Size) and Total Value (Color) (USD) by Reporter Country&quot;}, &quot;margin&quot;: {&quot;r&quot;: 0, &quot;t&quot;: 50, &quot;l&quot;: 0, &quot;b&quot;: 0}, &quot;dragmode&quot;: &quot;zoom&quot;}}' data-config='{}'></marimo-plotly>"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Displaying and saving map...\n"
+        }
+      ]
+    },
+    {
+      "id": "ntXd",
+      "code_hash": "140071658bb223d11b46172e511f8275",
+      "outputs": [
+        {
+          "type": "error",
+          "ename": "exception",
+          "evalue": "marimo came across the undefined variable `aggregated_df` during runtime. Definition expected in cell : ",
+          "traceback": []
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "\n--- Generating Bar Charts ---\n"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "<span class=\"codehilite\"><div class=\"highlight\"><pre><span></span><span class=\"gt\">Traceback (most recent call last):</span>\n  File <span class=\"nb\">&quot;/Users/lukasalemu/Documents/00. Bank of England/03. MPIL/tariff_trade_analysis/.venv/lib/python3.13/site-packages/marimo/_runtime/executor.py&quot;</span>, line <span class=\"m\">141</span>, in <span class=\"n\">execute_cell</span>\n<span class=\"w\">    </span><span class=\"n\">exec</span><span class=\"p\">(</span><span class=\"n\">cell</span><span class=\"o\">.</span><span class=\"n\">body</span><span class=\"p\">,</span> <span class=\"n\">glbls</span><span class=\"p\">)</span>\n<span class=\"w\">    </span><span class=\"pm\">~~~~^^^^^^^^^^^^^^^^^^</span>\n  File <span class=\"nb\">&quot;/var/folders/df/j998nyn11sdf0w5cf48pny6m0000gn/T/marimo_53654/__marimo__cell_ntXd_.py&quot;</span>, line <span class=\"m\">8</span>, in <span class=\"n\">&lt;module&gt;</span>\n<span class=\"w\">    </span><span class=\"n\">top_value_df</span> <span class=\"o\">=</span> <span class=\"n\">aggregated_df</span><span class=\"o\">.</span><span class=\"n\">sort</span><span class=\"p\">(</span><span class=\"s2\">&quot;total_value&quot;</span><span class=\"p\">,</span> <span class=\"n\">descending</span><span class=\"o\">=</span><span class=\"kc\">True</span><span class=\"p\">)</span><span class=\"o\">.</span><span class=\"n\">head</span><span class=\"p\">(</span><span class=\"n\">TOP_N</span><span class=\"p\">)</span>\n<span class=\"w\">                   </span><span class=\"pm\">^^^^^^^^^^^^^</span>\n<span class=\"gr\">NameError</span>: <span class=\"n\">name &#39;aggregated_df&#39; is not defined</span>\n</pre></div>\n</span>"
+        }
+      ]
+    },
+    {
+      "id": "QPJu",
+      "code_hash": "7ee456fdd4945adc3c6d71c2ec76c043",
+      "outputs": [
+        {
+          "type": "error",
+          "ename": "exception",
+          "evalue": "name 'sample_lf' is not defined",
+          "traceback": []
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "<span class=\"codehilite\"><div class=\"highlight\"><pre><span></span><span class=\"gt\">Traceback (most recent call last):</span>\n  File <span class=\"nb\">&quot;/Users/lukasalemu/Documents/00. Bank of England/03. MPIL/tariff_trade_analysis/.venv/lib/python3.13/site-packages/marimo/_runtime/executor.py&quot;</span>, line <span class=\"m\">141</span>, in <span class=\"n\">execute_cell</span>\n<span class=\"w\">    </span><span class=\"n\">exec</span><span class=\"p\">(</span><span class=\"n\">cell</span><span class=\"o\">.</span><span class=\"n\">body</span><span class=\"p\">,</span> <span class=\"n\">glbls</span><span class=\"p\">)</span>\n<span class=\"w\">    </span><span class=\"pm\">~~~~^^^^^^^^^^^^^^^^^^</span>\n  File <span class=\"nb\">&quot;/var/folders/df/j998nyn11sdf0w5cf48pny6m0000gn/T/marimo_53654/__marimo__cell_QPJu_.py&quot;</span>, line <span class=\"m\">7</span>, in <span class=\"n\">&lt;module&gt;</span>\n<span class=\"w\">    </span><span class=\"n\">aggregated_df</span> <span class=\"o\">=</span> <span class=\"n\">sample_lf</span><span class=\"o\">.</span><span class=\"n\">group_by</span><span class=\"p\">(</span><span class=\"s2\">&quot;reporter_country&quot;</span><span class=\"p\">)</span><span class=\"o\">.</span><span class=\"n\">agg</span><span class=\"p\">(</span>\n<span class=\"w\">                    </span><span class=\"pm\">^^^^^^^^^</span>\n<span class=\"gr\">NameError</span>: <span class=\"n\">name &#39;sample_lf&#39; is not defined</span>\n</pre></div>\n</span>"
+        }
+      ]
+    },
+    {
+      "id": "yKLj",
+      "code_hash": "05222e1292a2a6590b7dd9be5f1e898a",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<pre style='font-size: 12px'>False</pre>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "RFkg",
+      "code_hash": "17e6f895b8ae298dac92b6a76f7d9a08",
+      "outputs": [
+        {
+          "type": "error",
+          "ename": "exception",
+          "evalue": "name 'test' is not defined",
+          "traceback": []
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- CREATING CHARTS ---\n"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "<span class=\"codehilite\"><div class=\"highlight\"><pre><span></span><span class=\"gt\">Traceback (most recent call last):</span>\n  File <span class=\"nb\">&quot;/Users/lukasalemu/Documents/00. Bank of England/03. MPIL/tariff_trade_analysis/.venv/lib/python3.13/site-packages/marimo/_runtime/executor.py&quot;</span>, line <span class=\"m\">141</span>, in <span class=\"n\">execute_cell</span>\n<span class=\"w\">    </span><span class=\"n\">exec</span><span class=\"p\">(</span><span class=\"n\">cell</span><span class=\"o\">.</span><span class=\"n\">body</span><span class=\"p\">,</span> <span class=\"n\">glbls</span><span class=\"p\">)</span>\n<span class=\"w\">    </span><span class=\"pm\">~~~~^^^^^^^^^^^^^^^^^^</span>\n  File <span class=\"nb\">&quot;/var/folders/df/j998nyn11sdf0w5cf48pny6m0000gn/T/marimo_53654/__marimo__cell_RFkg_.py&quot;</span>, line <span class=\"m\">2</span>, in <span class=\"n\">&lt;module&gt;</span>\n<span class=\"w\">    </span><span class=\"k\">if</span> <span class=\"n\">test</span><span class=\"p\">:</span>\n<span class=\"w\">       </span><span class=\"pm\">^^^^</span>\n<span class=\"gr\">NameError</span>: <span class=\"n\">name &#39;test&#39; is not defined</span>\n</pre></div>\n</span>"
+        }
+      ]
     }
   ]
 }

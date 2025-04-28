@@ -87,7 +87,7 @@ def _(baci, pl):
             "i": "reporter_country",  # Exporter
             "j": "partner_country",  # Importer
             "k": "product_code",
-            "v": "volume",
+            "v": "value",
             "q": "quantity",
         }
     ).with_columns(pl.col("year").cast(pl.Utf8))
