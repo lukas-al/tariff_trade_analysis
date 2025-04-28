@@ -90,7 +90,14 @@
     {
       "id": "BYtC",
       "code_hash": "9801e670608671d33a4b6c20b5ce6737",
-      "outputs": [],
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
       "console": [
         {
           "type": "stream",
@@ -201,6 +208,51 @@
           "type": "stream",
           "name": "stdout",
           "text": "--- Processing Chunk 22/30: Year = 2015 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 23/30: Year = 2016 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 24/30: Year = 2017 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 25/30: Year = 2018 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 26/30: Year = 2019 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 27/30: Year = 2020 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 28/30: Year = 2021 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 29/30: Year = 2022 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 30/30: Year = 2023 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Time elapsed = 10.972947164376576 mins\n-----COMPLETE-----\n"
         }
       ]
     }

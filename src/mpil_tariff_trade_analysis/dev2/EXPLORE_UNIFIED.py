@@ -1,6 +1,8 @@
+
+
 import marimo
 
-__generated_with = "0.12.8"
+__generated_with = "0.13.2"
 app = marimo.App(width="medium")
 
 
@@ -9,7 +11,7 @@ def _():
     import marimo as mo
     import polars as pl
     from pprint import pprint
-    return mo, pl, pprint
+    return mo, pl
 
 
 @app.cell

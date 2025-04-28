@@ -1,37 +1,72 @@
 {
   "version": "1",
   "metadata": {
-    "marimo_version": "0.12.8"
+    "marimo_version": "0.13.2"
   },
   "cells": [
     {
       "id": "Hbol",
       "code_hash": "3d34b1d141700dd1a549e220e7d1dddd",
-      "outputs": [],
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
       "console": []
     },
     {
       "id": "MJUe",
       "code_hash": "d2ee3a5af55c9d4144dc644bfd805449",
-      "outputs": [],
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"explore-our-unified-dataset\">Explore our unified dataset</h1></span>"
+          }
+        }
+      ],
       "console": []
     },
     {
       "id": "vblA",
       "code_hash": "3515235067aa359c19146650fe63c576",
-      "outputs": [],
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
       "console": []
     },
     {
       "id": "bkHC",
       "code_hash": "a75167bbd691f8d7a94a572fc7c996c8",
-      "outputs": [],
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"what-are-we-interested-in\">What are we interested in?</h1>\n<ol>\n<li>Empirical effect on goods imports of tariff impositions</li>\n</ol>\n<span class=\"paragraph\">What is the average size of the effect (at y0, y1, y2, y5) of a tariff imposition on the corresponding product line?</span>\n<span class=\"paragraph\">Price, volume, value. How much substitution to lower-tariff countries is there?</span>\n<span class=\"paragraph\">Considerations:</span>\n<ul>\n<li>Do we want all data points to count the same? Do we want to preferentially weight larger import volumes? Can we just remove very small imports.</li>\n<li>Different categories have different dynamics, e.g. commodities vs specialist goods.</li>\n</ul>\n<ol start=\"2\">\n<li>How many 'tariff shocks' exist?</li>\n</ol>\n<span class=\"paragraph\">For countries with import volumes above a certain size, how many 'tariff shocks' (some metric similar to the US imposition) can we identify?</span>\n<span class=\"paragraph\">Considertations:</span>\n<ul>\n<li>What's a tariff shock</li>\n<li>What countries count, volumes &amp; values, etc.</li>\n</ul>\n<ol start=\"3\">\n<li>Trade Deflection - case study across countries and time</li>\n</ol>\n<span class=\"paragraph\">When tariffs cause imports to be deflected to other countries, how do those exporters react? Are there patterns in how they choose countries to redirect to? (Open economies, nearby, etc).</span>\n<span class=\"paragraph\">Considerations:</span>\n<ul>\n<li>Need to control for the imposition of reciprocal tariffs to understand effect sizes - conditional on no reciprocation, etc.</li>\n</ul>\n<ol start=\"4\">\n<li>Second-order impacts</li>\n</ol>\n<span class=\"paragraph\">Can we calculate the impact of cost passthroughs in supply chains? E.g. if export prices for good X from China increase by 10%, the direct impact is that import prices for that good in the UK from China also increase 10%. But if the good is used to produce X,Y,Z products in Germany, what is the impact on prices of goods which the UK imports from Germany?</span>\n<span class=\"paragraph\">Would need to use inter-country I/O tables or some such.</span>\n<ol start=\"5\">\n<li>Non-linearities in cost passthrough</li>\n</ol>\n<span class=\"paragraph\">Are manufacturers more likely to pass through cost increases to consumers due to tariffs? Has this ratio stayed the same? Is there reason to think we're in a more sensitive regime?</span>\n<h1 id=\"considerations\">Considerations:</h1>\n<ol>\n<li>Start with UK, China, US</li>\n<li>Use 2018 case study</li>\n</ol></span>"
+          }
+        }
+      ],
       "console": []
     },
     {
       "id": "lEQa",
       "code_hash": "5d495aa7894270199c4cda1955542108",
-      "outputs": [],
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"whats-the-actual-todo\">Whats the actual todo:</h1>\n<ol>\n<li>Validate the dataset</li>\n<li>Create a factsheet which I can share with MPIL</li>\n<li>Answer some questions</li>\n<li>Add services and NTBs?</li>\n</ol></span>"
+          }
+        }
+      ],
       "console": []
     },
     {
