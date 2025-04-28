@@ -10,7 +10,7 @@ app = marimo.App(width="medium")
 def _():
     import marimo as mo
     import polars as pl
-    from pprint import pprint
+
     return mo, pl
 
 
@@ -23,9 +23,9 @@ def _(mo):
 @app.cell
 def _(pl):
     unified_data = pl.scan_parquet(
-        'data/final/unified_trade_tariff_partitioned/',
+        "data/final/unified_trade_tariff_partitioned/",
     )
-    return (unified_data,)
+    return
 
 
 @app.cell
@@ -94,8 +94,19 @@ def _(mo):
 
 
 @app.cell
-def _(unified_data):
-    unified_data.describe()
+def _():
+    # First need to minimally inspect the data. I'd love to use polars, but a lot of the API for describing / interrogating data is pretty slow. 
+    return
+
+
+@app.cell
+def _():
+    import duckdb
+    parquet_file_path = "data/final/unified_trade_tariff_partitioned/"
+
+    conn = duckdb.connect(database=':memory:', read_only=False)
+    summarize_query = f"SUMMARIZE SELECT * FROM '{parquet_file_path}';"
+
     return
 
 
