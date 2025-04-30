@@ -1,6 +1,8 @@
+
+
 import marimo
 
-__generated_with = "0.12.8"
+__generated_with = "0.13.2"
 app = marimo.App(width="medium")
 
 
@@ -16,7 +18,7 @@ def _():
 
     from tqdm.auto import tqdm
     from pathlib import Path
-    return Path, duckdb, glob, mo, os, pd, pl, shutil, tqdm
+    return Path, duckdb, glob, mo, os, pl, shutil, tqdm
 
 
 @app.cell
@@ -55,12 +57,8 @@ def _(Path):
     baci_intermediate_parquet_name = f"BACI_{hs_code}_V{baci_release}_CLEAN.parquet"
     baci_intermediate_parquet_path = intermediate_data_dir / baci_intermediate_parquet_name
     return (
-        baci_input_folder,
-        baci_intermediate_parquet_name,
         baci_intermediate_parquet_path,
         baci_release,
-        base_data_dir,
-        final_data_dir,
         hs_code,
         intermediate_data_dir,
         raw_data_dir,
@@ -126,7 +124,7 @@ def _(
         input_folder=raw_data_dir,
         output_folder=intermediate_data_dir,
     )
-    return baci_path, baci_to_parquet_incremental
+    return (baci_path,)
 
 
 @app.cell
@@ -274,7 +272,7 @@ def _():
 
         print("Failed to match entirely. Returning original code.")
         return [cc]
-    return Dict, List, identify_iso_code, pycountry
+    return (identify_iso_code,)
 
 
 @app.cell
@@ -324,7 +322,7 @@ def _(Path, identify_iso_code, pl, recast_lf):
 
     mapping_df_i = create_mapping_df(recast_lf, 'i')
     mapping_df_j = create_mapping_df(recast_lf, 'j')
-    return create_mapping_df, mapping_df_i, mapping_df_j
+    return mapping_df_i, mapping_df_j
 
 
 @app.cell
@@ -404,13 +402,12 @@ def _(baci_intermediate_parquet_path, joined_lf):
 
 
 @app.cell
-def _():
+def _(shutil):
     print(f"Deleting intermediate intermediate folder (from duckdb aggregation)")
-    import shutil
 
     try: shutil.rmtree("data/intermediate/BACI_HS92_V202501")
     except FileNotFoundError: print("File doensn't exist")
-    return (shutil,)
+    return
 
 
 if __name__ == "__main__":

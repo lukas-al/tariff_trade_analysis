@@ -1,5 +1,3 @@
-
-
 import marimo
 
 __generated_with = "0.13.2"
@@ -8,12 +6,14 @@ app = marimo.App(width="medium")
 
 @app.cell
 def _():
-    import marimo as mo
-    import polars as pl
-    import time
     import os
     import random
     import shutil
+    import time
+
+    import marimo as mo
+    import polars as pl
+
     return mo, os, pl, random, shutil, time
 
 
@@ -41,9 +41,7 @@ def _(os, pl, shutil, time):
     print("--- CREATING DATASET SUB-SAMPLES ---")
 
     def create_and_save_filter(
-        lf: pl.LazyFrame,
-        min_trade_value: int,
-        top_n_countries: int
+        lf: pl.LazyFrame, min_trade_value: int, top_n_countries: int
     ) -> pl.LazyFrame:
         """
         Create a filtered version of the unified dataset based on minimum trade value
@@ -60,14 +58,16 @@ def _(os, pl, shutil, time):
             pl.LazyFrame: filter lazyframe pre sink
         """
         # --- Configuration ---
-        importer_col = 'partner_country' # Column name for the importing country
-        exporter_col = 'reporter_country' # Column name for the exporting country
-        value_col = 'volume'             # Column name for the trade value
-        year_col = 'year'                # Column name for the year, used for partitioning
+        importer_col = "partner_country"  # Column name for the importing country
+        exporter_col = "reporter_country"  # Column name for the exporting country
+        value_col = "volume"  # Column name for the trade value
+        year_col = "year"  # Column name for the year, used for partitioning
         # Construct a dynamic output path based on parameters
-        output_path = f"data/final/unified_filtered_{min_trade_value}minval_top{top_n_countries}countries"
+        output_path = (
+            f"data/final/unified_filtered_{min_trade_value}minval_top{top_n_countries}countries"
+        )
 
-        print(f"--- Starting Filter Process ---")
+        print("--- Starting Filter Process ---")
         print(f"Parameters: min_trade_value={min_trade_value}, top_n_countries={top_n_countries}")
         print(f"Output path: {output_path}")
 
@@ -82,18 +82,12 @@ def _(os, pl, shutil, time):
         print(f"Identifying top {top_n_countries} countries by total trade volume...")
 
         # Select exports: country and value
-        ldf_exports = lf.select(
-            pl.col(exporter_col).alias("country"),
-            pl.col(value_col)
-        ).filter(
+        ldf_exports = lf.select(pl.col(exporter_col).alias("country"), pl.col(value_col)).filter(
             pl.col("country").is_not_null() & pl.col(value_col).is_not_null()
         )
 
         # Select imports: country and value
-        ldf_imports = lf.select(
-            pl.col(importer_col).alias("country"),
-            pl.col(value_col)
-        ).filter(
+        ldf_imports = lf.select(pl.col(importer_col).alias("country"), pl.col(value_col)).filter(
             pl.col("country").is_not_null() & pl.col(value_col).is_not_null()
         )
 
@@ -101,21 +95,26 @@ def _(os, pl, shutil, time):
         ldf_all_flows = pl.concat([ldf_exports, ldf_imports], how="vertical")
 
         # Group by country and sum the trade values
-        ldf_volumes = ldf_all_flows.group_by("country").agg(
-            pl.sum(value_col).alias("total_volume")
-        )
+        ldf_volumes = ldf_all_flows.group_by("country").agg(pl.sum(value_col).alias("total_volume"))
 
         # Determine the top N countries based on total volume
         # Use collect(streaming=True) for potentially large grouping operations
-        top_countries_df = ldf_volumes.sort("total_volume", descending=True).head(top_n_countries).collect(engine='streaming')
-        top_countries_list = top_countries_df["country"].to_list() # Get list of country names
+        top_countries_df = (
+            ldf_volumes.sort("total_volume", descending=True)
+            .head(top_n_countries)
+            .collect(engine="streaming")
+        )
+        top_countries_list = top_countries_df["country"].to_list()  # Get list of country names
 
         print(f"Identified Top {len(top_countries_list)} countries.")
         if top_countries_list:
-          print(f"Sample of top countries: {top_countries_list[:min(10, len(top_countries_list))]}")
+            print(
+                f"Sample of top countries: {top_countries_list[:min(10, len(top_countries_list))]}"
+            )
         else:
-          print("Warning: No top countries identified. Filtering might result in an empty dataset.")
-
+            print(
+                "Warning: No top countries identified. Filtering might result in an empty dataset."
+            )
 
         # --- Step 2: Filter the original data ---
         print("Applying filters to the dataset (lazy execution)...")
@@ -125,28 +124,27 @@ def _(os, pl, shutil, time):
             pl.col(value_col) >= min_trade_value
         ).filter(
             # Filter 2: Keep rows where BOTH importer and exporter are in the top N list
-            pl.col(importer_col).is_in(top_countries_list) &
-            pl.col(exporter_col).is_in(top_countries_list)
+            pl.col(importer_col).is_in(top_countries_list)
+            & pl.col(exporter_col).is_in(top_countries_list)
         )
 
         # --- Step 3: Write filtered data to partitioned Parquet files ---
         print(f"Writing filtered data to: {output_path}")
         ldf_filtered.sink_parquet(
             pl.PartitionByKey(
-            base_path=output_path,
-            by=pl.col("year"),
-        ),
+                base_path=output_path,
+                by=pl.col("year"),
+            ),
             mkdir=True,
         )
         print("Successfully wrote filtered data.")
 
         end_time = time.time()
-        print(f"--- Finished Filtering ---")
+        print("--- Finished Filtering ---")
         print(f"Total duration: {end_time - start_time:.2f} seconds")
 
         # The function implicitly returns None as specified by the type hint
         return ldf_filtered
-
 
     return (create_and_save_filter,)
 
@@ -167,20 +165,19 @@ def _(mo):
 
 @app.cell
 def _(filtered_lf, pl):
-    num_rows = filtered_lf.select(pl.len()).collect(engine='streaming').item()
+    num_rows = filtered_lf.select(pl.len()).collect(engine="streaming").item()
     num_cols = len(filtered_lf.collect_schema().names())
 
-    null_count_lazy = filtered_lf.select(pl.col('effective_tariff').is_null().sum())
-    null_count_effective_tariff = null_count_lazy.collect(engine='streaming').item()
+    null_count_lazy = filtered_lf.select(pl.col("effective_tariff").is_null().sum())
+    null_count_effective_tariff = null_count_lazy.collect(engine="streaming").item()
 
-
-    print(f"--- Summary Statistics for filtered data ---")
+    print("--- Summary Statistics for filtered data ---")
     print(f"Dimensions (rows, columns): ({num_rows}, {num_cols})")
     print(f"Number of null values in 'effective_tariff': {null_count_effective_tariff}")
     print(f"Null percentage = {null_count_effective_tariff / num_rows}")
 
     print("\n--- First 5 Rows (Collected) ---")
-    print(filtered_lf.head(5).collect(engine='streaming'))
+    print(filtered_lf.head(5).collect(engine="streaming"))
 
     print("\n--- DataFrame Schema (from LazyFrame) ---")
     print(filtered_lf.collect_schema())
@@ -218,8 +215,7 @@ def _(
     indices_series = pl.Series("idx_to_keep", sorted(sampled_indices), dtype=pl.UInt32)
 
     filtered_lf_sample = (
-        filtered_lf
-        .with_row_index(name="index")
+        filtered_lf.with_row_index(name="index")
         .filter(pl.col("index").is_in(indices_series))
         .drop("index")
     )

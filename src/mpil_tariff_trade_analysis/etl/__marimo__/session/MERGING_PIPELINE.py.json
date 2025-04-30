@@ -1,0 +1,161 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.13.2"
+  },
+  "cells": [
+    {
+      "id": "Hbol",
+      "code_hash": "1aa1534ab133e8d5949458aeab9bf241",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "MJUe",
+      "code_hash": "e4f41ed6746d9c39f47cffa17349dff6",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "vblA",
+      "code_hash": "33f7af050d03bdf136bc1359d5306089",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "0336257ab7cbac53590a271f1d2c894e",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "c53dead810a2abfcaf3f5c6f1b486d39",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='lEQa-0' random-id='703a04dc-fd92-a8a3-5752-4e353c5819c5'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/761-2570497-HMB4RJzv.json&quot;' data-total-rows='5' data-total-columns='7' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;year&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;reporter_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;partner_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;tariff_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;min_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;max_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "PKri",
+      "code_hash": "9c592478d35ef1162f3064d5af85b481",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='PKri-0' random-id='2a1ae564-9eaf-2235-bb19-22a6462f01f9'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/653-2570497-vo7vpbUy.json&quot;' data-total-rows='5' data-total-columns='6' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;year&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;reporter_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;tariff_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;min_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;max_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Xref",
+      "code_hash": "b37202712c4b8009677756ffd84fb9df",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "SFPL",
+      "code_hash": "673b96eb97c0c4f269d0088c711e594f",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "BYtC",
+      "code_hash": "a3dcfa30015462669adc5c0d93209277",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "RGSE",
+      "code_hash": "e2d7b521ccd0ba7371b3da973dc8f898",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='RGSE-0' random-id='19728fe6-b57a-2fa7-d396-5663a2e44d1b'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/4194-2570497-dTnNI166.json&quot;' data-total-rows='5' data-total-columns='5' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;partner_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;list_tariff_rate_pref&quot;, [&quot;unknown&quot;, &quot;list[f32]&quot;]], [&quot;list_min_rate_pref&quot;, [&quot;unknown&quot;, &quot;list[f32]&quot;]], [&quot;list_max_rate_pref&quot;, [&quot;unknown&quot;, &quot;list[f32]&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Aggregating tariffs within Pref and MFN tables into lists...\n"
+        }
+      ]
+    },
+    {
+      "id": "Kclp",
+      "code_hash": "8137203722d3b55445950604b6ba709c",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"operate-over-the-baci-dataset-in-chunks\">Operate over the BACI dataset in chunks</h1></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "emfo",
+      "code_hash": "ecce1cc72f98e52b9c3bd9df3279c295",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "iDIV",
+      "code_hash": "c5b6c481046ff7192aecb1c45458dd79",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='iDIV-0' random-id='8331f779-21eb-a7b3-4810-50800bfdc331'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/3385-2570497-rc8eEaoD.json&quot;' data-total-rows='5' data-total-columns='5' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;partner_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;list_tariff_rate_pref&quot;, [&quot;unknown&quot;, &quot;list[f32]&quot;]], [&quot;list_min_rate_pref&quot;, [&quot;unknown&quot;, &quot;list[f32]&quot;]], [&quot;list_max_rate_pref&quot;, [&quot;unknown&quot;, &quot;list[f32]&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ZYnA",
+      "code_hash": "4f19b3c33e985ddddbec7df8523e23ca",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='ZYnA-0' random-id='5ae2b430-ae84-7a76-86ed-08e22857341d'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/829-2570497-NsJ7ZiZs.json&quot;' data-total-rows='5' data-total-columns='5' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;partner_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;list_tariff_rate_mfn&quot;, [&quot;unknown&quot;, &quot;list[f32]&quot;]], [&quot;list_min_rate_mfn&quot;, [&quot;unknown&quot;, &quot;list[f32]&quot;]], [&quot;list_max_rate_mfn&quot;, [&quot;unknown&quot;, &quot;list[f32]&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    }
+  ]
+}
