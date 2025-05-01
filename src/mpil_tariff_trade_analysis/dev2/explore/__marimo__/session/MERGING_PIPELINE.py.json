@@ -1,0 +1,260 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.13.2"
+  },
+  "cells": [
+    {
+      "id": "Hbol",
+      "code_hash": "78f693167cf9c64f76e1483f8410b960",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "MJUe",
+      "code_hash": "e4f41ed6746d9c39f47cffa17349dff6",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "vblA",
+      "code_hash": "33f7af050d03bdf136bc1359d5306089",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "0336257ab7cbac53590a271f1d2c894e",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "6817532e62179180720d4e8e1f21dcfe",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='lEQa-0' random-id='5fd38b6a-37b8-26f7-7d82-b848b82b31d4'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/761-361427-csOp8S7Z.json&quot;' data-total-rows='5' data-total-columns='7' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;year&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;reporter_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;partner_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;tariff_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;min_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;max_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "PKri",
+      "code_hash": "11c4c4ff50c69f9c1567731cd0c15694",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='PKri-0' random-id='fdbc9b86-557e-2fa0-60be-7c0ff4d5bfbb'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/653-361427-BDhzddh4.json&quot;' data-total-rows='5' data-total-columns='6' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;year&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;reporter_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;tariff_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;min_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;max_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Xref",
+      "code_hash": "e5395f29573e48542417e76a3df4ac14",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='Xref-0' random-id='c01bad8f-49e4-7fed-b445-b201a2815f55'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/609-361427-86TYkd99.json&quot;' data-total-rows='5' data-total-columns='6' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;year&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;reporter_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;partner_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;volume&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;quantity&quot;, [&quot;number&quot;, &quot;f64&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "SFPL",
+      "code_hash": "8137203722d3b55445950604b6ba709c",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "BYtC",
+      "code_hash": "9801e670608671d33a4b6c20b5ce6737",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Unique years in dataset:\n['1995', '1996', '1997', '1997', '1998', '1999', '2000', '2001', '2002', '2003', '2004', '2005', '2006', '2007', '2008', '2009', '2010', '2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023']\n--- Processing Chunk 1/30: Year = 1995 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 2/30: Year = 1996 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 3/30: Year = 1997 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 4/30: Year = 1997 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 5/30: Year = 1998 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 6/30: Year = 1999 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 7/30: Year = 2000 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 8/30: Year = 2001 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 9/30: Year = 2002 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 10/30: Year = 2003 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 11/30: Year = 2004 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 12/30: Year = 2005 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 13/30: Year = 2006 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 14/30: Year = 2007 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 15/30: Year = 2008 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 16/30: Year = 2009 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 17/30: Year = 2010 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 18/30: Year = 2011 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 19/30: Year = 2012 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 20/30: Year = 2013 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 21/30: Year = 2014 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 22/30: Year = 2015 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 23/30: Year = 2016 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 24/30: Year = 2017 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 25/30: Year = 2018 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 26/30: Year = 2019 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 27/30: Year = 2020 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 28/30: Year = 2021 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 29/30: Year = 2022 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 30/30: Year = 2023 ---\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Time elapsed = 10.972947164376576 mins\n-----COMPLETE-----\n"
+        }
+      ]
+    }
+  ]
+}

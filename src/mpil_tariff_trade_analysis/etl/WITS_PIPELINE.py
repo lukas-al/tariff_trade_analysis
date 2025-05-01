@@ -1,6 +1,8 @@
+
+
 import marimo
 
-__generated_with = "0.12.8"
+__generated_with = "0.13.2"
 app = marimo.App(width="medium")
 
 
@@ -203,11 +205,7 @@ def _(glob, os, pl, re):
 
     consolidated_lf_AVEMFN = consolidate_wits_tariff_data("AVEMFN", "data/raw/WITS_tariff/")
     consolidated_lf_AVEPref = consolidate_wits_tariff_data("AVEPref", "data/raw/WITS_tariff/")
-    return (
-        consolidate_wits_tariff_data,
-        consolidated_lf_AVEMFN,
-        consolidated_lf_AVEPref,
-    )
+    return consolidated_lf_AVEMFN, consolidated_lf_AVEPref
 
 
 @app.cell
@@ -321,11 +319,7 @@ def _(Path, consolidated_lf_AVEMFN, consolidated_lf_AVEPref, pd, pl):
 
     translated_lf_AVEMFN = vectorized_hs_translation(consolidated_lf_AVEMFN)
     translated_lf_AVEPref = vectorized_hs_translation(consolidated_lf_AVEPref)
-    return (
-        translated_lf_AVEMFN,
-        translated_lf_AVEPref,
-        vectorized_hs_translation,
-    )
+    return translated_lf_AVEMFN, translated_lf_AVEPref
 
 
 @app.cell
@@ -369,7 +363,7 @@ def _(pd, pl, translated_lf_AVEPref):
     ).drop('country_iso_num')
 
     print(f"Joine Pref LF head:\n{joined_pref_lf_AVEPref.head().collect(engine='streaming')}")
-    return joined_pref_lf_AVEPref, pref_group_mapping, pref_group_mapping_lf
+    return (joined_pref_lf_AVEPref,)
 
 
 @app.cell
@@ -494,7 +488,7 @@ def _():
 
         print("Failed to match entirely. Returning original code.")
         return [cc]
-    return Dict, List, identify_iso_code, pycountry
+    return (identify_iso_code,)
 
 
 @app.cell
@@ -551,7 +545,6 @@ def _(
     mapping_df_AVEPref_partner = create_mapping_df(joined_pref_lf_AVEPref, 'partner_country')
     mapping_df_AVEMFN_reporter = create_mapping_df(translated_lf_AVEMFN, 'reporter_country')
     return (
-        create_mapping_df,
         mapping_df_AVEMFN_reporter,
         mapping_df_AVEPref_partner,
         mapping_df_AVEPref_reporter,
@@ -594,7 +587,7 @@ def _(
     # Apply mapping twice, once for reporter and partner country for the AVEPref
     AVEPref_lf_clean = apply_mapping(joined_pref_lf_AVEPref, mapping_df_AVEPref_reporter, "reporter_country")
     AVEPref_lf_clean = apply_mapping(AVEPref_lf_clean, mapping_df_AVEPref_partner, "partner_country")
-    return AVEMFN_lf_clean, AVEPref_lf_clean, apply_mapping
+    return AVEMFN_lf_clean, AVEPref_lf_clean
 
 
 @app.cell
