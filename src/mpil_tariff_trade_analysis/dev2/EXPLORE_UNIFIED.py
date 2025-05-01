@@ -129,7 +129,7 @@ def _(mo):
 def _(args, pl):
     print("--- CREATING CHARTS ---")
     if not args.fullfat:
-        lf = pl.scan_parquet("data/final/unified_filtered_10000val_100c_sample_10000.0krows_filter")
+        lf = pl.scan_parquet("data/final/unified_filtered_10000val_100c_sample_1000krows_filter")
         print('Running in test mode on a sub-sample of the data')
     if args.fullfat:
         lf = pl.scan_parquet("data/final/unified_trade_tariff_partitioned/")
@@ -208,7 +208,7 @@ def _(lf, pl, pycountry):
 
     aggregated_df = lf.group_by("reporter_country").agg(
         pl.len().alias("record_count"),  # Count rows per group
-        pl.sum("volume").alias("total_value") # Sum the 'volume' (value) per group
+        pl.sum("value").alias("total_value") # Sum the 'volume' (value) per group
     ).with_columns(
         pl.col('reporter_country')
         .map_elements(get_alpha_3, return_dtype=pl.Utf8)
@@ -337,7 +337,7 @@ def _(get_alpha_3, go, lf, make_subplots, pl):
         us_partner_agg_lf = lf.filter(
             pl.col("reporter_country") == US_NUMERIC_CODE_STR,
         ).group_by("partner_country").agg(
-            pl.sum("volume").alias("total_value"),
+            pl.sum("value").alias("total_value"),
             pl.len().alias("record_count")
         ).with_columns(
             (pl.col('total_value') * 1000)
@@ -427,7 +427,7 @@ def _(get_alpha_3, go, lf, make_subplots, pl):
 
         fig.write_html("src/mpil_tariff_trade_analysis/dev2/US_exports.html")
         return fig.show()
-
+    # 
 
     _()
     return
@@ -446,7 +446,7 @@ def _(get_alpha_3, go, lf, make_subplots, pl, plotly):
         us_partner_agg_lf = lf.filter(
             pl.col("reporter_country") == US_NUMERIC_CODE_STR,
         ).group_by("partner_country").agg(
-            pl.sum("volume").alias("total_value"),
+            pl.sum("value").alias("total_value"),
             # Assuming a count mechanism exists or use pl.len() if appropriate
             # If 'record_count' column doesn't exist use pl.len()
             pl.len().alias("record_count") if 'record_count' not in lf.columns else pl.sum("record_count").alias("record_count")
@@ -506,7 +506,7 @@ def _(get_alpha_3, go, lf, make_subplots, pl, plotly):
             (pl.col("reporter_country") == US_NUMERIC_CODE_STR) &
             (pl.col("partner_country").is_in(top_n_partner_codes))
         ).group_by(["year", "partner_country"]).agg(
-            pl.sum("volume").alias("yearly_volume")
+            pl.sum("value").alias("yearly_volume")
         ).sort("year", "partner_country") # Sort for plotting
 
         yearly_volume_df = yearly_volume_lf.collect() # Collect the results
@@ -641,7 +641,7 @@ def _(get_alpha_3, go, lf, make_subplots, pl):
         us_import_agg_lf = lf.filter(
             pl.col("partner_country") == US_NUMERIC_CODE_STR # Filter where US is the partner
         ).group_by("reporter_country").agg( # Group by the reporting country (source of import)
-            pl.sum("volume").alias("total_value"),
+            pl.sum("value").alias("total_value"),
             pl.len().alias("record_count")
         ).with_columns(
             (pl.col('total_value') * 1000)
@@ -751,91 +751,91 @@ def _(mo):
 
 
 @app.cell
-def _(get_alpha_3, pl, px):
-    baci_original = pl.scan_csv("data/raw/BACI_HS92_V202501/BACI*.csv")
+def _():
+    # baci_original = pl.scan_csv("data/raw/BACI_HS92_V202501/BACI*.csv")
 
-    baci_usa_exports_lf = baci_original.filter(
-        pl.col("i") == 842 # Filter where US is the partner (BACI has USA as 842 rather than 840)
-    ).group_by(["j", 't']).agg( # Group by the reporting country (source of import)
-        pl.sum('v').alias('total_volume'),
-        pl.len().alias("record_count")
-    ).with_columns(
-        (pl.col('total_volume') * 1000)
-    ).sort("t", "j")
+    # baci_usa_exports_lf = baci_original.filter(
+    #     pl.col("i") == 842 # Filter where US is the partner (BACI has USA as 842 rather than 840)
+    # ).group_by(["j", 't']).agg( # Group by the reporting country (source of import)
+    #     pl.sum('v').alias('total_volume'),
+    #     pl.len().alias("record_count")
+    # ).with_columns(
+    #     (pl.col('total_volume') * 1000)
+    # ).sort("t", "j")
 
-    trf_baci_usa_exports = baci_usa_exports_lf.with_columns(
-        pl.col("j").cast(pl.Utf8).str.zfill(3)
-          .map_elements(get_alpha_3, return_dtype=pl.Utf8, skip_nulls=False) # Apply conversion
-          .alias("partner_country_alpha3")
-    )
+    # trf_baci_usa_exports = baci_usa_exports_lf.with_columns(
+    #     pl.col("j").cast(pl.Utf8).str.zfill(3)
+    #       .map_elements(get_alpha_3, return_dtype=pl.Utf8, skip_nulls=False) # Apply conversion
+    #       .alias("partner_country_alpha3")
+    # )
 
-    trf_baci_usa_exports_pd = trf_baci_usa_exports.collect(engine='streaming').to_pandas()
-    fig_px_baci = px.line(
-            trf_baci_usa_exports_pd,
-            x="t",                      # Column for the x-axis
-            y="total_volume",           # Column for the y-axis
-            color="partner_country_alpha3", # Column to define line colors and legend entries
-            markers=True,               # Show markers on the lines (equiv. to mode='lines+markers')
-            title="USA Exports Volume by Partner Country - BACI ORIGINAL", # Chart title
-            labels={                    # Optional: Customize axis/legend labels
-                "t": "Year",
-                "total_volume": "Total Export Volume",
-                "partner_country_alpha3": "Partner Country"
-            },
-    )
+    # trf_baci_usa_exports_pd = trf_baci_usa_exports.collect(engine='streaming').to_pandas()
+    # fig_px_baci = px.line(
+    #         trf_baci_usa_exports_pd,
+    #         x="t",                      # Column for the x-axis
+    #         y="total_volume",           # Column for the y-axis
+    #         color="partner_country_alpha3", # Column to define line colors and legend entries
+    #         markers=True,               # Show markers on the lines (equiv. to mode='lines+markers')
+    #         title="USA Exports Volume by Partner Country - BACI ORIGINAL", # Chart title
+    #         labels={                    # Optional: Customize axis/legend labels
+    #             "t": "Year",
+    #             "total_volume": "Total Export Volume",
+    #             "partner_country_alpha3": "Partner Country"
+    #         },
+    # )
 
-    fig_px_baci.show()
-    return
-
-
-@app.cell
-def _(get_alpha_3, pl, px):
-    def _():
-        baci_intermediate = pl.scan_parquet("data/intermediate/BACI_HS92_V202501_CLEAN.parquet")
-
-        baci_usa_exports_lf = baci_intermediate.filter(
-            pl.col("i") == "840" # Filter where US is the partner (BACI has USA as 842 rather than 840)
-        ).group_by(["j", 't']).agg( # Group by the reporting country (source of import)
-            pl.sum('v').alias('total_value'),
-            pl.len().alias("record_count")
-        ).with_columns(
-            (pl.col('total_value') * 1000)
-        ).sort("t", "j")
-
-        trf_baci_usa_exports = baci_usa_exports_lf.with_columns(
-            pl.col("j").cast(pl.Utf8).str.zfill(3)
-              .map_elements(get_alpha_3, return_dtype=pl.Utf8, skip_nulls=False) # Apply conversion
-              .alias("partner_country_alpha3")
-        )
-
-        trf_baci_usa_exports_pd = trf_baci_usa_exports.collect(engine='streaming').to_pandas()
-        fig_px_baci = px.line(
-                trf_baci_usa_exports_pd,
-                x="t",                      # Column for the x-axis
-                y="total_value",           # Column for the y-axis
-                color="partner_country_alpha3", # Column to define line colors and legend entries
-                markers=True,               # Show markers on the lines (equiv. to mode='lines+markers')
-                title="USA Exports Value by Partner Country - BACI INTERMEDIATE", # Chart title
-                labels={                    # Optional: Customize axis/legend labels
-                    "t": "Year",
-                    "total_value": "Total Export Value",
-                    "partner_country_alpha3": "Partner Country"
-                },
-        )
-        return fig_px_baci.show()
-
-    _()
-    return
-
-
-@app.cell
-def _(mo):
-    mo.md(r"""# Evidence: errors being introduced in the unifying pipeline.""")
+    # fig_px_baci.show()
     return
 
 
 @app.cell
 def _():
+    # def _():
+    #     baci_intermediate = pl.scan_parquet("data/intermediate/BACI_HS92_V202501_CLEAN.parquet")
+
+    #     baci_usa_exports_lf = baci_intermediate.filter(
+    #         pl.col("i") == "840" # Filter where US is the partner (BACI has USA as 842 rather than 840)
+    #     ).group_by(["j", 't']).agg( # Group by the reporting country (source of import)
+    #         pl.sum('v').alias('total_value'),
+    #         pl.len().alias("record_count")
+    #     ).with_columns(
+    #         (pl.col('total_value') * 1000)
+    #     ).sort("t", "j")
+
+    #     trf_baci_usa_exports = baci_usa_exports_lf.with_columns(
+    #         pl.col("j").cast(pl.Utf8).str.zfill(3)
+    #           .map_elements(get_alpha_3, return_dtype=pl.Utf8, skip_nulls=False) # Apply conversion
+    #           .alias("partner_country_alpha3")
+    #     )
+
+    #     trf_baci_usa_exports_pd = trf_baci_usa_exports.collect(engine='streaming').to_pandas()
+    #     fig_px_baci = px.line(
+    #             trf_baci_usa_exports_pd,
+    #             x="t",                      # Column for the x-axis
+    #             y="total_value",           # Column for the y-axis
+    #             color="partner_country_alpha3", # Column to define line colors and legend entries
+    #             markers=True,               # Show markers on the lines (equiv. to mode='lines+markers')
+    #             title="USA Exports Value by Partner Country - BACI INTERMEDIATE", # Chart title
+    #             labels={                    # Optional: Customize axis/legend labels
+    #                 "t": "Year",
+    #                 "total_value": "Total Export Value",
+    #                 "partner_country_alpha3": "Partner Country"
+    #             },
+    #     )
+    #     return fig_px_baci.show()
+
+    # _()
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(
+        r"""
+        # Tariff Levels between countries and product lines
+
+        """
+    )
     return
 
 

@@ -20,7 +20,14 @@
     {
       "id": "MJUe",
       "code_hash": "e4f41ed6746d9c39f47cffa17349dff6",
-      "outputs": [],
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"create-unified-dataset\">CREATE UNIFIED DATASET</h1>\n<span class=\"paragraph\">Join trade values and volumes with tariff amounts. Left join on BACI. Simple operation.</span></span>"
+          }
+        }
+      ],
       "console": []
     },
     {
@@ -39,7 +46,14 @@
     {
       "id": "bkHC",
       "code_hash": "0336257ab7cbac53590a271f1d2c894e",
-      "outputs": [],
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h2 id=\"format-the-datasets-to-make-them-joinable\">Format the datasets to make them joinable</h2></span>"
+          }
+        }
+      ],
       "console": []
     },
     {
@@ -49,7 +63,7 @@
         {
           "type": "data",
           "data": {
-            "text/html": "<marimo-ui-element object-id='lEQa-0' random-id='703a04dc-fd92-a8a3-5752-4e353c5819c5'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/761-2570497-HMB4RJzv.json&quot;' data-total-rows='5' data-total-columns='7' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;year&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;reporter_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;partner_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;tariff_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;min_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;max_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+            "text/html": "<marimo-ui-element object-id='lEQa-0' random-id='44cdc8d3-6a77-cda7-18bc-24fd17ada1b0'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/761-2633718-pEiYhGDM.json&quot;' data-total-rows='5' data-total-columns='7' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;year&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;reporter_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;partner_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;tariff_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;min_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;max_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
           }
         }
       ],
@@ -62,7 +76,7 @@
         {
           "type": "data",
           "data": {
-            "text/html": "<marimo-ui-element object-id='PKri-0' random-id='2a1ae564-9eaf-2235-bb19-22a6462f01f9'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/653-2570497-vo7vpbUy.json&quot;' data-total-rows='5' data-total-columns='6' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;year&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;reporter_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;tariff_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;min_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;max_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+            "text/html": "<marimo-ui-element object-id='PKri-0' random-id='e9cdf2c9-e5fb-2196-29bc-1591c77e9ff6'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/653-2633718-C22pjFNr.json&quot;' data-total-rows='5' data-total-columns='6' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;year&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;reporter_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;tariff_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;min_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;max_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
           }
         }
       ],
@@ -71,18 +85,32 @@
     {
       "id": "Xref",
       "code_hash": "b37202712c4b8009677756ffd84fb9df",
-      "outputs": [],
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='Xref-0' random-id='04e4cb73-8169-b0fb-4304-a59c62e29b2f'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/604-2633718-AgmyAc2M.json&quot;' data-total-rows='5' data-total-columns='6' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;year&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;reporter_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;partner_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;value&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;quantity&quot;, [&quot;number&quot;, &quot;f64&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
       "console": []
     },
     {
       "id": "SFPL",
       "code_hash": "673b96eb97c0c4f269d0088c711e594f",
-      "outputs": [],
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"merge-pref-and-mfn\">Merge Pref and MFN</h1>\n<span class=\"paragraph\">Need to merge these two datasets, ensuring that for each year, each country and product code there is ONLY ONE value.</span></span>"
+          }
+        }
+      ],
       "console": []
     },
     {
       "id": "BYtC",
-      "code_hash": "a3dcfa30015462669adc5c0d93209277",
+      "code_hash": "da1cb08faeaf6258805a86e3db3eb674",
       "outputs": [
         {
           "type": "data",
@@ -95,25 +123,45 @@
     },
     {
       "id": "RGSE",
-      "code_hash": "e2d7b521ccd0ba7371b3da973dc8f898",
+      "code_hash": "c514c99c2c833a18ee6d78a75988cb00",
       "outputs": [
         {
           "type": "data",
           "data": {
-            "text/html": "<marimo-ui-element object-id='RGSE-0' random-id='19728fe6-b57a-2fa7-d396-5663a2e44d1b'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/4194-2570497-dTnNI166.json&quot;' data-total-rows='5' data-total-columns='5' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;partner_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;list_tariff_rate_pref&quot;, [&quot;unknown&quot;, &quot;list[f32]&quot;]], [&quot;list_min_rate_pref&quot;, [&quot;unknown&quot;, &quot;list[f32]&quot;]], [&quot;list_max_rate_pref&quot;, [&quot;unknown&quot;, &quot;list[f32]&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+            "text/plain": ""
           }
         }
       ],
-      "console": [
-        {
-          "type": "stream",
-          "name": "stdout",
-          "text": "Aggregating tariffs within Pref and MFN tables into lists...\n"
-        }
-      ]
+      "console": []
     },
     {
       "id": "Kclp",
+      "code_hash": "e5048c3b5558c3bb5c94db1c4b98d0c7",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "emfo",
+      "code_hash": "f396068071994e97eace88a6986dea36",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Hstk",
       "code_hash": "8137203722d3b55445950604b6ba709c",
       "outputs": [
         {
@@ -126,32 +174,190 @@
       "console": []
     },
     {
-      "id": "emfo",
-      "code_hash": "ecce1cc72f98e52b9c3bd9df3279c295",
-      "outputs": [],
-      "console": []
-    },
-    {
-      "id": "iDIV",
-      "code_hash": "c5b6c481046ff7192aecb1c45458dd79",
+      "id": "nWHF",
+      "code_hash": "aa3497af4a44868acf32fc71730cf024",
       "outputs": [
         {
           "type": "data",
           "data": {
-            "text/html": "<marimo-ui-element object-id='iDIV-0' random-id='8331f779-21eb-a7b3-4810-50800bfdc331'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/3385-2570497-rc8eEaoD.json&quot;' data-total-rows='5' data-total-columns='5' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;partner_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;list_tariff_rate_pref&quot;, [&quot;unknown&quot;, &quot;list[f32]&quot;]], [&quot;list_min_rate_pref&quot;, [&quot;unknown&quot;, &quot;list[f32]&quot;]], [&quot;list_max_rate_pref&quot;, [&quot;unknown&quot;, &quot;list[f32]&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Unique years in dataset:\n['1995', '1996', '1997', '1998', '1999', '2000', '2001', '2002', '2003', '2004', '2005', '2006', '2007', '2008', '2009', '2010', '2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023']\n--- Processing Chunk 1/29: Year = 1995 ---\n    Filtering for correct year\n    Removing duplicate entries, selecting minimum\n    Joining table values\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 2/29: Year = 1996 ---\n    Filtering for correct year\n    Removing duplicate entries, selecting minimum\n    Joining table values\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 3/29: Year = 1997 ---\n    Filtering for correct year\n    Removing duplicate entries, selecting minimum\n    Joining table values\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 4/29: Year = 1998 ---\n    Filtering for correct year\n    Removing duplicate entries, selecting minimum\n    Joining table values\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 5/29: Year = 1999 ---\n    Filtering for correct year\n    Removing duplicate entries, selecting minimum\n    Joining table values\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 6/29: Year = 2000 ---\n    Filtering for correct year\n    Removing duplicate entries, selecting minimum\n    Joining table values\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 7/29: Year = 2001 ---\n    Filtering for correct year\n    Removing duplicate entries, selecting minimum\n    Joining table values\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 8/29: Year = 2002 ---\n    Filtering for correct year\n    Removing duplicate entries, selecting minimum\n    Joining table values\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 9/29: Year = 2003 ---\n    Filtering for correct year\n    Removing duplicate entries, selecting minimum\n    Joining table values\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 10/29: Year = 2004 ---\n    Filtering for correct year\n    Removing duplicate entries, selecting minimum\n    Joining table values\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 11/29: Year = 2005 ---\n    Filtering for correct year\n    Removing duplicate entries, selecting minimum\n    Joining table values\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 12/29: Year = 2006 ---\n    Filtering for correct year\n    Removing duplicate entries, selecting minimum\n    Joining table values\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 13/29: Year = 2007 ---\n    Filtering for correct year\n    Removing duplicate entries, selecting minimum\n    Joining table values\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 14/29: Year = 2008 ---\n    Filtering for correct year\n    Removing duplicate entries, selecting minimum\n    Joining table values\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 15/29: Year = 2009 ---\n    Filtering for correct year\n    Removing duplicate entries, selecting minimum\n    Joining table values\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 16/29: Year = 2010 ---\n    Filtering for correct year\n    Removing duplicate entries, selecting minimum\n    Joining table values\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 17/29: Year = 2011 ---\n    Filtering for correct year\n    Removing duplicate entries, selecting minimum\n    Joining table values\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 18/29: Year = 2012 ---\n    Filtering for correct year\n    Removing duplicate entries, selecting minimum\n    Joining table values\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 19/29: Year = 2013 ---\n    Filtering for correct year\n    Removing duplicate entries, selecting minimum\n    Joining table values\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 20/29: Year = 2014 ---\n    Filtering for correct year\n    Removing duplicate entries, selecting minimum\n    Joining table values\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 21/29: Year = 2015 ---\n    Filtering for correct year\n    Removing duplicate entries, selecting minimum\n    Joining table values\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 22/29: Year = 2016 ---\n    Filtering for correct year\n    Removing duplicate entries, selecting minimum\n    Joining table values\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 23/29: Year = 2017 ---\n    Filtering for correct year\n    Removing duplicate entries, selecting minimum\n    Joining table values\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 24/29: Year = 2018 ---\n    Filtering for correct year\n    Removing duplicate entries, selecting minimum\n    Joining table values\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 25/29: Year = 2019 ---\n    Filtering for correct year\n    Removing duplicate entries, selecting minimum\n    Joining table values\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 26/29: Year = 2020 ---\n    Filtering for correct year\n    Removing duplicate entries, selecting minimum\n    Joining table values\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 27/29: Year = 2021 ---\n    Filtering for correct year\n    Removing duplicate entries, selecting minimum\n    Joining table values\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 28/29: Year = 2022 ---\n    Filtering for correct year\n    Removing duplicate entries, selecting minimum\n    Joining table values\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "--- Processing Chunk 29/29: Year = 2023 ---\n    Filtering for correct year\n    Removing duplicate entries, selecting minimum\n    Joining table values\n    Joining WITS to BACI\n    Coalescing AVEPref and MFN tariffs\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Time elapsed = 5.923300051689148 mins\n-----COMPLETE-----\n"
+        }
+      ]
+    },
+    {
+      "id": "UXeQ",
+      "code_hash": null,
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
           }
         }
       ],
       "console": []
     },
     {
-      "id": "ZYnA",
-      "code_hash": "4f19b3c33e985ddddbec7df8523e23ca",
+      "id": "fRdV",
+      "code_hash": "0b4f797625529c09229321b0866bfde2",
       "outputs": [
         {
           "type": "data",
           "data": {
-            "text/html": "<marimo-ui-element object-id='ZYnA-0' random-id='5ae2b430-ae84-7a76-86ed-08e22857341d'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/829-2570497-NsJ7ZiZs.json&quot;' data-total-rows='5' data-total-columns='5' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;partner_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;list_tariff_rate_mfn&quot;, [&quot;unknown&quot;, &quot;list[f32]&quot;]], [&quot;list_min_rate_mfn&quot;, [&quot;unknown&quot;, &quot;list[f32]&quot;]], [&quot;list_max_rate_mfn&quot;, [&quot;unknown&quot;, &quot;list[f32]&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+            "text/html": "<marimo-ui-element object-id='fRdV-0' random-id='7c4512f8-6886-ca71-e5df-b88030de0127'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;./@file/2699-2633718-6i3YVFaq.json&quot;' data-total-rows='100' data-total-columns='13' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;year&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;reporter_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;partner_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;value&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;quantity&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;tariff_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;min_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;max_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;tariff_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;min_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;max_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;effective_tariff&quot;, [&quot;number&quot;, &quot;f32&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='true' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
           }
         }
       ],

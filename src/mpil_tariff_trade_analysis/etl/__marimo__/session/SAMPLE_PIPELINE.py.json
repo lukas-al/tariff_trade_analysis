@@ -6,54 +6,56 @@
   "cells": [
     {
       "id": "Hbol",
-      "code_hash": "3b03eadcc8b9cbe717a8423de80625ee",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/plain": ""
-          }
-        }
-      ],
+      "code_hash": "c07292114cb2eba48ef20645505fdbf8",
+      "outputs": [],
       "console": []
     },
     {
-      "id": "SKnw",
-      "code_hash": "947c57fb10275c296bda3685fc3ed942",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"sample-pipeline\">Sample Pipeline</h1>\n<span class=\"paragraph\">Create some sub-samples of the data to develop and experiment with</span></span>"
-          }
-        }
-      ],
+      "id": "MJUe",
+      "code_hash": "ef8482c978d599623977b76570f361d0",
+      "outputs": [],
       "console": []
     },
     {
-      "id": "Olmg",
+      "id": "vblA",
+      "code_hash": "e05c97c389549ebf98439e3d577b57bc",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "2c489b95fd2f4a10f8be53bc192f292b",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "ce3f443f04fd59e794199fe4a16b0166",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "PKri",
       "code_hash": "0e7489ca74543273e9818c666f750f48",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"print-some-summary-stats-and-create-smaller-filters\">Print some summary stats, and create smaller filters</h1></span>"
-          }
-        }
-      ],
+      "outputs": [],
       "console": []
     },
     {
-      "id": "ZbUG",
-      "code_hash": "4d6c7cf501fae4e387510f3bab8f3bca",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"write-an-even-smaller-sample\">Write an even smaller sample</h1></span>"
-          }
-        }
-      ],
+      "id": "Xref",
+      "code_hash": "511b5e3e9d0ab164f903fea1307c05c1",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "SFPL",
+      "code_hash": "1b8b08c4aa0db8a9bfcb09cf11d764e7",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "BYtC",
+      "code_hash": "cbfaecc55670879532dfca8195abd957",
+      "outputs": [],
       "console": []
     }
   ]

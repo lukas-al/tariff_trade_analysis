@@ -60,7 +60,7 @@ def _(os, pl, shutil, time):
         # --- Configuration ---
         importer_col = "partner_country"  # Column name for the importing country
         exporter_col = "reporter_country"  # Column name for the exporting country
-        value_col = "volume"  # Column name for the trade value
+        value_col = "value"  # Column name for the trade value
         year_col = "year"  # Column name for the year, used for partitioning
         # Construct a dynamic output path based on parameters
         output_path = (
@@ -201,7 +201,7 @@ def _(
     random,
     shutil,
 ):
-    sample_size = 10000000
+    sample_size = 1000000
     random.seed(42)
     sample_output_path = f"data/final/unified_filtered_{min_trade_value}val_{num_top_countries}c_sample_{int(sample_size/1000)}krows_filter"
 

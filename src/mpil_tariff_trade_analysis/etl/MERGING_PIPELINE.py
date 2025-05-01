@@ -95,7 +95,7 @@ def _(baci, pl):
     ).with_columns(pl.col("year").cast(pl.Utf8))
 
     baci_clean.head().collect()
-    return
+    return (baci_clean,)
 
 
 @app.cell
@@ -110,71 +110,20 @@ def _(mo):
 
 
 @app.cell
-def _(ave_mfn_clean, ave_pref_clean, pl):
-    # set unique_year for testing
-    unique_y = '2020'
+def _():
+    # # set unique_year for testing
+    # unique_y = '2020'
 
-    test_filtered_avepref = ave_pref_clean.filter(pl.col("year") == unique_y).select(
-        "partner_country",
-        "product_code",
-        "tariff_rate_pref",
-        "min_rate_pref",
-        "max_rate_pref",
-    )
+    # test_filtered_avepref = (ave_pref_clean.filter(pl.col("year") == unique_y))
+    # # Reporter applies Pref to imports from Partner.
+    # # So we need to join this partner to BACI's reporter
 
-    # Reporter applies Pref to imports from Partner.
-    # So we need to join this partner to BACI's reporter
-    test_filtered_avemfn = (
-        ave_mfn_clean.filter(pl.col("year") == unique_y)
-        .select(
-            "reporter_country",
-            "product_code",
-            "tariff_rate_mfn",
-            "min_rate_mfn",
-            "max_rate_mfn",
-        )
-        .rename({"reporter_country": "partner_country"})
-    )  # Rename to flip the reporter to be our importer (partner) They are reporting an import duty. So we need to join this 
+    # test_filtered_avemfn = (
+    #     ave_mfn_clean.filter(pl.col("year") == unique_y)
+    #     .rename({"reporter_country": "partner_country"})
+    # )  # Rename to flip the reporter to be our importer (partner) They are reporting an import duty. So we need to join this 
 
 
-    return test_filtered_avemfn, test_filtered_avepref
-
-
-@app.cell
-def _(pl, test_filtered_avepref):
-    print("Aggregating tariffs within Pref and MFN tables into lists...")
-
-    pref_agg_list = test_filtered_avepref.group_by(
-        ["partner_country", "product_code"]
-    ).agg(
-        [
-            pl.col("tariff_rate_pref").alias("list_tariff_rate_pref"),
-            pl.col("min_rate_pref").alias("list_min_rate_pref"),
-            pl.col("max_rate_pref").alias("list_max_rate_pref"),
-        ]
-        # pl.List("tariff_rate_pref").alias("list_tariff_rate_pref"),
-        # pl.List("min_rate_pref").alias("list_min_rate_pref"),
-        # pl.List("max_rate_pref").alias("list_max_rate_pref"),
-        # # Add other pref columns if needed and aggregate them (e.g., pl.first(...) or pl.list(...))
-    )
-
-    pref_agg_list.head().collect()
-
-    return
-
-
-@app.cell
-def _(pl, test_filtered_avemfn):
-    mfn_agg_list = test_filtered_avemfn.group_by(
-        ["partner_country", "product_code"]
-    ).agg(
-        [
-            pl.col("tariff_rate_mfn").alias("list_tariff_rate_mfn"),
-            pl.col("min_rate_mfn").alias("list_min_rate_mfn"),
-            pl.col("max_rate_mfn").alias("list_max_rate_mfn"),
-        ],
-    )
-    mfn_agg_list.head().collect()
     return
 
 
@@ -193,112 +142,152 @@ def _(mo):
 
 
 @app.cell
-def _():
-    # # First get the chunk values
-    # import time
+def _(ave_mfn_clean, ave_pref_clean, baci_clean, pl):
+    # First get the chunk values
+    import time
 
-    # start_time = time.time()
+    start_time = time.time()
 
-    # # unique_years = baci_clean.select("year").unique().collect().to_series().to_list()
-    # # unique_years.sort()
+    # unique_years = baci_clean.select("year").unique().collect().to_series().to_list()
+    # unique_years.sort()
 
-    # # MANUAL OVERRIDE - MUCH QUICKER
-    # unique_years = [
-    #     "1995",
-    #     "1996",
-    #     "1997",
-    #     "1998",
-    #     "1999",
-    #     "2000",
-    #     "2001",
-    #     "2002",
-    #     "2003",
-    #     "2004",
-    #     "2005",
-    #     "2006",
-    #     "2007",
-    #     "2008",
-    #     "2009",
-    #     "2010",
-    #     "2011",
-    #     "2012",
-    #     "2013",
-    #     "2014",
-    #     "2015",
-    #     "2016",
-    #     "2017",
-    #     "2018",
-    #     "2019",
-    #     "2020",
-    #     "2021",
-    #     "2022",
-    #     "2023",
-    # ]
+    # MANUAL OVERRIDE - MUCH QUICKER
+    unique_years = [
+        "1995",
+        "1996",
+        "1997",
+        "1998",
+        "1999",
+        "2000",
+        "2001",
+        "2002",
+        "2003",
+        "2004",
+        "2005",
+        "2006",
+        "2007",
+        "2008",
+        "2009",
+        "2010",
+        "2011",
+        "2012",
+        "2013",
+        "2014",
+        "2015",
+        "2016",
+        "2017",
+        "2018",
+        "2019",
+        "2020",
+        "2021",
+        "2022",
+        "2023",
+    ]
 
-    # print(f"Unique years in dataset:\n{unique_years}")
+    print(f"Unique years in dataset:\n{unique_years}")
 
-    # schema = None
-    # for i, year in enumerate(unique_years):
-    #     print(f"--- Processing Chunk {i + 1}/{len(unique_years)}: Year = {year} ---")
+    for i, year in enumerate(unique_years):
+        print(f"--- Processing Chunk {i + 1}/{len(unique_years)}: Year = {year} ---")
 
-    #     filtered_baci = baci_clean.filter(pl.col("year") == year)
-    #     filtered_avepref = ave_pref_clean.filter(pl.col("year") == year).select(
-    #         "partner_country",
-    #         "product_code",
-    #         "tariff_rate_pref",
-    #         "min_rate_pref",
-    #         "max_rate_pref",
-    #     )
-    #     filtered_avemfn = (
-    #         ave_mfn_clean.filter(pl.col("year") == year)
-    #         .select(
-    #             "reporter_country",
-    #             "product_code",
-    #             "tariff_rate_mfn",
-    #             "min_rate_mfn",
-    #             "max_rate_mfn",
-    #         )
-    #         .rename({"reporter_country": "partner_country"})
-    #     )  # Rename to flip the reporter to be our importer (partner)
+        ### 1. Filtering the correct year
+        print('    Filtering for correct year')
+        filtered_baci = baci_clean.filter(pl.col("year") == year)
+        filtered_avepref = ave_pref_clean.filter(pl.col("year") == year).select(
+            "partner_country",
+            "product_code",
+            'reporter_country',
+            "tariff_rate_pref",
+            "min_rate_pref",
+            "max_rate_pref",
+        )
+        filtered_avemfn = (
+            ave_mfn_clean.filter(pl.col("year") == year)
+            .select(
+                "reporter_country",
+                "product_code",
+                "tariff_rate_mfn",
+                "min_rate_mfn",
+                "max_rate_mfn",
+            )
+            .rename({"reporter_country": "partner_country"})
+        )  # Rename to flip the reporter to be our importer (partner)
 
-    #     # Join avepref to BACI
-    #     # -> WITS pref tariffs are import duties. The importer in BACI is the 'partner'.
-    #     baci_avepref = filtered_baci.join(
-    #         filtered_avepref,
-    #         how="left",
-    #         on=["partner_country", "product_code"],
-    #         maintain_order='left',
-    #     )
+        ### 2. Remove duplicate entries by aggregating and selecting the minimum:
+        print('    Removing duplicate entries, selecting minimum')
+        mfn_mins = filtered_avemfn.group_by(
+            ["partner_country", "product_code"]
+        ).agg(
+            [
+                pl.col("tariff_rate_mfn"),
+                pl.col("min_rate_mfn"),
+                pl.col("max_rate_mfn"),
+            ],
+        ).with_columns( # Get the min value of the collected list
+            pl.col("tariff_rate_mfn").list.min(),
+            pl.col("min_rate_mfn").list.min(),
+            pl.col("max_rate_mfn").list.min(),
+        )
 
-    #     # Join avemfn to BACI
-    #     baci_all = baci_avepref.join(
-    #         filtered_avemfn,
-    #         how="left", 
-    #         on=["partner_country", "product_code"],
-    #         maintain_order='left',
-    #     )
+        pref_mins = filtered_avepref.group_by(
+            ["partner_country", "product_code", "reporter_country"]
+        ).agg(
+            [
+                pl.col("tariff_rate_pref"),
+                pl.col("min_rate_pref"),
+                pl.col("max_rate_pref"),
+            ]
+        ).with_columns(
+            pl.col("tariff_rate_pref").list.min(),
+            pl.col("min_rate_pref").list.min(),
+            pl.col("max_rate_pref").list.min(),
+        )
 
-    #     # Coalesce the MFN and AVEPREF tariffs. Pref takes precedent. If neither then None (so we can count)
-    #     unified_baci_lf = baci_all.with_columns(
-    #         pl.when(pl.col("tariff_rate_pref").is_not_null())
-    #         .then(pl.col("tariff_rate_pref"))
-    #         .otherwise(pl.col("tariff_rate_mfn"))
-    #         .alias("effective_tariff")
-    #     )
+        # Join avepref to BACI
+        # -> WITS pref tariffs are import duties. The importer in BACI is the 'partner'.
+        print('    Joining table values')
+        baci_avepref = filtered_baci.join(
+            pref_mins,
+            how="left",
+            on=["partner_country", "product_code", "reporter_country"],
+            maintain_order='left',
+        )
+        # Join avemfn to BACI
+        baci_all = baci_avepref.join(
+            mfn_mins,
+            how="left", 
+            on=["partner_country", "product_code"],
+            maintain_order='left',
+        )
 
-    #     print("    Joining WITS to BACI")
-    #     print("    Coalescing AVEPref and MFN tariffs")
+        # Coalesce the MFN and AVEPREF tariffs. Pref takes precedent. If neither then None (so we can count)
+        unified_baci_lf = baci_all.with_columns(
+            pl.when(pl.col("tariff_rate_pref").is_not_null())
+            .then(pl.col("tariff_rate_pref"))
+            .otherwise(pl.col("tariff_rate_mfn"))
+            .alias("effective_tariff")
+        )
 
-    #     unified_baci_lf.sink_parquet(
-    #         pl.PartitionByKey(
-    #             base_path="data/final/unified_trade_tariff_partitioned/",
-    #             by=pl.col("year"),
-    #         ),
-    #         mkdir=True,
-    #     )
+        print("    Joining WITS to BACI")
+        print("    Coalescing AVEPref and MFN tariffs")
 
-    # print(f"Time elapsed = {(time.time() - start_time) / 60} mins")
-    # print("-----COMPLETE-----")
+        # break
+
+        unified_baci_lf.sink_parquet(
+            pl.PartitionByKey(
+                base_path="data/final/unified_trade_tariff_partitioned/",
+                by=pl.col("year"),
+            ),
+            mkdir=True,
+        )
+
+    print(f"Time elapsed = {(time.time() - start_time) / 60} mins")
+    print("-----COMPLETE-----")
+    return (unified_baci_lf,)
+
+
+@app.cell
+def _(unified_baci_lf):
+    unified_baci_lf.tail(100).collect()
     return
 
 
