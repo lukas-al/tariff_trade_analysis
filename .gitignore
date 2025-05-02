@@ -30,3 +30,6 @@ logs/*
 # Keep .gitkeep
 !.gitkeep
 .aider*
+
+# HTMLS for charts and marimo notebooks
+*.html
