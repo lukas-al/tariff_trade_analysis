@@ -1,7 +1,7 @@
 {
   "version": "1",
   "metadata": {
-    "marimo_version": "0.13.2"
+    "marimo_version": "0.13.3"
   },
   "cells": [
     {
@@ -24,7 +24,7 @@
     },
     {
       "id": "bkHC",
-      "code_hash": "2c489b95fd2f4a10f8be53bc192f292b",
+      "code_hash": "7724e1e29d59b6b79063c9c7a647120e",
       "outputs": [],
       "console": []
     },
@@ -54,7 +54,7 @@
     },
     {
       "id": "BYtC",
-      "code_hash": "cbfaecc55670879532dfca8195abd957",
+      "code_hash": "1148f3acdae450e45bfb35f951162b19",
       "outputs": [],
       "console": []
     }

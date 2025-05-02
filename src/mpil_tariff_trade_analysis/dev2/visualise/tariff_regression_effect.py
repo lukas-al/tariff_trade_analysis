@@ -11,6 +11,8 @@ def _():
     import marimo as mo
     import polars as pl
     import itertools
+    import functools
+    import operator
     import time
     import math
     import plotly.express as px
@@ -20,7 +22,7 @@ def _():
     import pickle
 
     from tqdm import tqdm
-    return go, make_subplots, mo, pickle, pl, time, tqdm
+    return functools, mo, operator, pickle, pl, px, time, tqdm
 
 
 @app.cell
@@ -45,7 +47,6 @@ def _(mo):
         * What is the change in unit price between those
 
         So first, we need to find those elements where there's a change in the tariff level between t and t+x
-
         """
     )
     return
@@ -127,39 +128,196 @@ def _(data_list, pickle):
 def _(pickle):
     with open("src/mpil_tariff_trade_analysis/dev2/visualise/processed_ts_USA_product_averages.pkl", 'rb') as f:
         saved_data_list = pickle.load(f)
+    return (saved_data_list,)
+
+
+@app.cell
+def _(px, saved_data_list):
+    specific_df = saved_data_list[1110]
+    df_pd = specific_df.to_pandas()
+
+    # # title = f"Product {product}; country {country_name}"
+    # title='test'
+
+    # fig = make_subplots(specs=[[{"secondary_y": True}]])
+
+    # fig.add_trace(
+    #     go.Scatter(x=df_pd['year'], y=df_pd['unit_value'], name='unit_value', mode='lines'),
+    #     secondary_y=False,
+    # )
+
+    # fig.add_trace(
+    #     go.Scatter(x=df_pd['year'], y=df_pd['effective_tariff'], name='effective_tariff', mode='lines'),
+    #     secondary_y=True,
+    # )
+
+    # fig.update_layout(
+    #     title_text=title
+    # )
+
+    # fig.update_yaxes(title_text="unit_value", secondary_y=False)
+    # fig.update_yaxes(title_text="effective_tariff", secondary_y=True)
+    # fig.update_xaxes(title_text="year")
+
+    # fig.show()
+
+    fig = px.line(
+        df_pd,
+        x='year',
+        y=['unit_value', 'effective_tariff'],
+        # title=f"Product {product}; country {country_name}",
+        title="Test"
+    )
+    fig.show()
     return
 
 
 @app.cell
-def _(data_list, go, make_subplots):
-    specific_df = data_list[100]
-    df_pd = specific_df.to_pandas()
+def _(mo):
+    mo.md(
+        r"""
+        # Regression approaches
+        - Simple scatter plot of unitprice change vs tariff change at different intervals
+        - Estimate overall parameters using the above!
+        - More complex panel using some sort of panel OLS with HDFE
+        - Other?
 
-    # title = f"Product {product}; country {country_name}"
-    title='test'
+        ## 1. Simple scatter plot of different subsets of the data
+        """
+    )
+    return
 
-    fig = make_subplots(specs=[[{"secondary_y": True}]])
 
-    fig.add_trace(
-        go.Scatter(x=df_pd['year'], y=df_pd['unit_value'], name='unit_value', mode='lines'),
-        secondary_y=False,
+@app.cell
+def _():
+    # 1. Filter the subset
+    # 2. Identify all cases of tariff increase or decrease
+    # 3. Extract the change in tariffs to the change in price
+    # 4. Store in a list along with some metadata
+    # 5. Plot on a scatter. Use the metadata to group products, countries, etc.
+    # 6. Apply this methodology to the 2018 US-China tariffs on specific goods.
+    # 7. Estimate the coefficient. Estimate statistical significance.
+    return
+
+
+@app.cell
+def _():
+    # Config for subsequent analysis
+    start_year = "2000" # Starting year for analysis
+    end_year = "2023" # End year for analysis
+    year_gap = 1
+
+    reporter_countries = ['156'] # China exporter
+    partner_countries = ['840'] # USA importer
+    # product_codes = ['01'] # Can use the aggregated code values...
+    product_codes = None
+    return (
+        end_year,
+        partner_countries,
+        product_codes,
+        reporter_countries,
+        start_year,
+        year_gap,
     )
 
-    fig.add_trace(
-        go.Scatter(x=df_pd['year'], y=df_pd['effective_tariff'], name='effective_tariff', mode='lines'),
-        secondary_y=True,
+
+@app.cell
+def _(end_year, start_year, year_gap):
+    # For each year in start_year, 
+    year_range_end_excluded = [
+        str(year)
+        for year in range(int(start_year), int(end_year) + 1 - year_gap)
+    ]
+
+    year_pairs = []
+    for year in year_range_end_excluded:
+        year_pairs.append(
+            [
+                year, 
+                str(int(year) + year_gap)
+            ]
+        )
+
+    print(year_pairs)
+    return (year_pairs,)
+
+
+@app.cell
+def _():
+    return
+
+
+@app.cell
+def _(
+    functools,
+    operator,
+    partner_countries,
+    pl,
+    product_codes,
+    reporter_countries,
+    unified_lf,
+    year_pairs,
+):
+    # --- 1. FILTER DATA --- 
+    if reporter_countries:
+        filtered_lf = unified_lf.filter(
+            pl.col('reporter_country').is_in(reporter_countries)
+        )
+
+    if partner_countries:
+        filtered_lf = filtered_lf.filter(
+            pl.col('partner_country').is_in(partner_countries)
+        )
+
+    if product_codes:
+        conditions = [
+            pl.col('product_code').str.slice(0, len(p)) == p
+            for p in product_codes
+        ]
+        combined_condition = functools.reduce(operator.or_, conditions) # Combine conditions with an or
+        filtered_lf = filtered_lf.filter(combined_condition)
+
+    # Create a unit value column
+    filtered_lf = filtered_lf.with_columns(
+        (pl.col('value') / pl.col('quantity')).alias('unit_value')
     )
 
-    fig.update_layout(
-        title_text=title
-    )
+    print("Length post filter:", filtered_lf.select(pl.len()).collect().item())
 
-    fig.update_yaxes(title_text="unit_value", secondary_y=False)
-    fig.update_yaxes(title_text="effective_tariff", secondary_y=True)
-    fig.update_xaxes(title_text="year")
+    # Now find all values within this set where there was a change in tariff between the years and get the magnitude of that change.
+    group_cols = ['reporter_country', 'partner_country', 'product_code'] # This is our UUID
 
-    fig.show()
+    for y1, y2 in year_pairs:
 
+        # --- 2. FIND ROWS WHERE THE EFFECTIVE_TARIFF CHANGED --- 
+        changed_groups_lf = filtered_lf.filter(
+            pl.col('year').is_in([y1, y2])
+        ).group_by(
+            group_cols
+        ).agg(
+            (pl.col('effective_tariff').last() - pl.col('effective_tariff').first()).alias('tariff_difference'),
+            (pl.col('value').last() - pl.col('value').first()).alias('value_difference'),
+            (pl.col('quantity').last() - pl.col('quantity').first()).alias('quantity_difference'),
+            (pl.col('unit_value').last() - pl.col('unit_value').first()).alias('unit_value_difference'),
+        ).filter(
+            pl.col('tariff_difference') > 0.0
+        )
+            
+        print(changed_groups_lf.collect())
+   
+        break
+    return
+
+
+@app.cell
+def _(unified_lf):
+    unified_lf.collect_schema()
+    return
+
+
+@app.cell
+def _(intermediate_years):
+    intermediate_years
     return
 
 

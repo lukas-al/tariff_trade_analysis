@@ -1,0 +1,325 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.13.3"
+  },
+  "cells": [
+    {
+      "id": "Hbol",
+      "code_hash": "a145ca6ac6dcc3364187c29f4805d8cf",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "MJUe",
+      "code_hash": "f2ecd4264d1f122a4f8f3175fc535fda",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='MJUe-0' random-id='d5fb4eba-8b77-b45d-6e4a-999d65fc0086'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;[{&#92;&quot;year&#92;&quot;:&#92;&quot;1995&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;156&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;795&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;051191&#92;&quot;,&#92;&quot;value&#92;&quot;:60.0,&#92;&quot;quantity&#92;&quot;:0.136,&#92;&quot;tariff_rate_pref&#92;&quot;:null,&#92;&quot;min_rate_pref&#92;&quot;:null,&#92;&quot;max_rate_pref&#92;&quot;:null,&#92;&quot;tariff_rate_mfn&#92;&quot;:null,&#92;&quot;min_rate_mfn&#92;&quot;:null,&#92;&quot;max_rate_mfn&#92;&quot;:null,&#92;&quot;effective_tariff&#92;&quot;:null},{&#92;&quot;year&#92;&quot;:&#92;&quot;1995&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;156&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;795&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;090220&#92;&quot;,&#92;&quot;value&#92;&quot;:39.524,&#92;&quot;quantity&#92;&quot;:100.0,&#92;&quot;tariff_rate_pref&#92;&quot;:null,&#92;&quot;min_rate_pref&#92;&quot;:null,&#92;&quot;max_rate_pref&#92;&quot;:null,&#92;&quot;tariff_rate_mfn&#92;&quot;:null,&#92;&quot;min_rate_mfn&#92;&quot;:null,&#92;&quot;max_rate_mfn&#92;&quot;:null,&#92;&quot;effective_tariff&#92;&quot;:null},{&#92;&quot;year&#92;&quot;:&#92;&quot;1995&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;156&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;795&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;090412&#92;&quot;,&#92;&quot;value&#92;&quot;:190.886,&#92;&quot;quantity&#92;&quot;:30.0,&#92;&quot;tariff_rate_pref&#92;&quot;:null,&#92;&quot;min_rate_pref&#92;&quot;:null,&#92;&quot;max_rate_pref&#92;&quot;:null,&#92;&quot;tariff_rate_mfn&#92;&quot;:null,&#92;&quot;min_rate_mfn&#92;&quot;:null,&#92;&quot;max_rate_mfn&#92;&quot;:null,&#92;&quot;effective_tariff&#92;&quot;:null},{&#92;&quot;year&#92;&quot;:&#92;&quot;1995&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;156&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;795&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;091099&#92;&quot;,&#92;&quot;value&#92;&quot;:3.534,&#92;&quot;quantity&#92;&quot;:0.5,&#92;&quot;tariff_rate_pref&#92;&quot;:null,&#92;&quot;min_rate_pref&#92;&quot;:null,&#92;&quot;max_rate_pref&#92;&quot;:null,&#92;&quot;tariff_rate_mfn&#92;&quot;:null,&#92;&quot;min_rate_mfn&#92;&quot;:null,&#92;&quot;max_rate_mfn&#92;&quot;:null,&#92;&quot;effective_tariff&#92;&quot;:null},{&#92;&quot;year&#92;&quot;:&#92;&quot;1995&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;156&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;795&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;170199&#92;&quot;,&#92;&quot;value&#92;&quot;:16.25,&#92;&quot;quantity&#92;&quot;:25.0,&#92;&quot;tariff_rate_pref&#92;&quot;:null,&#92;&quot;min_rate_pref&#92;&quot;:null,&#92;&quot;max_rate_pref&#92;&quot;:null,&#92;&quot;tariff_rate_mfn&#92;&quot;:null,&#92;&quot;min_rate_mfn&#92;&quot;:null,&#92;&quot;max_rate_mfn&#92;&quot;:null,&#92;&quot;effective_tariff&#92;&quot;:null}]&quot;' data-total-rows='5' data-total-columns='13' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;year&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;reporter_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;partner_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;value&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;quantity&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;tariff_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;min_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;max_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;tariff_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;min_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;max_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;effective_tariff&quot;, [&quot;number&quot;, &quot;f32&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "vblA",
+      "code_hash": "13f7ada3f9876dca65f2bcf2cbb11454",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"effect-of-tariff-change-on-unit-price-level\">Effect of tariff change on unit price level</h1>\n<span class=\"paragraph\">Can we identify a relationship between the unit price level at different intervals and the tariff application?</span>\n<span class=\"paragraph\">What we're essentially looking for, is the change in unit price on the X axis and the tariff application on the Y axis, at different time delays.</span>\n<ul>\n<li>If there is a change in the tariff level between t and t+x</li>\n<li>What is the change in unit price between those</li>\n</ul>\n<span class=\"paragraph\">So first, we need to find those elements where there's a change in the tariff level between t and t+x</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "07c1fef821c249a5156e1f56de86a069",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "8ec2239636691ae1f2a296a6f675af99",
+      "outputs": [
+        {
+          "type": "error",
+          "ename": "interruption",
+          "evalue": "This cell was interrupted and needs to be re-run",
+          "traceback": []
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\riterating over table:   0%|                                                                                                                                       | 0/5018 [00:00<?, ?it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\riterating over table:   0%|                                                                                                                             | 1/5018 [00:00<1:11:36,  1.17it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\riterating over table:   0%|                                                                                                                               | 2/5018 [00:00<36:30,  2.29it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\riterating over table:   0%|                                                                                                                               | 3/5018 [00:01<30:08,  2.77it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\riterating over table:   0%|                                                                                                                               | 4/5018 [00:01<28:58,  2.88it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\riterating over table:   0%|\u258f                                                                                                                              | 5/5018 [00:01<27:48,  3.00it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\riterating over table:   0%|\u258f                                                                                                                              | 6/5018 [00:02<29:24,  2.84it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\riterating over table:   0%|\u258f                                                                                                                              | 7/5018 [00:02<24:58,  3.34it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\riterating over table:   0%|\u258f                                                                                                                              | 8/5018 [00:02<22:56,  3.64it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\riterating over table:   0%|\u258f                                                                                                                              | 9/5018 [00:02<19:55,  4.19it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\riterating over table:   0%|\u258e                                                                                                                             | 10/5018 [00:03<22:57,  3.64it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\riterating over table:   0%|\u258e                                                                                                                             | 11/5018 [00:03<28:12,  2.96it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\riterating over table:   0%|\u258e                                                                                                                             | 12/5018 [00:04<28:02,  2.97it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\riterating over table:   0%|\u258e                                                                                                                             | 13/5018 [00:04<32:21,  2.58it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\riterating over table:   0%|\u258e                                                                                                                             | 14/5018 [00:04<33:44,  2.47it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\riterating over table:   0%|\u258d                                                                                                                             | 15/5018 [00:05<30:43,  2.71it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\riterating over table:   0%|\u258d                                                                                                                             | 16/5018 [00:05<25:50,  3.23it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\riterating over table:   0%|\u258d                                                                                                                             | 17/5018 [00:05<29:19,  2.84it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\riterating over table:   0%|\u258d                                                                                                                             | 18/5018 [00:06<27:28,  3.03it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\riterating over table:   0%|\u258d                                                                                                                             | 19/5018 [00:06<23:17,  3.58it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\riterating over table:   0%|\u258c                                                                                                                             | 20/5018 [00:06<27:52,  2.99it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\riterating over table:   0%|\u258c                                                                                                                             | 21/5018 [00:07<27:47,  3.00it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\riterating over table:   0%|\u258c                                                                                                                             | 22/5018 [00:07<26:26,  3.15it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\riterating over table:   0%|\u258c                                                                                                                             | 23/5018 [00:07<30:40,  2.71it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\riterating over table:   0%|\u258c                                                                                                                             | 24/5018 [00:08<24:56,  3.34it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\riterating over table:   0%|\u258b                                                                                                                             | 25/5018 [00:08<21:15,  3.91it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\riterating over table:   1%|\u258b                                                                                                                             | 26/5018 [00:08<19:50,  4.19it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\riterating over table:   1%|\u258b                                                                                                                             | 27/5018 [00:08<22:59,  3.62it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\riterating over table:   1%|\u258b                                                                                                                             | 28/5018 [00:09<27:34,  3.02it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\riterating over table:   1%|\u258b                                                                                                                             | 29/5018 [00:09<30:19,  2.74it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\riterating over table:   1%|\u258a                                                                                                                             | 30/5018 [00:10<30:43,  2.71it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\riterating over table:   1%|\u258a                                                                                                                             | 31/5018 [00:10<32:12,  2.58it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\riterating over table:   1%|\u258a                                                                                                                             | 32/5018 [00:10<29:43,  2.80it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\riterating over table:   1%|\u258a                                                                                                                             | 33/5018 [00:11<30:50,  2.69it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\riterating over table:   1%|\u258a                                                                                                                             | 34/5018 [00:11<31:13,  2.66it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\riterating over table:   1%|\u2589                                                                                                                             | 35/5018 [00:11<30:42,  2.71it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\riterating over table:   1%|\u2589                                                                                                                             | 36/5018 [00:12<28:13,  2.94it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "\riterating over table:   1%|\u2589                                                                                                                             | 37/5018 [00:12<32:03,  2.59it/s]"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "Exception ignored in: <generator object tqdm.__iter__ at 0x109fa0700>\nTraceback (most recent call last):\n  File \"/Users/lukasalemu/Documents/00. Bank of England/03. MPIL/tariff_trade_analysis/.venv/lib/python3.13/site-packages/tqdm/std.py\", line 1196, in __iter__\n    self.close()\n  File \"/Users/lukasalemu/Documents/00. Bank of England/03. MPIL/tariff_trade_analysis/.venv/lib/python3.13/site-packages/tqdm/std.py\", line 1265, in close\n    def close(self):\n  File \"/Users/lukasalemu/Documents/00. Bank of England/03. MPIL/tariff_trade_analysis/.venv/lib/python3.13/site-packages/marimo/_runtime/handlers.py\", line 32, in interrupt_handler\n    raise MarimoInterrupt\nKeyboardInterrupt: \n\riterating over table:   1%|\u2589                                                                                                                             | 37/5018 [00:12<29:01,  2.86it/s]\n"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "<span class=\"codehilite\"><div class=\"highlight\"><pre><span></span><span class=\"gt\">Traceback (most recent call last):</span>\n  File <span class=\"nb\">&quot;/Users/lukasalemu/Documents/00. Bank of England/03. MPIL/tariff_trade_analysis/.venv/lib/python3.13/site-packages/marimo/_runtime/executor.py&quot;</span>, line <span class=\"m\">141</span>, in <span class=\"n\">execute_cell</span>\n<span class=\"w\">    </span><span class=\"n\">exec</span><span class=\"p\">(</span><span class=\"n\">cell</span><span class=\"o\">.</span><span class=\"n\">body</span><span class=\"p\">,</span> <span class=\"n\">glbls</span><span class=\"p\">)</span>\n<span class=\"w\">    </span><span class=\"pm\">~~~~^^^^^^^^^^^^^^^^^^</span>\n  File <span class=\"nb\">&quot;/var/folders/df/j998nyn11sdf0w5cf48pny6m0000gn/T/marimo_82226/__marimo__cell_lEQa_.py&quot;</span>, line <span class=\"m\">27</span>, in <span class=\"n\">&lt;module&gt;</span>\n<span class=\"w\">    </span><span class=\"n\">df</span> <span class=\"o\">=</span> <span class=\"n\">product_vals</span><span class=\"o\">.</span><span class=\"n\">collect</span><span class=\"p\">()</span>\n  File <span class=\"nb\">&quot;/Users/lukasalemu/Documents/00. Bank of England/03. MPIL/tariff_trade_analysis/.venv/lib/python3.13/site-packages/polars/_utils/deprecation.py&quot;</span>, line <span class=\"m\">93</span>, in <span class=\"n\">wrapper</span>\n<span class=\"w\">    </span><span class=\"k\">return</span> <span class=\"n\">function</span><span class=\"p\">(</span><span class=\"o\">*</span><span class=\"n\">args</span><span class=\"p\">,</span> <span class=\"o\">**</span><span class=\"n\">kwargs</span><span class=\"p\">)</span>\n  File <span class=\"nb\">&quot;/Users/lukasalemu/Documents/00. Bank of England/03. MPIL/tariff_trade_analysis/.venv/lib/python3.13/site-packages/polars/lazyframe/frame.py&quot;</span>, line <span class=\"m\">2224</span>, in <span class=\"n\">collect</span>\n<span class=\"w\">    </span><span class=\"k\">return</span> <span class=\"n\">wrap_df</span><span class=\"p\">(</span><span class=\"n\">ldf</span><span class=\"o\">.</span><span class=\"n\">collect</span><span class=\"p\">(</span><span class=\"n\">engine</span><span class=\"p\">,</span> <span class=\"n\">callback</span><span class=\"p\">))</span>\n<span class=\"w\">                   </span><span class=\"pm\">~~~~~~~~~~~^^^^^^^^^^^^^^^^^^</span>\n<span class=\"gr\">KeyboardInterrupt</span>\n</pre></div>\n</span>"
+        }
+      ]
+    },
+    {
+      "id": "PKri",
+      "code_hash": "cd897b796f5bbc25d391bee1e23ee754",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "Xref",
+      "code_hash": "c57e7a3bce8864b0a2e335ba45428939",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "SFPL",
+      "code_hash": "a3352d4cdb997b2b9f8adc640c358a7d",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "<marimo-plotly data-figure='{&quot;data&quot;: [{&quot;hovertemplate&quot;: &quot;variable=unit_value&lt;br&gt;year=%{x}&lt;br&gt;value=%{y}&lt;extra&gt;&lt;/extra&gt;&quot;, &quot;legendgroup&quot;: &quot;unit_value&quot;, &quot;line&quot;: {&quot;color&quot;: &quot;#636efa&quot;, &quot;dash&quot;: &quot;solid&quot;}, &quot;marker&quot;: {&quot;symbol&quot;: &quot;circle&quot;}, &quot;mode&quot;: &quot;lines&quot;, &quot;name&quot;: &quot;unit_value&quot;, &quot;orientation&quot;: &quot;v&quot;, &quot;showlegend&quot;: true, &quot;x&quot;: [&quot;1995&quot;, &quot;1996&quot;, &quot;1997&quot;, &quot;1998&quot;, &quot;1999&quot;, &quot;2000&quot;, &quot;2001&quot;, &quot;2002&quot;, &quot;2003&quot;, &quot;2004&quot;, &quot;2005&quot;, &quot;2006&quot;, &quot;2007&quot;, &quot;2008&quot;, &quot;2009&quot;, &quot;2010&quot;, &quot;2011&quot;, &quot;2012&quot;, &quot;2013&quot;, &quot;2014&quot;, &quot;2015&quot;, &quot;2016&quot;, &quot;2017&quot;, &quot;2018&quot;, &quot;2019&quot;, &quot;2020&quot;, &quot;2021&quot;, &quot;2022&quot;, &quot;2023&quot;], &quot;xaxis&quot;: &quot;x&quot;, &quot;y&quot;: {&quot;dtype&quot;: &quot;f8&quot;, &quot;bdata&quot;: &quot;VLPYsQqzSUBGOI3+NuVQQHvMeghlSlJAlWVXZpchVUBB1bTJdbVDQCuoegwtYkdAdKiVtBw1RkDGgoC1SIRJQGRyJa0NvFBAud7j1QYVTUDeLi78MHJJQOIGdM35nU5AKT/RHXc0UUB5za1BxEJTQHiq8dlJmVRAWWGhgMcxVEAMyMu4LIFRQNUnwUxOnFJAdtXTma/4U0BZwgVRi/tTQC1gLGDooFNA95a8JsokU0DyucCIWmNVQICmFbu0N1VAJIKbJVVZVkCFLtI98bxWQPumjYRSdFRAKA5JmisvWEAwqPpnXblXQA==&quot;}, &quot;yaxis&quot;: &quot;y&quot;, &quot;type&quot;: &quot;scatter&quot;}, {&quot;hovertemplate&quot;: &quot;variable=effective_tariff&lt;br&gt;year=%{x}&lt;br&gt;value=%{y}&lt;extra&gt;&lt;/extra&gt;&quot;, &quot;legendgroup&quot;: &quot;effective_tariff&quot;, &quot;line&quot;: {&quot;color&quot;: &quot;#EF553B&quot;, &quot;dash&quot;: &quot;solid&quot;}, &quot;marker&quot;: {&quot;symbol&quot;: &quot;circle&quot;}, &quot;mode&quot;: &quot;lines&quot;, &quot;name&quot;: &quot;effective_tariff&quot;, &quot;orientation&quot;: &quot;v&quot;, &quot;showlegend&quot;: true, &quot;x&quot;: [&quot;1995&quot;, &quot;1996&quot;, &quot;1997&quot;, &quot;1998&quot;, &quot;1999&quot;, &quot;2000&quot;, &quot;2001&quot;, &quot;2002&quot;, &quot;2003&quot;, &quot;2004&quot;, &quot;2005&quot;, &quot;2006&quot;, &quot;2007&quot;, &quot;2008&quot;, &quot;2009&quot;, &quot;2010&quot;, &quot;2011&quot;, &quot;2012&quot;, &quot;2013&quot;, &quot;2014&quot;, &quot;2015&quot;, &quot;2016&quot;, &quot;2017&quot;, &quot;2018&quot;, &quot;2019&quot;, &quot;2020&quot;, &quot;2021&quot;, &quot;2022&quot;, &quot;2023&quot;], &quot;xaxis&quot;: &quot;x&quot;, &quot;y&quot;: {&quot;dtype&quot;: &quot;f8&quot;, &quot;bdata&quot;: &quot;AAAAwDMzA0AAAABgzMwAQAAAAGBnZv4/AAAAQMzM8D8AAADA16PoPwAAAKDMzOQ/AAAA4MzM5D8AAACAH4XbPwAAAEDNzOQ/AAAAQM3M5D8AAABAzczkPwAAAGDNzOQ/AAAAAAAAAAAAAACAzczkPwAAAMDNzOQ/AAAAoM3M5D8AAADAzczkPwAAAKDNzOQ/AAAAgM3M5D8AAACgzczkPwAAAIDNzOQ/AAAAwM3M5D8AAAAgzszcPwAAAMAyM9M/AAAAwDIzwz8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==&quot;}, &quot;yaxis&quot;: &quot;y&quot;, &quot;type&quot;: &quot;scatter&quot;}], &quot;layout&quot;: {&quot;template&quot;: {&quot;data&quot;: {&quot;histogram2dcontour&quot;: [{&quot;type&quot;: &quot;histogram2dcontour&quot;, &quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}, &quot;colorscale&quot;: [[0.0, &quot;#0d0887&quot;], [0.1111111111111111, &quot;#46039f&quot;], [0.2222222222222222, &quot;#7201a8&quot;], [0.3333333333333333, &quot;#9c179e&quot;], [0.4444444444444444, &quot;#bd3786&quot;], [0.5555555555555556, &quot;#d8576b&quot;], [0.6666666666666666, &quot;#ed7953&quot;], [0.7777777777777778, &quot;#fb9f3a&quot;], [0.8888888888888888, &quot;#fdca26&quot;], [1.0, &quot;#f0f921&quot;]]}], &quot;choropleth&quot;: [{&quot;type&quot;: &quot;choropleth&quot;, &quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}}], &quot;histogram2d&quot;: [{&quot;type&quot;: &quot;histogram2d&quot;, &quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}, &quot;colorscale&quot;: [[0.0, &quot;#0d0887&quot;], [0.1111111111111111, &quot;#46039f&quot;], [0.2222222222222222, &quot;#7201a8&quot;], [0.3333333333333333, &quot;#9c179e&quot;], [0.4444444444444444, &quot;#bd3786&quot;], [0.5555555555555556, &quot;#d8576b&quot;], [0.6666666666666666, &quot;#ed7953&quot;], [0.7777777777777778, &quot;#fb9f3a&quot;], [0.8888888888888888, &quot;#fdca26&quot;], [1.0, &quot;#f0f921&quot;]]}], &quot;heatmap&quot;: [{&quot;type&quot;: &quot;heatmap&quot;, &quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}, &quot;colorscale&quot;: [[0.0, &quot;#0d0887&quot;], [0.1111111111111111, &quot;#46039f&quot;], [0.2222222222222222, &quot;#7201a8&quot;], [0.3333333333333333, &quot;#9c179e&quot;], [0.4444444444444444, &quot;#bd3786&quot;], [0.5555555555555556, &quot;#d8576b&quot;], [0.6666666666666666, &quot;#ed7953&quot;], [0.7777777777777778, &quot;#fb9f3a&quot;], [0.8888888888888888, &quot;#fdca26&quot;], [1.0, &quot;#f0f921&quot;]]}], &quot;contourcarpet&quot;: [{&quot;type&quot;: &quot;contourcarpet&quot;, &quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}}], &quot;contour&quot;: [{&quot;type&quot;: &quot;contour&quot;, &quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}, &quot;colorscale&quot;: [[0.0, &quot;#0d0887&quot;], [0.1111111111111111, &quot;#46039f&quot;], [0.2222222222222222, &quot;#7201a8&quot;], [0.3333333333333333, &quot;#9c179e&quot;], [0.4444444444444444, &quot;#bd3786&quot;], [0.5555555555555556, &quot;#d8576b&quot;], [0.6666666666666666, &quot;#ed7953&quot;], [0.7777777777777778, &quot;#fb9f3a&quot;], [0.8888888888888888, &quot;#fdca26&quot;], [1.0, &quot;#f0f921&quot;]]}], &quot;surface&quot;: [{&quot;type&quot;: &quot;surface&quot;, &quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}, &quot;colorscale&quot;: [[0.0, &quot;#0d0887&quot;], [0.1111111111111111, &quot;#46039f&quot;], [0.2222222222222222, &quot;#7201a8&quot;], [0.3333333333333333, &quot;#9c179e&quot;], [0.4444444444444444, &quot;#bd3786&quot;], [0.5555555555555556, &quot;#d8576b&quot;], [0.6666666666666666, &quot;#ed7953&quot;], [0.7777777777777778, &quot;#fb9f3a&quot;], [0.8888888888888888, &quot;#fdca26&quot;], [1.0, &quot;#f0f921&quot;]]}], &quot;mesh3d&quot;: [{&quot;type&quot;: &quot;mesh3d&quot;, &quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}}], &quot;scatter&quot;: [{&quot;fillpattern&quot;: {&quot;fillmode&quot;: &quot;overlay&quot;, &quot;size&quot;: 10, &quot;solidity&quot;: 0.2}, &quot;type&quot;: &quot;scatter&quot;}], &quot;parcoords&quot;: [{&quot;type&quot;: &quot;parcoords&quot;, &quot;line&quot;: {&quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}}}], &quot;scatterpolargl&quot;: [{&quot;type&quot;: &quot;scatterpolargl&quot;, &quot;marker&quot;: {&quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}}}], &quot;bar&quot;: [{&quot;error_x&quot;: {&quot;color&quot;: &quot;#2a3f5f&quot;}, &quot;error_y&quot;: {&quot;color&quot;: &quot;#2a3f5f&quot;}, &quot;marker&quot;: {&quot;line&quot;: {&quot;color&quot;: &quot;#E5ECF6&quot;, &quot;width&quot;: 0.5}, &quot;pattern&quot;: {&quot;fillmode&quot;: &quot;overlay&quot;, &quot;size&quot;: 10, &quot;solidity&quot;: 0.2}}, &quot;type&quot;: &quot;bar&quot;}], &quot;scattergeo&quot;: [{&quot;type&quot;: &quot;scattergeo&quot;, &quot;marker&quot;: {&quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}}}], &quot;scatterpolar&quot;: [{&quot;type&quot;: &quot;scatterpolar&quot;, &quot;marker&quot;: {&quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}}}], &quot;histogram&quot;: [{&quot;marker&quot;: {&quot;pattern&quot;: {&quot;fillmode&quot;: &quot;overlay&quot;, &quot;size&quot;: 10, &quot;solidity&quot;: 0.2}}, &quot;type&quot;: &quot;histogram&quot;}], &quot;scattergl&quot;: [{&quot;type&quot;: &quot;scattergl&quot;, &quot;marker&quot;: {&quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}}}], &quot;scatter3d&quot;: [{&quot;type&quot;: &quot;scatter3d&quot;, &quot;line&quot;: {&quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}}, &quot;marker&quot;: {&quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}}}], &quot;scattermap&quot;: [{&quot;type&quot;: &quot;scattermap&quot;, &quot;marker&quot;: {&quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}}}], &quot;scattermapbox&quot;: [{&quot;type&quot;: &quot;scattermapbox&quot;, &quot;marker&quot;: {&quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}}}], &quot;scatterternary&quot;: [{&quot;type&quot;: &quot;scatterternary&quot;, &quot;marker&quot;: {&quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}}}], &quot;scattercarpet&quot;: [{&quot;type&quot;: &quot;scattercarpet&quot;, &quot;marker&quot;: {&quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}}}], &quot;carpet&quot;: [{&quot;aaxis&quot;: {&quot;endlinecolor&quot;: &quot;#2a3f5f&quot;, &quot;gridcolor&quot;: &quot;white&quot;, &quot;linecolor&quot;: &quot;white&quot;, &quot;minorgridcolor&quot;: &quot;white&quot;, &quot;startlinecolor&quot;: &quot;#2a3f5f&quot;}, &quot;baxis&quot;: {&quot;endlinecolor&quot;: &quot;#2a3f5f&quot;, &quot;gridcolor&quot;: &quot;white&quot;, &quot;linecolor&quot;: &quot;white&quot;, &quot;minorgridcolor&quot;: &quot;white&quot;, &quot;startlinecolor&quot;: &quot;#2a3f5f&quot;}, &quot;type&quot;: &quot;carpet&quot;}], &quot;table&quot;: [{&quot;cells&quot;: {&quot;fill&quot;: {&quot;color&quot;: &quot;#EBF0F8&quot;}, &quot;line&quot;: {&quot;color&quot;: &quot;white&quot;}}, &quot;header&quot;: {&quot;fill&quot;: {&quot;color&quot;: &quot;#C8D4E3&quot;}, &quot;line&quot;: {&quot;color&quot;: &quot;white&quot;}}, &quot;type&quot;: &quot;table&quot;}], &quot;barpolar&quot;: [{&quot;marker&quot;: {&quot;line&quot;: {&quot;color&quot;: &quot;#E5ECF6&quot;, &quot;width&quot;: 0.5}, &quot;pattern&quot;: {&quot;fillmode&quot;: &quot;overlay&quot;, &quot;size&quot;: 10, &quot;solidity&quot;: 0.2}}, &quot;type&quot;: &quot;barpolar&quot;}], &quot;pie&quot;: [{&quot;automargin&quot;: true, &quot;type&quot;: &quot;pie&quot;}]}, &quot;layout&quot;: {&quot;autotypenumbers&quot;: &quot;strict&quot;, &quot;colorway&quot;: [&quot;#636efa&quot;, &quot;#EF553B&quot;, &quot;#00cc96&quot;, &quot;#ab63fa&quot;, &quot;#FFA15A&quot;, &quot;#19d3f3&quot;, &quot;#FF6692&quot;, &quot;#B6E880&quot;, &quot;#FF97FF&quot;, &quot;#FECB52&quot;], &quot;font&quot;: {&quot;color&quot;: &quot;#2a3f5f&quot;}, &quot;hovermode&quot;: &quot;closest&quot;, &quot;hoverlabel&quot;: {&quot;align&quot;: &quot;left&quot;}, &quot;paper_bgcolor&quot;: &quot;white&quot;, &quot;plot_bgcolor&quot;: &quot;#E5ECF6&quot;, &quot;polar&quot;: {&quot;bgcolor&quot;: &quot;#E5ECF6&quot;, &quot;angularaxis&quot;: {&quot;gridcolor&quot;: &quot;white&quot;, &quot;linecolor&quot;: &quot;white&quot;, &quot;ticks&quot;: &quot;&quot;}, &quot;radialaxis&quot;: {&quot;gridcolor&quot;: &quot;white&quot;, &quot;linecolor&quot;: &quot;white&quot;, &quot;ticks&quot;: &quot;&quot;}}, &quot;ternary&quot;: {&quot;bgcolor&quot;: &quot;#E5ECF6&quot;, &quot;aaxis&quot;: {&quot;gridcolor&quot;: &quot;white&quot;, &quot;linecolor&quot;: &quot;white&quot;, &quot;ticks&quot;: &quot;&quot;}, &quot;baxis&quot;: {&quot;gridcolor&quot;: &quot;white&quot;, &quot;linecolor&quot;: &quot;white&quot;, &quot;ticks&quot;: &quot;&quot;}, &quot;caxis&quot;: {&quot;gridcolor&quot;: &quot;white&quot;, &quot;linecolor&quot;: &quot;white&quot;, &quot;ticks&quot;: &quot;&quot;}}, &quot;coloraxis&quot;: {&quot;colorbar&quot;: {&quot;outlinewidth&quot;: 0, &quot;ticks&quot;: &quot;&quot;}}, &quot;colorscale&quot;: {&quot;sequential&quot;: [[0.0, &quot;#0d0887&quot;], [0.1111111111111111, &quot;#46039f&quot;], [0.2222222222222222, &quot;#7201a8&quot;], [0.3333333333333333, &quot;#9c179e&quot;], [0.4444444444444444, &quot;#bd3786&quot;], [0.5555555555555556, &quot;#d8576b&quot;], [0.6666666666666666, &quot;#ed7953&quot;], [0.7777777777777778, &quot;#fb9f3a&quot;], [0.8888888888888888, &quot;#fdca26&quot;], [1.0, &quot;#f0f921&quot;]], &quot;sequentialminus&quot;: [[0.0, &quot;#0d0887&quot;], [0.1111111111111111, &quot;#46039f&quot;], [0.2222222222222222, &quot;#7201a8&quot;], [0.3333333333333333, &quot;#9c179e&quot;], [0.4444444444444444, &quot;#bd3786&quot;], [0.5555555555555556, &quot;#d8576b&quot;], [0.6666666666666666, &quot;#ed7953&quot;], [0.7777777777777778, &quot;#fb9f3a&quot;], [0.8888888888888888, &quot;#fdca26&quot;], [1.0, &quot;#f0f921&quot;]], &quot;diverging&quot;: [[0, &quot;#8e0152&quot;], [0.1, &quot;#c51b7d&quot;], [0.2, &quot;#de77ae&quot;], [0.3, &quot;#f1b6da&quot;], [0.4, &quot;#fde0ef&quot;], [0.5, &quot;#f7f7f7&quot;], [0.6, &quot;#e6f5d0&quot;], [0.7, &quot;#b8e186&quot;], [0.8, &quot;#7fbc41&quot;], [0.9, &quot;#4d9221&quot;], [1, &quot;#276419&quot;]]}, &quot;xaxis&quot;: {&quot;gridcolor&quot;: &quot;white&quot;, &quot;linecolor&quot;: &quot;white&quot;, &quot;ticks&quot;: &quot;&quot;, &quot;title&quot;: {&quot;standoff&quot;: 15}, &quot;zerolinecolor&quot;: &quot;white&quot;, &quot;automargin&quot;: true, &quot;zerolinewidth&quot;: 2}, &quot;yaxis&quot;: {&quot;gridcolor&quot;: &quot;white&quot;, &quot;linecolor&quot;: &quot;white&quot;, &quot;ticks&quot;: &quot;&quot;, &quot;title&quot;: {&quot;standoff&quot;: 15}, &quot;zerolinecolor&quot;: &quot;white&quot;, &quot;automargin&quot;: true, &quot;zerolinewidth&quot;: 2}, &quot;scene&quot;: {&quot;xaxis&quot;: {&quot;backgroundcolor&quot;: &quot;#E5ECF6&quot;, &quot;gridcolor&quot;: &quot;white&quot;, &quot;linecolor&quot;: &quot;white&quot;, &quot;showbackground&quot;: true, &quot;ticks&quot;: &quot;&quot;, &quot;zerolinecolor&quot;: &quot;white&quot;, &quot;gridwidth&quot;: 2}, &quot;yaxis&quot;: {&quot;backgroundcolor&quot;: &quot;#E5ECF6&quot;, &quot;gridcolor&quot;: &quot;white&quot;, &quot;linecolor&quot;: &quot;white&quot;, &quot;showbackground&quot;: true, &quot;ticks&quot;: &quot;&quot;, &quot;zerolinecolor&quot;: &quot;white&quot;, &quot;gridwidth&quot;: 2}, &quot;zaxis&quot;: {&quot;backgroundcolor&quot;: &quot;#E5ECF6&quot;, &quot;gridcolor&quot;: &quot;white&quot;, &quot;linecolor&quot;: &quot;white&quot;, &quot;showbackground&quot;: true, &quot;ticks&quot;: &quot;&quot;, &quot;zerolinecolor&quot;: &quot;white&quot;, &quot;gridwidth&quot;: 2}}, &quot;shapedefaults&quot;: {&quot;line&quot;: {&quot;color&quot;: &quot;#2a3f5f&quot;}}, &quot;annotationdefaults&quot;: {&quot;arrowcolor&quot;: &quot;#2a3f5f&quot;, &quot;arrowhead&quot;: 0, &quot;arrowwidth&quot;: 1}, &quot;geo&quot;: {&quot;bgcolor&quot;: &quot;white&quot;, &quot;landcolor&quot;: &quot;#E5ECF6&quot;, &quot;subunitcolor&quot;: &quot;white&quot;, &quot;showland&quot;: true, &quot;showlakes&quot;: true, &quot;lakecolor&quot;: &quot;white&quot;}, &quot;title&quot;: {&quot;x&quot;: 0.05}, &quot;mapbox&quot;: {&quot;style&quot;: &quot;light&quot;}}}, &quot;xaxis&quot;: {&quot;anchor&quot;: &quot;y&quot;, &quot;domain&quot;: [0.0, 1.0], &quot;title&quot;: {&quot;text&quot;: &quot;year&quot;}}, &quot;yaxis&quot;: {&quot;anchor&quot;: &quot;x&quot;, &quot;domain&quot;: [0.0, 1.0], &quot;title&quot;: {&quot;text&quot;: &quot;value&quot;}}, &quot;legend&quot;: {&quot;title&quot;: {&quot;text&quot;: &quot;variable&quot;}, &quot;tracegroupgap&quot;: 0}, &quot;title&quot;: {&quot;text&quot;: &quot;Test&quot;}, &quot;dragmode&quot;: &quot;zoom&quot;}}' data-config='{}'></marimo-plotly>"
+        }
+      ]
+    },
+    {
+      "id": "PNqJ",
+      "code_hash": "f04752e2901cba3861dac9f45334f5ff",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='PNqJ-0' random-id='1666f858-aa42-6596-805c-b61921eb6ff0'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;[{&#92;&quot;year&#92;&quot;:&#92;&quot;2023&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;840&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;398&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;970110&#92;&quot;,&#92;&quot;value&#92;&quot;:14.076,&#92;&quot;quantity&#92;&quot;:0.281,&#92;&quot;tariff_rate_pref&#92;&quot;:null,&#92;&quot;min_rate_pref&#92;&quot;:null,&#92;&quot;max_rate_pref&#92;&quot;:null,&#92;&quot;tariff_rate_mfn&#92;&quot;:0.0,&#92;&quot;min_rate_mfn&#92;&quot;:0.0,&#92;&quot;max_rate_mfn&#92;&quot;:0.0,&#92;&quot;effective_tariff&#92;&quot;:0.0},{&#92;&quot;year&#92;&quot;:&#92;&quot;2023&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;840&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;398&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;970190&#92;&quot;,&#92;&quot;value&#92;&quot;:4.857,&#92;&quot;quantity&#92;&quot;:0.053,&#92;&quot;tariff_rate_pref&#92;&quot;:null,&#92;&quot;min_rate_pref&#92;&quot;:null,&#92;&quot;max_rate_pref&#92;&quot;:null,&#92;&quot;tariff_rate_mfn&#92;&quot;:0.0,&#92;&quot;min_rate_mfn&#92;&quot;:0.0,&#92;&quot;max_rate_mfn&#92;&quot;:0.0,&#92;&quot;effective_tariff&#92;&quot;:0.0},{&#92;&quot;year&#92;&quot;:&#92;&quot;2023&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;840&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;398&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;970300&#92;&quot;,&#92;&quot;value&#92;&quot;:214.615,&#92;&quot;quantity&#92;&quot;:0.472,&#92;&quot;tariff_rate_pref&#92;&quot;:null,&#92;&quot;min_rate_pref&#92;&quot;:null,&#92;&quot;max_rate_pref&#92;&quot;:null,&#92;&quot;tariff_rate_mfn&#92;&quot;:0.0,&#92;&quot;min_rate_mfn&#92;&quot;:0.0,&#92;&quot;max_rate_mfn&#92;&quot;:0.0,&#92;&quot;effective_tariff&#92;&quot;:0.0},{&#92;&quot;year&#92;&quot;:&#92;&quot;2023&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;840&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;398&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;970500&#92;&quot;,&#92;&quot;value&#92;&quot;:360.824,&#92;&quot;quantity&#92;&quot;:1.194,&#92;&quot;tariff_rate_pref&#92;&quot;:null,&#92;&quot;min_rate_pref&#92;&quot;:null,&#92;&quot;max_rate_pref&#92;&quot;:null,&#92;&quot;tariff_rate_mfn&#92;&quot;:0.0,&#92;&quot;min_rate_mfn&#92;&quot;:0.0,&#92;&quot;max_rate_mfn&#92;&quot;:0.0,&#92;&quot;effective_tariff&#92;&quot;:0.0},{&#92;&quot;year&#92;&quot;:&#92;&quot;2023&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;840&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;398&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;970600&#92;&quot;,&#92;&quot;value&#92;&quot;:32.76,&#92;&quot;quantity&#92;&quot;:0.035,&#92;&quot;tariff_rate_pref&#92;&quot;:null,&#92;&quot;min_rate_pref&#92;&quot;:null,&#92;&quot;max_rate_pref&#92;&quot;:null,&#92;&quot;tariff_rate_mfn&#92;&quot;:0.0,&#92;&quot;min_rate_mfn&#92;&quot;:0.0,&#92;&quot;max_rate_mfn&#92;&quot;:0.0,&#92;&quot;effective_tariff&#92;&quot;:0.0}]&quot;' data-total-rows='5' data-total-columns='13' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;year&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;reporter_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;partner_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;value&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;quantity&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;tariff_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;min_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;max_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;tariff_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;min_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;max_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;effective_tariff&quot;, [&quot;number&quot;, &quot;f32&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    }
+  ]
+}
