@@ -8,18 +8,14 @@ app = marimo.App(width="medium")
 
 @app.cell
 def _():
-    import marimo as mo
-    import polars as pl
-    import itertools
-    import time
-    import math
-    import plotly.express as px
-    import plotly.graph_objects as go
-    from plotly.subplots import make_subplots
-    import pycountry
     import pickle
+    import time
 
+    import marimo as mo
+    import plotly.express as px
+    import polars as pl
     from tqdm import tqdm
+
     return mo, pickle, pl, px, time, tqdm
 
 
@@ -56,15 +52,17 @@ def _(unified_lf):
     # This means we need to create time series of each product and country pair. Or we could simply iterate over the whole table? Maybe that's actually fine.
 
     # Unique list of all countries
-    country_list = set(unified_lf.select('reporter_country').unique().collect()['reporter_country'].to_list()).intersection(
-        unified_lf.select('partner_country').unique().collect()['partner_country'].to_list()
+    country_list = set(
+        unified_lf.select("reporter_country").unique().collect()["reporter_country"].to_list()
+    ).intersection(
+        unified_lf.select("partner_country").unique().collect()["partner_country"].to_list()
     )
 
     # List of all years
-    year_list = unified_lf.select('year').unique().collect()['year'].to_list()
+    year_list = unified_lf.select("year").unique().collect()["year"].to_list()
 
     # List of all products
-    product_list = unified_lf.select('product_code').unique().collect()['product_code'].to_list()
+    product_list = unified_lf.select("product_code").unique().collect()["product_code"].to_list()
     return (product_list,)
 
 
@@ -75,7 +73,7 @@ def _(pl, product_list, time, tqdm, unified_lf):
     starttime = time.time()
     # for country, product in tqdm(itertools.product(country_list, product_list)):
     for product in tqdm(product_list, desc="iterating over table"):
-        country = '840' # Fix to be USA for now
+        country = "840"  # Fix to be USA for now
         # country_name = pycountry.countries.get(numeric=country).name
         country_name = "USA"
         product_vals = unified_lf.filter(
@@ -109,22 +107,24 @@ def _(pl, product_list, time, tqdm, unified_lf):
 
         # break
 
-
-
     print(f"Total time to pass over table is {int(time.time()-starttime)}s")
     return (data_list,)
 
 
 @app.cell
 def _(data_list, pickle):
-    with open("src/mpil_tariff_trade_analysis/dev2/visualise/processed_ts_USA_product_averages.pkl", 'wb') as f:
+    with open(
+        "src/mpil_tariff_trade_analysis/dev2/visualise/processed_ts_USA_product_averages.pkl", "wb"
+    ) as f:
         pickle.dump(data_list, f)
     return
 
 
 @app.cell
 def _(pickle):
-    with open("src/mpil_tariff_trade_analysis/dev2/visualise/processed_ts_USA_product_averages.pkl", 'rb') as f:
+    with open(
+        "src/mpil_tariff_trade_analysis/dev2/visualise/processed_ts_USA_product_averages.pkl", "rb"
+    ) as f:
         saved_data_list = pickle.load(f)
     return (saved_data_list,)
 
@@ -161,10 +161,10 @@ def _(px, saved_data_list):
 
     fig = px.line(
         df_pd,
-        x='year',
-        y=['unit_value', 'effective_tariff'],
+        x="year",
+        y=["unit_value", "effective_tariff"],
         # title=f"Product {product}; country {country_name}",
-        title="Test"
+        title="Test",
     )
     fig.show()
     return
