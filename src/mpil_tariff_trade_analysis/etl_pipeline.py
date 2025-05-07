@@ -59,9 +59,7 @@ def run_pipeline():
             pipeline_successful = False
             break
         except Exception as e:
-            logger.error(
-                f"An unexpected error occurred while trying to run {script_path.name}: {e}"
-            )
+            logger.error(f"An unexpected error occurred while trying to run {script_path.name}: {e}")
             pipeline_successful = False
             break
 
