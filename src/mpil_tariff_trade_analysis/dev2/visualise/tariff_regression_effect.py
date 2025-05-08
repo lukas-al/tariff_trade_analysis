@@ -20,10 +20,10 @@ def _():
     from plotly.subplots import make_subplots
     import pycountry
     import pickle
-
+    from functools import partial
     from tqdm import tqdm
     from typing import List
-    return List, functools, mo, operator, pl, px, tqdm
+    return List, functools, mo, operator, pl, px
 
 
 @app.cell
@@ -186,7 +186,7 @@ def _(pl):
         return pl.DataFrame({"slope": [slope], "intercept": [intercept], "product_code": product_code})
 
     udf_output_schema_sm = {"slope": pl.Float64, "intercept": pl.Float64, "product_code": pl.String}
-    return calculate_trend_params_statsmodels, udf_output_schema_sm
+    return
 
 
 @app.cell
@@ -236,20 +236,304 @@ def _(List, pl):
     return (simple_rebase,)
 
 
+app._unparsable_cell(
+    r"""
+    def analyze_tariff_changes(
+        unified_lf: pl.LazyFrame,
+        start_year: str,
+        end_year: str,
+        year_gap: int,
+        year_unit_value_end_gap: int,
+        years_before_tariff_change_unit_value: int = 0,
+        reporter_countries: list[str] = None,
+        partner_countries: list[str] = None,
+        product_codes: list[str] = None,
+        tariff_col_name: str = 'effective_tariff',
+        price_col_name: str = 'unit_value'
+    ) -> pl.DataFrame:
+        \"\"\"
+        Filters a Polars LazyFrame, identifies tariff changes over a configured period,
+        extracts changes in unit value, value, and quantity, and returns these instances.
+
+        Args:
+            unified_lf: The input Polars LazyFrame containing trade data.
+                        Expected columns: 'reporter_country', 'partner_country',
+                                          'product_code', 'year', 'effective_tariff',
+                                          'unit_value', 'value', 'quantity'.
+            start_year: Starting year for analysis (e.g., \"2000\").
+            end_year: End year for analysis (e.g., \"2023\").
+            year_gap: Gap in years to identify and calculate the tariff change
+                      (e.g., if 1, compares year Y with Y+1).
+            year_unit_value_end_gap: Year gap from the start of the tariff change period (y1)
+                                     to calculate the change in unit value up to
+                                     (e.g., if 2, unit value change is y1 vs y1+2).
+             years_before_tariff_change_unit_value: Year gap before the start of the tariff change
+                                                    (first year) from which we measure unit value
+                                                    change. (e.g. if 1, makes y1 = y1-1)
+            reporter_countries: Optional list of reporter country codes to filter by.
+            partner_countries: Optional list of partner country codes to filter by.
+            product_codes: Optional list of product codes (or prefixes) to filter by.
+
+        Returns:
+            A Polars DataFrame containing instances of tariff changes and their
+            relevant information.
+        \"\"\"
+
+        # --- 1. FILTER DATA ---
+        filtered_lf = unified_lf
+
+        if reporter_countries:
+            filtered_lf = filtered_lf.filter(
+                pl.col(\"reporter_country\").is_in(reporter_countries)
+            )
+
+        if partner_countries:
+            filtered_lf = filtered_lf.filter(
+                pl.col(\"partner_country\").is_in(partner_countries)
+            )
+
+        if product_codes:
+            conditions = [
+                pl.col(\"product_code\").str.slice(0, len(p)) == p
+                for p in product_codes
+            ]
+            # Combine conditions with an OR
+            combined_condition = functools.reduce(operator.or_, conditions)
+            filtered_lf = filtered_lf.filter(combined_condition)
+
+        # --- 2. PROCESS TARIFF CHANGES BY YEAR PAIR ---
+        year_pairs = [
+            (str(y1_int), str(y1_int + year_gap))
+            for y1_int in range(int(start_year), int(end_year) + 1 - year_gap)
+        ]
+
+        group_cols = [\"reporter_country\", \"partner_country\", \"product_code\"]
+        extracted_dfs_list = [
+
+        for y1, y2 in tqdm(year_pairs, desc=\"Processing year pairs\"):
+            # The years between which we want to measure the price change
+            year_before_imposition = str(int(y1) - years_before_tariff_change_unit_value)
+            year_unit_value_end = str(int(y1) + int(year_unit_value_end_gap))
+
+            # Ensure relevant_years are distinct and sorted, useful for filtering
+            relevant_years = sorted(
+                list(set([year_before_imposition, y1, y2, year_unit_value_end]))
+            )
+
+            changed_groups_lf = (
+                filtered_lf.filter(pl.col(\"year\").is_in(relevant_years))
+                .group_by(group_cols, maintain_order=True)
+                .agg(
+                    # Tariff difference calculated between y1 and y2
+                    (
+                        pl.col(tariff_col_name)
+                        .filter(pl.col(\"year\") == y2)
+                        .mean()
+                        - pl.col(tariff_col_name)
+                        .filter(pl.col(\"year\") == y1)
+                        .mean()
+                    ).alias(\"tariff_difference\"),
+                    # Tariff percentage change calculated between y1 and y2
+                    (
+                        (
+                            pl.col(tariff_col_name)
+                            .filter(pl.col(\"year\") == y2)
+                            .mean()
+                            - pl.col(tariff_col_name)
+                            .filter(pl.col(\"year\") == y1)
+                            .mean()
+                        )
+                        / pl.col(tariff_col_name)
+                        .filter(pl.col(\"year\") == y1)
+                        .mean()
+                        * 100
+                    ).alias(\"tariff_perc_change\"),
+                    # Unit value percentage change calculated between year_before_imposition and year_unit_value_end
+                    ((
+                        (
+                            pl.col(price_col_name)
+                            .filter(pl.col(\"year\") == year_unit_value_end)
+                            .mean()
+                            - pl.col(price_col_name)
+                            .filter(pl.col(\"year\") == year_before_imposition)
+                            .mean()
+                        )
+                        / pl.col(price_col_name)
+                        .filter(pl.col(\"year\") == year_before_imposition)
+                        .mean()
+                    ) * 100).alias(\"unit_value_perc_change\"),
+                    # Unit value change
+                    (
+                         pl.col(price_col_name)
+                        .filter(pl.col(\"year\") == year_unit_value_end)
+                        .mean()
+                        - pl.col(price_col_name)
+                        .filter(pl.col(\"year\") == year_before_imposition)
+                        .mean()
+                    ).alias('unit_value_difference'),
+                    # Value difference calculated between year_before_imposition and year_unit_value_end
+                    (
+                        pl.col(\"value\")
+                        .filter(pl.col(\"year\") == year_unit_value_end)
+                        .sum()
+                        - pl.col(\"value\")
+                        .filter(pl.col(\"year\") == year_before_imposition)
+                        .sum()
+                    ).alias(\"value_difference\"),
+                    # Quantity difference calculated between year_before_imposition and year_unit_value_end
+                    (
+                        pl.col(\"quantity\")
+                        .filter(pl.col(\"year\") == year_unit_value_end)
+                        .sum()
+                        - pl.col(\"quantity\")
+                        .filter(pl.col(\"year\") == year_before_imposition)
+                        .sum()
+                    ).alias(\"quantity_difference\"),
+                )
+                .filter(
+                    (pl.col(\"tariff_difference\").is_not_null())
+                    & (pl.col(\"tariff_difference\") != 0.0)
+                    & (pl.col(\"unit_value_perc_change\").is_not_null())
+                )
+                .with_columns(
+                    # pl.lit(y1).alias(\"year_period_start\"),
+                    pl.lit(y1+\"-\"+y2).alias(\"tariff_change_range\"),
+                    pl.lit(year_before_imposition+\"-\"+year_unit_value_end).alias(
+                        \"unit_value_change_range\"
+                    ),
+                )
+            )
+
+            extracted_dfs_list.append(changed_groups_lf.collect())
+
+        combined_df = pl.concat(extracted_dfs_list)
+        return combined_df
+    """,
+    name="_"
+)
+
+
 @app.cell
 def _(pl):
-    unified_lf = pl.scan_parquet("data/final/unified_filtered_10000val_100c_sample_1000krows_filter")
-    # unified_lf = pl.scan_parquet("data/final/unified_trade_tariff_partitioned")
+    def apply_detrending_to_lazyframe(
+        target_lf: pl.LazyFrame,
+        source_lf: pl.LazyFrame,
+        value_column_name: str,
+        detrended_output_col_name: str = "detrended_value",
+        trend_line_output_col_name: str = "trend_line_value"
+    ) -> pl.LazyFrame:
+        """
+        Applies detrending to a Polars LazyFrame.
+
+        This function calculates trend parameters (slope and intercept) for each 'product_code'
+        group using the 'year' column from `source_for_trend_params_lf` and the specified
+        `value_column_name`. It then joins these parameters to `target_lf` and
+        calculates the trend line and the detrended values.
+
+        It relies on the globally defined `calculate_trend_params_statsmodels` UDF and
+        `udf_output_schema_sm` which hardcode 'product_code' as the grouping key and
+        'year' as the time variable for OLS regression.
+
+        Args:
+            target_lf: The LazyFrame to which detrending will be applied.
+                           Must contain 'product_code', 'year', and `value_column_name`.
+            source_lf: The LazyFrame used to calculate trend parameters.
+                                        Must contain 'product_code', 'year', and `value_column_name`.
+                                        Can be the same as `target_lf`.
+            value_column_name: The name of the column in `source_for_trend_params_lf` (for fitting)
+                               and `target_lf` (for detrending) that contains the values to be detrended.
+            detrended_output_col_name: The desired name for the new column containing detrended values.
+            trend_line_output_col_name: The desired name for the new column containing trend line values.
+
+        Returns:
+            A new LazyFrame with the added trend line and detrended value columns.
+        """
+
+        # ## THIS IS TAKING TOO LONG ---->> 
+
+        # detrend_calc_func = partial(
+        #     calculate_trend_params_statsmodels, # User's UDF from CELL 1
+        #     target_col_name=value_column_name
+        # )
+
+        # # Calculate trend parameters. Grouping is by 'product_code' and schema uses 'product_code'
+        # trend_params_lf = source_lf.group_by(
+        #     "product_code", maintain_order=True
+        # ).map_groups(
+        #     detrend_calc_func, schema=udf_output_schema_sm # User's schema from CELL 1
+        # )
+
+        # ### <<---- REPLACE WITH POLARS OPTIMISED OLS
+
+        ### OPTIMISED VERSION ---->>
+
+        source_lf = source_lf.with_columns(
+                pl.col('year').cast(pl.Float64)
+            ).sort('year')
+        #     .filter(
+        #     (pl.col(value_column_name).is_not_null() & pl.col('year').is_not_null())
+        # )
+
+        trend_params_lf = source_lf.group_by(
+            "product_code", maintain_order=True
+        ).agg(
+            [
+                # Manually calculate the OLS linear regression
+                pl.cov(pl.col("year"), pl.col(value_column_name)).alias("cov_xy"),
+                pl.col("year").var().alias("var_x"),
+                pl.col("year").mean().alias("mean_x"),
+                pl.col(value_column_name).mean().alias("mean_y"),
+            ]
+        )
+
+        trend_params_lf = trend_params_lf.with_columns(
+            (
+                pl.col("cov_xy") / pl.col("var_x")
+            ).alias('slope')
+        )
+
+        trend_params_lf = trend_params_lf.with_columns(
+            (
+                pl.col("mean_y") - (pl.col("slope") * pl.col("mean_x"))
+            ).alias('intercept')
+        ).select(['product_code', 'slope', 'intercept'])
+        ### <<------
+
+        # Join trend parameters with the target LazyFrame.
+        # The join is on 'product_code'.
+        detrended_lf = target_lf.join(
+            trend_params_lf,
+            on='product_code', # Fixed by the UDF's output
+            how='left',
+            allow_parallel=True,
+        ).sort('year')
+
+        # Calculate the global trend at each year and the detrended value.
+        # Cast 'year' to Float64 for consistency with OLS fitting in the UDF.
+        detrended_lf = detrended_lf.with_columns(
+            (
+                pl.col("slope") * pl.col("year").cast(pl.Float64) + pl.col("intercept")
+            ).alias(trend_line_output_col_name)
+        ).with_columns(
+            (
+                pl.col(value_column_name) - pl.col(trend_line_output_col_name)
+            ).alias(detrended_output_col_name)
+        ).sort('year')
+
+        return detrended_lf
+
+    return (apply_detrending_to_lazyframe,)
+
+
+@app.cell
+def _(pl):
+    # unified_lf = pl.scan_parquet("data/final/unified_filtered_10000val_100c_sample_1000krows_filter")
+    unified_lf = pl.scan_parquet("data/final/unified_trade_tariff_partitioned")
     unified_lf = unified_lf.with_columns(
         (pl.col('value') / pl.col('quantity')).alias('unit_value')
     )
     unified_lf.head().collect()
     return (unified_lf,)
-
-
-@app.cell
-def _():
-    return
 
 
 @app.cell
@@ -324,189 +608,9 @@ def _():
 
 
 @app.cell
-def _(functools, operator, pl, tqdm):
-    def analyze_tariff_changes(
-        unified_lf: pl.LazyFrame,
-        start_year: str,
-        end_year: str,
-        year_gap: int,
-        year_unit_value_end_gap: int,
-        years_before_tariff_change_unit_value: int = 0,
-        reporter_countries: list[str] = None,
-        partner_countries: list[str] = None,
-        product_codes: list[str] = None,
-        tariff_col_name: str = 'effective_tariff',
-        price_col_name: str = 'unit_value'
-    ) -> pl.DataFrame:
-        """
-        Filters a Polars LazyFrame, identifies tariff changes over a configured period,
-        extracts changes in unit value, value, and quantity, and returns these instances.
-
-        Args:
-            unified_lf: The input Polars LazyFrame containing trade data.
-                        Expected columns: 'reporter_country', 'partner_country',
-                                          'product_code', 'year', 'effective_tariff',
-                                          'unit_value', 'value', 'quantity'.
-            start_year: Starting year for analysis (e.g., "2000").
-            end_year: End year for analysis (e.g., "2023").
-            year_gap: Gap in years to identify and calculate the tariff change
-                      (e.g., if 1, compares year Y with Y+1).
-            year_unit_value_end_gap: Year gap from the start of the tariff change period (y1)
-                                     to calculate the change in unit value up to
-                                     (e.g., if 2, unit value change is y1 vs y1+2).
-             years_before_tariff_change_unit_value: Year gap before the start of the tariff change
-                                                    (first year) from which we measure unit value
-                                                    change. (e.g. if 1, makes y1 = y1-1)
-            reporter_countries: Optional list of reporter country codes to filter by.
-            partner_countries: Optional list of partner country codes to filter by.
-            product_codes: Optional list of product codes (or prefixes) to filter by.
-
-        Returns:
-            A Polars DataFrame containing instances of tariff changes and their
-            relevant information.
-        """
-
-        # --- 1. FILTER DATA ---
-        filtered_lf = unified_lf
-
-        if reporter_countries:
-            filtered_lf = filtered_lf.filter(
-                pl.col("reporter_country").is_in(reporter_countries)
-            )
-
-        if partner_countries:
-            filtered_lf = filtered_lf.filter(
-                pl.col("partner_country").is_in(partner_countries)
-            )
-
-        if product_codes:
-            conditions = [
-                pl.col("product_code").str.slice(0, len(p)) == p
-                for p in product_codes
-            ]
-            # Combine conditions with an OR
-            combined_condition = functools.reduce(operator.or_, conditions)
-            filtered_lf = filtered_lf.filter(combined_condition)
-
-        # --- 2. PROCESS TARIFF CHANGES BY YEAR PAIR ---
-        year_pairs = [
-            (str(y1_int), str(y1_int + year_gap))
-            for y1_int in range(int(start_year), int(end_year) + 1 - year_gap)
-        ]
-
-        group_cols = ["reporter_country", "partner_country", "product_code"]
-        extracted_dfs_list = []
-
-        for y1, y2 in tqdm(year_pairs, desc="Processing year pairs"):
-            # The years between which we want to measure the price change
-            year_before_imposition = str(int(y1) - years_before_tariff_change_unit_value)
-            year_unit_value_end = str(int(y1) + int(year_unit_value_end_gap))
-
-            # Ensure relevant_years are distinct and sorted, useful for filtering
-            relevant_years = sorted(
-                list(set([year_before_imposition, y1, y2, year_unit_value_end]))
-            )
-
-            changed_groups_lf = (
-                filtered_lf.filter(pl.col("year").is_in(relevant_years))
-                .group_by(group_cols, maintain_order=True)
-                .agg(
-                    # Tariff difference calculated between y1 and y2
-                    (
-                        pl.col(tariff_col_name)
-                        .filter(pl.col("year") == y2)
-                        .mean()
-                        - pl.col(tariff_col_name)
-                        .filter(pl.col("year") == y1)
-                        .mean()
-                    ).alias("tariff_difference"),
-                    # Tariff percentage change calculated between y1 and y2
-                    (
-                        (
-                            pl.col(tariff_col_name)
-                            .filter(pl.col("year") == y2)
-                            .mean()
-                            - pl.col(tariff_col_name)
-                            .filter(pl.col("year") == y1)
-                            .mean()
-                        )
-                        / pl.col(tariff_col_name)
-                        .filter(pl.col("year") == y1)
-                        .mean()
-                        * 100
-                    ).alias("tariff_perc_change"),
-                    # Unit value percentage change calculated between year_before_imposition and year_unit_value_end
-                    ((
-                        (
-                            pl.col(price_col_name)
-                            .filter(pl.col("year") == year_unit_value_end)
-                            .mean()
-                            - pl.col(price_col_name)
-                            .filter(pl.col("year") == year_before_imposition)
-                            .mean()
-                        )
-                        / pl.col(price_col_name)
-                        .filter(pl.col("year") == year_before_imposition)
-                        .mean()
-                    ) * 100).alias("unit_value_perc_change_extended"),
-                    # Value difference calculated between year_before_imposition and year_unit_value_end
-                    (
-                        pl.col("value")
-                        .filter(pl.col("year") == year_unit_value_end)
-                        .sum()
-                        - pl.col("value")
-                        .filter(pl.col("year") == year_before_imposition)
-                        .sum()
-                    ).alias("value_difference_extended"),
-                    # Quantity difference calculated between year_before_imposition and year_unit_value_end
-                    (
-                        pl.col("quantity")
-                        .filter(pl.col("year") == year_unit_value_end)
-                        .sum()
-                        - pl.col("quantity")
-                        .filter(pl.col("year") == year_before_imposition)
-                        .sum()
-                    ).alias("quantity_difference_extended"),
-                    # # Contemporaneous unit value percentage change (between y1 and y2) for comparison
-                    # (
-                    #     (
-                    #         pl.col("unit_value")
-                    #         .filter(pl.col("year") == y2)
-                    #         .first()
-                    #         - pl.col("unit_value")
-                    #         .filter(pl.col("year") == y1)
-                    #         .first()
-                    #     )
-                    #     / pl.col("unit_value").filter(pl.col("year") == y1).first()
-                    # ).alias("unit_value_perc_tariff_period"),
-                    # Tariff change as a pct change
-
-                )
-                .filter(
-                    (pl.col("tariff_difference").is_not_null())
-                    & (pl.col("tariff_difference") != 0.0)
-                    & (pl.col("unit_value_perc_change_extended").is_not_null())
-                )
-                .with_columns(
-                    # pl.lit(y1).alias("year_period_start"),
-                    pl.lit(y1+"-"+y2).alias("tariff_change_range"),
-                    pl.lit(year_before_imposition+"-"+year_unit_value_end).alias(
-                        "unit_value_change_range"
-                    ),
-                )
-            )
-
-            extracted_dfs_list.append(changed_groups_lf.collect())
-
-        combined_df = pl.concat(extracted_dfs_list)
-        return combined_df
-    return (analyze_tariff_changes,)
-
-
-@app.cell
 def _(analyze_tariff_changes, unified_lf):
     year_gap = 1
-    year_unit_value_end_gap = 1
+    year_unit_value_end_gap = 2
 
     tariff_changes_df = analyze_tariff_changes(
         unified_lf,
@@ -535,7 +639,9 @@ def _(remove_outliers_by_percentile, tariff_changes_df):
     # Should probably run this earlier.
     normalised_combined_df = remove_outliers_by_percentile(
         tariff_changes_df,
-        column_names=['unit_value_perc_change_extended', 'tariff_difference', "tariff_perc_change"],
+        column_names=[
+            'unit_value_perc_change_extended', 'tariff_difference', "tariff_perc_change", "unit_value_difference"
+    ],
         upper_p=0.99,
         lower_p=0.01,
     )
@@ -547,11 +653,12 @@ def _(normalised_combined_df, px, year_gap, year_unit_value_end_gap):
     # --- 4. CREATE INITIAL TOTAL SCATTER ---
     scatter_fig = px.scatter(
         normalised_combined_df,
-        # x="tariff_difference",
-        x="tariff_perc_change",
-        y="unit_value_perc_change_extended",
+        x="tariff_difference",
+        # x="tariff_perc_change",
+        # y="unit_value_perc_change",
+        y="unit_value_difference",
         title=f"""
-            {year_gap}-year % change in tariffs vs {year_unit_value_end_gap}-year % change in unit value US (importer) & China (exporter)
+            {year_gap}-year abs change in tariff vs {year_unit_value_end_gap}-year abs change in unit value US (importer) & China (exporter)
         """,
         hover_data=['tariff_change_range', "unit_value_change_range", 'product_code'],
         color='tariff_change_range',
@@ -594,169 +701,12 @@ def _(mo):
 
 
 @app.cell
-def _(calculate_trend_params_statsmodels, partial, pl, udf_output_schema_sm):
-    def apply_detrending_to_lazyframe(
-        target_lf: pl.LazyFrame,
-        source_for_trend_params_lf: pl.LazyFrame,
-        value_column_name: str,
-        detrended_output_col_name: str = "detrended_value",
-        trend_line_output_col_name: str = "trend_line_value"
-    ) -> pl.LazyFrame:
-        """
-        Applies detrending to a Polars LazyFrame.
-
-        This function calculates trend parameters (slope and intercept) for each 'product_code'
-        group using the 'year' column from `source_for_trend_params_lf` and the specified
-        `value_column_name`. It then joins these parameters to `target_lf` and
-        calculates the trend line and the detrended values.
-
-        It relies on the globally defined `calculate_trend_params_statsmodels` UDF and
-        `udf_output_schema_sm` which hardcode 'product_code' as the grouping key and
-        'year' as the time variable for OLS regression.
-
-        Args:
-            target_lf: The LazyFrame to which detrending will be applied.
-                           Must contain 'product_code', 'year', and `value_column_name`.
-            source_for_trend_params_lf: The LazyFrame used to calculate trend parameters.
-                                        Must contain 'product_code', 'year', and `value_column_name`.
-                                        Can be the same as `target_lf`.
-            value_column_name: The name of the column in `source_for_trend_params_lf` (for fitting)
-                               and `target_lf` (for detrending) that contains the values to be detrended.
-            detrended_output_col_name: The desired name for the new column containing detrended values.
-            trend_line_output_col_name: The desired name for the new column containing trend line values.
-
-        Returns:
-            A new LazyFrame with the added trend line and detrended value columns.
-        """
-
-        detrend_calc_func = partial(
-            calculate_trend_params_statsmodels, # User's UDF from CELL 1
-            target_col_name=value_column_name
-        )
-
-        # Calculate trend parameters. Grouping is by 'product_code' and schema uses 'product_code'
-        trend_params_lf = source_for_trend_params_lf.group_by(
-            "product_code", maintain_order=True
-        ).map_groups(
-            detrend_calc_func, schema=udf_output_schema_sm # User's schema from CELL 1
-        )
-
-        # Join trend parameters with the target LazyFrame.
-        # The join is on 'product_code'.
-        detrended_lf = target_lf.join(
-            trend_params_lf,
-            on='product_code', # Fixed by the UDF's output
-            how='left',
-            allow_parallel=True,
-        )
-
-        # Calculate the global trend at each year and the detrended value.
-        # Cast 'year' to Float64 for consistency with OLS fitting in the UDF.
-        detrended_lf = detrended_lf.with_columns(
-            (
-                pl.col("slope") * pl.col("year").cast(pl.Float64) + pl.col("intercept")
-            ).alias(trend_line_output_col_name)
-        ).with_columns(
-            (
-                pl.col(value_column_name) - pl.col(trend_line_output_col_name)
-            ).alias(detrended_output_col_name)
-        )
-
-        return detrended_lf
-
-    return (apply_detrending_to_lazyframe,)
-
-
-@app.cell
-def _():
-    # # --- 5. DETRENDING  ---
-    # from functools import partial
-
-    # detrend_calc_func = partial(
-    #     calculate_trend_params_statsmodels,
-    #     target_col_name="unit_value"
-    # )
-
-    # trend_params_lf = unified_lf.group_by(
-    #     "product_code", maintain_order=True
-    # ).map_groups(
-    #     detrend_calc_func, schema=udf_output_schema_sm
-    # )
-
-    # trend_params_lf.head().collect()
-    return
-
-
-@app.cell
-def _():
-    # detrend_lf = filtered_lf.with_columns(
-    #     (pl.col('value') / pl.col('quantity')).alias('unit_value')
-    # ).group_by(
-    #     ['product_code', 'year'], maintain_order=True
-    # ).agg(
-    #     pl.sum('value'),
-    #     pl.sum('quantity'),
-    #     pl.mean('effective_tariff')
-    #     # pl.mean('unit_value'),
-    # ).with_columns(
-    #     (pl.col('value') / pl.col('quantity')).alias('unit_value'),
-    #     (pl.col('effective_tariff').pct_change(n=1)).alias('effective_tariff_pct_change')
-    # )
-
-    # detrend_lf = detrend_lf.explode(['unit_value', 'value', 'quantity', 'year'])
-    # detrend_lf.filter(pl.col('product_code') == pc).collect()
-    return
-
-
-@app.cell
-def _():
-    # # Detrend, having calculated the slope and y intercept for each product code
-    # Join on the original table, then calculate the trend at that year for the product using the parameters, then subtract the trend.
-    # detrended_df = filtered_lf.join(
-    #     trend_params_lf,
-    #     on='product_code',
-    #     how='left',
-    # ).with_columns(
-    #     (
-    #         pl.col("slope") * pl.col("year").cast(pl.Int32) + pl.col("intercept")
-    #     ).alias('global_trend_at_year')
-    # ).with_columns(
-    #     (
-    #         pl.col("unit_value") - pl.col("global_trend_at_year")
-    #     ).alias('detrended_unit_value')
-    # )
-
-    # detrended_df_head = detrended_df.head().collect(engine='streaming')
-    # detrended_df_head
-    return
-
-
-@app.cell
-def _(apply_detrending_to_lazyframe, unified_lf):
-    detrend_lf = apply_detrending_to_lazyframe(
-        target_lf=unified_lf,
-        source_for_trend_params_lf=unified_lf,
-        value_column_name="unit_value",
-        detrended_output_col_name='unit_value_detrend',
-        trend_line_output_col_name='product_global_trend_vals'
-    )
-
-    detrend_lf.head().collect() # < ----- TEST
-    return (detrend_lf,)
-
-
-@app.cell
-def _(detrend_lf, functools, operator, pl, px, simple_rebase):
-    # --- 6. VISUALISE EFFECTS OF DETRENDING AND REBASE ---
-    # Investigate effects of detrending
-
-    # Filter to a specific product code to make visualisation easier.
-    # We've obviously previously filtered down to just the US / China
+def _(apply_detrending_to_lazyframe, functools, operator, pl, unified_lf):
     product_codes=['320417']
     reporter_countries=['156'] # China exporter, 
     partner_countries=['840'] # US importer
 
-    test_lf = detrend_lf
+    test_lf = unified_lf
     if reporter_countries:
         test_lf = test_lf.filter(
             pl.col("reporter_country").is_in(reporter_countries)
@@ -775,14 +725,53 @@ def _(detrend_lf, functools, operator, pl, px, simple_rebase):
         # Combine conditions with an OR
         combined_condition = functools.reduce(operator.or_, conditions)
         test_lf = test_lf.filter(combined_condition)
+    # 
+
+    detrend_lf_filtered = apply_detrending_to_lazyframe(
+        target_lf=test_lf,
+        source_lf=unified_lf,
+        value_column_name="unit_value",
+        detrended_output_col_name='unit_value_detrend',
+        trend_line_output_col_name='product_global_trend_vals'
+    )
+
+    return (
+        detrend_lf_filtered,
+        partner_countries,
+        product_codes,
+        reporter_countries,
+    )
+
+
+@app.cell
+def _(detrend_lf_filtered):
+    detrend_lf_filtered.head(25).collect(engine='streaming') # < ----- TEST
+    return
+
+
+@app.cell
+def _(
+    detrend_lf_filtered,
+    partner_countries,
+    pl,
+    product_codes,
+    px,
+    reporter_countries,
+    simple_rebase,
+):
+    # --- 6. VISUALISE EFFECTS OF DETRENDING AND REBASE ---
+    # Investigate effects of detrending
+
+    # Filter to a specific product code to make visualisation easier.
+    # We've obviously previously filtered down to just the US / China
 
     # Rebase
-    test_df_rebased = simple_rebase(
-        test_lf, '1995', ['value', 'quantity']
+    detrend_df_rebased_filtered = simple_rebase(
+        detrend_lf_filtered, '1995', ['value', 'quantity']
     ).collect(engine='streaming')
 
     # If we previously selected multiple countries, etc. We need to group the data down
-    test_df_rebased = test_df_rebased.group_by(
+    detrend_df_rebased_filtered = detrend_df_rebased_filtered.group_by(
         'year'
     ).agg(
         pl.sum('quantity_rebased'),
@@ -798,15 +787,15 @@ def _(detrend_lf, functools, operator, pl, px, simple_rebase):
 
     # Chart of aggregate quantities an values
     px.line(
-        test_df_rebased,
+        detrend_df_rebased_filtered,
         x='year',
         y=['quantity_rebased', 'value_rebased'],
-        title=f"Aggregate quantities and values for product: {product_codes[0]}"
+        title=f"Aggregate export quantities and values for product: {product_codes[0]} between {reporter_countries} to {partner_countries} "
     ).update_traces(textposition='top center').show()
 
     # Chart of unit value trend and the OLS
     fig_unitvaluetrend = px.scatter(
-        test_df_rebased,
+        detrend_df_rebased_filtered,
         x='year',
         y='unit_value',
         title=f"unit value for product with OLS overlayed (red): {product_codes[0]}",
@@ -818,7 +807,7 @@ def _(detrend_lf, functools, operator, pl, px, simple_rebase):
 
     # Chart of the detrended unit_value and the % change in effective tariff
     fig_detrend_tariff = px.line(
-        test_df_rebased,
+        detrend_df_rebased_filtered,
         x='year',
         y='unit_value_detrend',
         title=f"unit value for product - Detrended: {product_codes[0]}"
@@ -842,14 +831,20 @@ def _():
 
 
 @app.cell
-def _():
+def _(detrend_lf_filtered):
+    detrend_lf_filtered.head(10).collect()
     return
 
 
 @app.cell
-def _(analyze_tariff_changes, detrend_lf, year_gap, year_unit_value_end_gap):
-    tariff_changes_df_detrend = analyze_tariff_changes(
-        detrend_lf,
+def _(
+    analyze_tariff_changes,
+    detrend_lf_filtered,
+    year_gap,
+    year_unit_value_end_gap,
+):
+    tariff_changes_df_detrend_filtered = analyze_tariff_changes(
+        detrend_lf_filtered,
         start_year="1996",
         end_year="2023",
         year_gap=year_gap,
@@ -860,39 +855,48 @@ def _(analyze_tariff_changes, detrend_lf, year_gap, year_unit_value_end_gap):
         tariff_col_name='effective_tariff',
         price_col_name='unit_value_detrend',
     )
-    #!!!! Need to rename unit value detrend - analyze tariff changes is hard coded to look for unit value rn
-    tariff_changes_df_detrend.head()
-    return (tariff_changes_df_detrend,)
+
+    tariff_changes_df_detrend_filtered.head()
+    return (tariff_changes_df_detrend_filtered,)
 
 
 @app.cell
-def _(remove_outliers_by_percentile, tariff_changes_df_detrend):
+def _(remove_outliers_by_percentile, tariff_changes_df_detrend_filtered):
     # --- 3. REMOVE OUTLIERS --- 
     # Should probably run this earlier.
-    tariff_changes_df_detrend_outliers = remove_outliers_by_percentile(
-        tariff_changes_df_detrend,
+    tariff_changes_df_detrend_filtered_outliers = remove_outliers_by_percentile(
+        tariff_changes_df_detrend_filtered,
         column_names=['unit_value_perc_change_extended', 'tariff_difference', "tariff_perc_change"],
         upper_p=0.99,
         lower_p=0.01,
     )
-    return (tariff_changes_df_detrend_outliers,)
+    return (tariff_changes_df_detrend_filtered_outliers,)
+
+
+@app.cell
+def _(tariff_changes_df_detrend_filtered_outliers):
+    tariff_changes_df_detrend_filtered_outliers.head()
+    return
 
 
 @app.cell
 def _(
+    partner_countries,
     px,
-    tariff_changes_df_detrend_outliers,
+    reporter_countries,
+    tariff_changes_df_detrend_filtered_outliers,
     year_gap,
     year_unit_value_end_gap,
 ):
     # --- 4. CREATE INITIAL TOTAL SCATTER ---
     scatter_fig_detrend = px.scatter(
-        tariff_changes_df_detrend_outliers,
-        # x="tariff_difference",
-        x="tariff_perc_change",
-        y="unit_value_perc_change_extended",
+        tariff_changes_df_detrend_filtered_outliers,
+        x="tariff_difference",
+        # x="tariff_perc_change",
+        # y="unit_value_perc_change_extended",
+        y="unit_value_difference",
         title=f"""
-            {year_gap}-year % change in tariffs vs {year_unit_value_end_gap}-year % change in unit value US (importer) & China (exporter)
+            {year_gap}-year abs change in tariff % vs {year_unit_value_end_gap}-year abs change in unit value {partner_countries} (importer) & {reporter_countries} (exporter)
         """,
         hover_data=['tariff_change_range', "unit_value_change_range", 'product_code'],
         color='tariff_change_range',
