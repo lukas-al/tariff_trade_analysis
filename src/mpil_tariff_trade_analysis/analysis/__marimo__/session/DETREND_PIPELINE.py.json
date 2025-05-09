@@ -1,0 +1,174 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.13.3"
+  },
+  "cells": [
+    {
+      "id": "Hbol",
+      "code_hash": "1a1790ce2ff503789c0bf27f14b626ee",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "MJUe",
+      "code_hash": "6f96f6252fc2204fb0423d851a88f074",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"implement-the-detrending-further-post-processing\">Implement the detrending &amp; further post-processing</h1>\n<ol>\n<li>Load the unified data</li>\n<li>Detrend</li>\n<li>Remove outliers</li>\n<li>Save</li>\n</ol>\n<h2 id=\"first-define-convenience-functions\">First define convenience functions</h2></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "vblA",
+      "code_hash": "9d199e4fb10528b5ec7c8be613c93488",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "240944da4eff37eb5550638299cd2cf2",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Loading Unified DF\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Loaded unified_lf with unit_value:\n shape: (5, 14)\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502 year \u2506 reporter_c \u2506 partner_co \u2506 product_co \u2506 \u2026 \u2506 min_rate_m \u2506 max_rate_ \u2506 effective \u2506 unit_valu \u2502\n\u2502 ---  \u2506 ountry     \u2506 untry      \u2506 de         \u2506   \u2506 fn         \u2506 mfn       \u2506 _tariff   \u2506 e         \u2502\n\u2502 str  \u2506 ---        \u2506 ---        \u2506 ---        \u2506   \u2506 ---        \u2506 ---       \u2506 ---       \u2506 ---       \u2502\n\u2502      \u2506 str        \u2506 str        \u2506 str        \u2506   \u2506 f32        \u2506 f32       \u2506 f32       \u2506 f64       \u2502\n\u255e\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2561\n\u2502 1995 \u2506 156        \u2506 795        \u2506 051191     \u2506 \u2026 \u2506 null       \u2506 null      \u2506 null      \u2506 441.17647 \u2502\n\u2502      \u2506            \u2506            \u2506            \u2506   \u2506            \u2506           \u2506           \u2506 1         \u2502\n\u2502 1995 \u2506 156        \u2506 795        \u2506 090220     \u2506 \u2026 \u2506 null       \u2506 null      \u2506 null      \u2506 0.39524   \u2502\n\u2502 1995 \u2506 156        \u2506 795        \u2506 090412     \u2506 \u2026 \u2506 null       \u2506 null      \u2506 null      \u2506 6.362867  \u2502\n\u2502 1995 \u2506 156        \u2506 795        \u2506 091099     \u2506 \u2026 \u2506 null       \u2506 null      \u2506 null      \u2506 7.068     \u2502\n\u2502 1995 \u2506 156        \u2506 795        \u2506 170199     \u2506 \u2026 \u2506 null       \u2506 null      \u2506 null      \u2506 0.65      \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n"
+        }
+      ]
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "729e23a849198303ca562ef8cc29b284",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Applying detrending to entire table...\n"
+        }
+      ]
+    },
+    {
+      "id": "PKri",
+      "code_hash": "dfab7c496b2b270b01a8c0a9e6bfe90f",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Xref",
+      "code_hash": "bf86024ac9632a25479d04791f90d706",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Sinking back to unified_lf\n"
+        }
+      ]
+    },
+    {
+      "id": "SoFR",
+      "code_hash": "efa4abe0d13c1bb610a109d8a3464433",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "iXlx",
+      "code_hash": "5f9682e5875c86cdf53521375b836816",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='iXlx-0' random-id='1e32acf4-0787-17d8-2273-d957ec299b23'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;[{&#92;&quot;year&#92;&quot;:&#92;&quot;1995&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;276&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;756&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;392290&#92;&quot;,&#92;&quot;value&#92;&quot;:14778.414,&#92;&quot;quantity&#92;&quot;:1157.617,&#92;&quot;tariff_rate_pref&#92;&quot;:null,&#92;&quot;min_rate_pref&#92;&quot;:null,&#92;&quot;max_rate_pref&#92;&quot;:null,&#92;&quot;tariff_rate_mfn&#92;&quot;:3.14,&#92;&quot;min_rate_mfn&#92;&quot;:3.14,&#92;&quot;max_rate_mfn&#92;&quot;:3.14,&#92;&quot;effective_tariff&#92;&quot;:3.14,&#92;&quot;unit_value&#92;&quot;:12.766237883514151,&#92;&quot;product_global_trend&#92;&quot;:11.059976477504222,&#92;&quot;unit_value_detrend&#92;&quot;:1.7062614060099293,&#92;&quot;product_global_trend_right&#92;&quot;:10.996272989414841,&#92;&quot;unit_value_detrended&#92;&quot;:1.7062614060099293},{&#92;&quot;year&#92;&quot;:&#92;&quot;1995&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;076&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;392&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;500400&#92;&quot;,&#92;&quot;value&#92;&quot;:43318.276,&#92;&quot;quantity&#92;&quot;:813.586,&#92;&quot;tariff_rate_pref&#92;&quot;:null,&#92;&quot;min_rate_pref&#92;&quot;:null,&#92;&quot;max_rate_pref&#92;&quot;:null,&#92;&quot;tariff_rate_mfn&#92;&quot;:6.0,&#92;&quot;min_rate_mfn&#92;&quot;:6.0,&#92;&quot;max_rate_mfn&#92;&quot;:6.0,&#92;&quot;effective_tariff&#92;&quot;:6.0,&#92;&quot;unit_value&#92;&quot;:53.243634969136636,&#92;&quot;product_global_trend&#92;&quot;:23.35424958745307,&#92;&quot;unit_value_detrend&#92;&quot;:29.889385381683567,&#92;&quot;product_global_trend_right&#92;&quot;:40.75225084919259,&#92;&quot;unit_value_detrended&#92;&quot;:29.889385381683567},{&#92;&quot;year&#92;&quot;:&#92;&quot;1995&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;076&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;392&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;720842&#92;&quot;,&#92;&quot;value&#92;&quot;:33089.725,&#92;&quot;quantity&#92;&quot;:76591.434,&#92;&quot;tariff_rate_pref&#92;&quot;:null,&#92;&quot;min_rate_pref&#92;&quot;:null,&#92;&quot;max_rate_pref&#92;&quot;:null,&#92;&quot;tariff_rate_mfn&#92;&quot;:3.5,&#92;&quot;min_rate_mfn&#92;&quot;:3.5,&#92;&quot;max_rate_mfn&#92;&quot;:3.5,&#92;&quot;effective_tariff&#92;&quot;:3.5,&#92;&quot;unit_value&#92;&quot;:0.4320290569308312,&#92;&quot;product_global_trend&#92;&quot;:0.6094660167573238,&#92;&quot;unit_value_detrend&#92;&quot;:-0.1774369598264926,&#92;&quot;product_global_trend_right&#92;&quot;:0.4447312318691053,&#92;&quot;unit_value_detrended&#92;&quot;:-0.1774369598264926},{&#92;&quot;year&#92;&quot;:&#92;&quot;1995&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;076&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;356&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;252400&#92;&quot;,&#92;&quot;value&#92;&quot;:12166.431,&#92;&quot;quantity&#92;&quot;:24321.667,&#92;&quot;tariff_rate_pref&#92;&quot;:null,&#92;&quot;min_rate_pref&#92;&quot;:null,&#92;&quot;max_rate_pref&#92;&quot;:null,&#92;&quot;tariff_rate_mfn&#92;&quot;:null,&#92;&quot;min_rate_mfn&#92;&quot;:null,&#92;&quot;max_rate_mfn&#92;&quot;:null,&#92;&quot;effective_tariff&#92;&quot;:null,&#92;&quot;unit_value&#92;&quot;:0.5002301445867177,&#92;&quot;product_global_trend&#92;&quot;:0.4511868323497583,&#92;&quot;unit_value_detrend&#92;&quot;:0.04904331223695935,&#92;&quot;product_global_trend_right&#92;&quot;:0.46557679401276914,&#92;&quot;unit_value_detrended&#92;&quot;:0.04904331223695935},{&#92;&quot;year&#92;&quot;:&#92;&quot;1995&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;104&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;356&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;440333&#92;&quot;,&#92;&quot;value&#92;&quot;:38075.712,&#92;&quot;quantity&#92;&quot;:50619.1,&#92;&quot;tariff_rate_pref&#92;&quot;:null,&#92;&quot;min_rate_pref&#92;&quot;:null,&#92;&quot;max_rate_pref&#92;&quot;:null,&#92;&quot;tariff_rate_mfn&#92;&quot;:null,&#92;&quot;min_rate_mfn&#92;&quot;:null,&#92;&quot;max_rate_mfn&#92;&quot;:null,&#92;&quot;effective_tariff&#92;&quot;:null,&#92;&quot;unit_value&#92;&quot;:0.7522004934896116,&#92;&quot;product_global_trend&#92;&quot;:21.46023170119946,&#92;&quot;unit_value_detrend&#92;&quot;:-20.70803120770985,&#92;&quot;product_global_trend_right&#92;&quot;:0.364198134721769,&#92;&quot;unit_value_detrended&#92;&quot;:-20.70803120770985}]&quot;' data-total-rows='5' data-total-columns='18' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;year&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;reporter_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;partner_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;value&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;quantity&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;tariff_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;min_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;max_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;tariff_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;min_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;max_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;effective_tariff&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;unit_value&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;product_global_trend&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;unit_value_detrend&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;product_global_trend_right&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;unit_value_detrended&quot;, [&quot;number&quot;, &quot;f64&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "bOCq",
+      "code_hash": "c8f0ae62b1ee16d14c99d640f484458e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='bOCq-0' random-id='b3c7446b-5190-17ed-34e1-9b509a3a30c8'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;[{&#92;&quot;year&#92;&quot;:&#92;&quot;1995&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;250&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;826&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;711220&#92;&quot;,&#92;&quot;value&#92;&quot;:36852.648,&#92;&quot;quantity&#92;&quot;:7.037,&#92;&quot;tariff_rate_pref&#92;&quot;:null,&#92;&quot;min_rate_pref&#92;&quot;:null,&#92;&quot;max_rate_pref&#92;&quot;:null,&#92;&quot;tariff_rate_mfn&#92;&quot;:null,&#92;&quot;min_rate_mfn&#92;&quot;:null,&#92;&quot;max_rate_mfn&#92;&quot;:null,&#92;&quot;effective_tariff&#92;&quot;:null,&#92;&quot;unit_value&#92;&quot;:5236.982805172659,&#92;&quot;product_global_trend&#92;&quot;:2208.268510826826,&#92;&quot;unit_value_detrended&#92;&quot;:3028.714294345833},{&#92;&quot;year&#92;&quot;:&#92;&quot;1995&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;208&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;752&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;481920&#92;&quot;,&#92;&quot;value&#92;&quot;:13564.355,&#92;&quot;quantity&#92;&quot;:4474.51,&#92;&quot;tariff_rate_pref&#92;&quot;:null,&#92;&quot;min_rate_pref&#92;&quot;:null,&#92;&quot;max_rate_pref&#92;&quot;:null,&#92;&quot;tariff_rate_mfn&#92;&quot;:10.6,&#92;&quot;min_rate_mfn&#92;&quot;:10.4,&#92;&quot;max_rate_mfn&#92;&quot;:10.8,&#92;&quot;effective_tariff&#92;&quot;:10.6,&#92;&quot;unit_value&#92;&quot;:3.031472719917935,&#92;&quot;product_global_trend&#92;&quot;:2.303547674131638,&#92;&quot;unit_value_detrended&#92;&quot;:0.7279250457862969},{&#92;&quot;year&#92;&quot;:&#92;&quot;1995&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;208&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;752&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;841122&#92;&quot;,&#92;&quot;value&#92;&quot;:33423.88,&#92;&quot;quantity&#92;&quot;:13.0,&#92;&quot;tariff_rate_pref&#92;&quot;:null,&#92;&quot;min_rate_pref&#92;&quot;:null,&#92;&quot;max_rate_pref&#92;&quot;:null,&#92;&quot;tariff_rate_mfn&#92;&quot;:1.27,&#92;&quot;min_rate_mfn&#92;&quot;:0.0,&#92;&quot;max_rate_mfn&#92;&quot;:3.8,&#92;&quot;effective_tariff&#92;&quot;:1.27,&#92;&quot;unit_value&#92;&quot;:2571.067692307692,&#92;&quot;product_global_trend&#92;&quot;:1135.2974011294048,&#92;&quot;unit_value_detrended&#92;&quot;:1435.7702911782874},{&#92;&quot;year&#92;&quot;:&#92;&quot;1995&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;208&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;752&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;843999&#92;&quot;,&#92;&quot;value&#92;&quot;:10214.641,&#92;&quot;quantity&#92;&quot;:426.432,&#92;&quot;tariff_rate_pref&#92;&quot;:null,&#92;&quot;min_rate_pref&#92;&quot;:null,&#92;&quot;max_rate_pref&#92;&quot;:null,&#92;&quot;tariff_rate_mfn&#92;&quot;:3.5,&#92;&quot;min_rate_mfn&#92;&quot;:3.5,&#92;&quot;max_rate_mfn&#92;&quot;:3.5,&#92;&quot;effective_tariff&#92;&quot;:3.5,&#92;&quot;unit_value&#92;&quot;:23.95373940042023,&#92;&quot;product_global_trend&#92;&quot;:17.147431156981007,&#92;&quot;unit_value_detrended&#92;&quot;:6.806308243439222},{&#92;&quot;year&#92;&quot;:&#92;&quot;1995&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;208&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;752&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;852490&#92;&quot;,&#92;&quot;value&#92;&quot;:21447.14,&#92;&quot;quantity&#92;&quot;:584.46,&#92;&quot;tariff_rate_pref&#92;&quot;:null,&#92;&quot;min_rate_pref&#92;&quot;:null,&#92;&quot;max_rate_pref&#92;&quot;:null,&#92;&quot;tariff_rate_mfn&#92;&quot;:3.13,&#92;&quot;min_rate_mfn&#92;&quot;:0.0,&#92;&quot;max_rate_mfn&#92;&quot;:4.8,&#92;&quot;effective_tariff&#92;&quot;:3.13,&#92;&quot;unit_value&#92;&quot;:36.695650686103406,&#92;&quot;product_global_trend&#92;&quot;:70.45306999798824,&#92;&quot;unit_value_detrended&#92;&quot;:-33.75741931188483}]&quot;' data-total-rows='5' data-total-columns='16' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;year&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;reporter_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;partner_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;value&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;quantity&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;tariff_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;min_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;max_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;tariff_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;min_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;max_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;effective_tariff&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;unit_value&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;product_global_trend&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;unit_value_detrended&quot;, [&quot;number&quot;, &quot;f64&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "fAWE",
+      "code_hash": "9d2c42444c368087affefa459968bff0",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='fAWE-0' random-id='e773653f-d96b-c760-5872-3759adf263e2'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;[{&#92;&quot;year&#92;&quot;:&#92;&quot;1995&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;191&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;643&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;300420&#92;&quot;,&#92;&quot;value&#92;&quot;:11192.102,&#92;&quot;quantity&#92;&quot;:48.0,&#92;&quot;tariff_rate_pref&#92;&quot;:0.0,&#92;&quot;min_rate_pref&#92;&quot;:0.0,&#92;&quot;max_rate_pref&#92;&quot;:0.0,&#92;&quot;tariff_rate_mfn&#92;&quot;:null,&#92;&quot;min_rate_mfn&#92;&quot;:null,&#92;&quot;max_rate_mfn&#92;&quot;:null,&#92;&quot;effective_tariff&#92;&quot;:0.0,&#92;&quot;unit_value&#92;&quot;:233.1687916666667},{&#92;&quot;year&#92;&quot;:&#92;&quot;1995&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;191&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;643&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;851730&#92;&quot;,&#92;&quot;value&#92;&quot;:13280.802,&#92;&quot;quantity&#92;&quot;:163.0,&#92;&quot;tariff_rate_pref&#92;&quot;:2.6,&#92;&quot;min_rate_pref&#92;&quot;:2.6,&#92;&quot;max_rate_pref&#92;&quot;:2.6,&#92;&quot;tariff_rate_mfn&#92;&quot;:null,&#92;&quot;min_rate_mfn&#92;&quot;:null,&#92;&quot;max_rate_mfn&#92;&quot;:null,&#92;&quot;effective_tariff&#92;&quot;:2.6,&#92;&quot;unit_value&#92;&quot;:81.47731288343559},{&#92;&quot;year&#92;&quot;:&#92;&quot;1995&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;191&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;643&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;851790&#92;&quot;,&#92;&quot;value&#92;&quot;:21888.292,&#92;&quot;quantity&#92;&quot;:283.0,&#92;&quot;tariff_rate_pref&#92;&quot;:2.27,&#92;&quot;min_rate_pref&#92;&quot;:1.6,&#92;&quot;max_rate_pref&#92;&quot;:2.6,&#92;&quot;tariff_rate_mfn&#92;&quot;:null,&#92;&quot;min_rate_mfn&#92;&quot;:null,&#92;&quot;max_rate_mfn&#92;&quot;:null,&#92;&quot;effective_tariff&#92;&quot;:2.27,&#92;&quot;unit_value&#92;&quot;:77.34378798586573},{&#92;&quot;year&#92;&quot;:&#92;&quot;1995&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;191&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;643&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;870899&#92;&quot;,&#92;&quot;value&#92;&quot;:13207.878,&#92;&quot;quantity&#92;&quot;:1339.0,&#92;&quot;tariff_rate_pref&#92;&quot;:4.12,&#92;&quot;min_rate_pref&#92;&quot;:3.1,&#92;&quot;max_rate_pref&#92;&quot;:4.4,&#92;&quot;tariff_rate_mfn&#92;&quot;:null,&#92;&quot;min_rate_mfn&#92;&quot;:null,&#92;&quot;max_rate_mfn&#92;&quot;:null,&#92;&quot;effective_tariff&#92;&quot;:4.12,&#92;&quot;unit_value&#92;&quot;:9.863986557132188},{&#92;&quot;year&#92;&quot;:&#92;&quot;1995&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;191&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;705&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;270900&#92;&quot;,&#92;&quot;value&#92;&quot;:34320.516,&#92;&quot;quantity&#92;&quot;:205188.843,&#92;&quot;tariff_rate_pref&#92;&quot;:0.0,&#92;&quot;min_rate_pref&#92;&quot;:0.0,&#92;&quot;max_rate_pref&#92;&quot;:0.0,&#92;&quot;tariff_rate_mfn&#92;&quot;:0.0,&#92;&quot;min_rate_mfn&#92;&quot;:0.0,&#92;&quot;max_rate_mfn&#92;&quot;:0.0,&#92;&quot;effective_tariff&#92;&quot;:0.0,&#92;&quot;unit_value&#92;&quot;:0.16726307092632714},{&#92;&quot;year&#92;&quot;:&#92;&quot;1995&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;191&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;705&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;271000&#92;&quot;,&#92;&quot;value&#92;&quot;:89306.691,&#92;&quot;quantity&#92;&quot;:552437.452,&#92;&quot;tariff_rate_pref&#92;&quot;:0.0,&#92;&quot;min_rate_pref&#92;&quot;:0.0,&#92;&quot;max_rate_pref&#92;&quot;:0.0,&#92;&quot;tariff_rate_mfn&#92;&quot;:5.77,&#92;&quot;min_rate_mfn&#92;&quot;:4.7,&#92;&quot;max_rate_mfn&#92;&quot;:6.5,&#92;&quot;effective_tariff&#92;&quot;:0.0,&#92;&quot;unit_value&#92;&quot;:0.16165937098703437},{&#92;&quot;year&#92;&quot;:&#92;&quot;1995&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;191&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;705&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;300490&#92;&quot;,&#92;&quot;value&#92;&quot;:17420.589,&#92;&quot;quantity&#92;&quot;:310.651,&#92;&quot;tariff_rate_pref&#92;&quot;:0.0,&#92;&quot;min_rate_pref&#92;&quot;:0.0,&#92;&quot;max_rate_pref&#92;&quot;:0.0,&#92;&quot;tariff_rate_mfn&#92;&quot;:0.0,&#92;&quot;min_rate_mfn&#92;&quot;:0.0,&#92;&quot;max_rate_mfn&#92;&quot;:0.0,&#92;&quot;effective_tariff&#92;&quot;:0.0,&#92;&quot;unit_value&#92;&quot;:56.07768524807581},{&#92;&quot;year&#92;&quot;:&#92;&quot;1995&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;191&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;705&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;310520&#92;&quot;,&#92;&quot;value&#92;&quot;:13170.574,&#92;&quot;quantity&#92;&quot;:72476.328,&#92;&quot;tariff_rate_pref&#92;&quot;:4.5,&#92;&quot;min_rate_pref&#92;&quot;:4.5,&#92;&quot;max_rate_pref&#92;&quot;:4.5,&#92;&quot;tariff_rate_mfn&#92;&quot;:6.5,&#92;&quot;min_rate_mfn&#92;&quot;:6.5,&#92;&quot;max_rate_mfn&#92;&quot;:6.5,&#92;&quot;effective_tariff&#92;&quot;:4.5,&#92;&quot;unit_value&#92;&quot;:0.18172242390646504},{&#92;&quot;year&#92;&quot;:&#92;&quot;1995&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;191&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;705&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;390110&#92;&quot;,&#92;&quot;value&#92;&quot;:16309.776,&#92;&quot;quantity&#92;&quot;:11730.931,&#92;&quot;tariff_rate_pref&#92;&quot;:4.15,&#92;&quot;min_rate_pref&#92;&quot;:0.0,&#92;&quot;max_rate_pref&#92;&quot;:8.3,&#92;&quot;tariff_rate_mfn&#92;&quot;:11.9,&#92;&quot;min_rate_mfn&#92;&quot;:11.9,&#92;&quot;max_rate_mfn&#92;&quot;:11.9,&#92;&quot;effective_tariff&#92;&quot;:4.15,&#92;&quot;unit_value&#92;&quot;:1.390322387882087},{&#92;&quot;year&#92;&quot;:&#92;&quot;1995&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;191&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;705&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;870899&#92;&quot;,&#92;&quot;value&#92;&quot;:13093.058,&#92;&quot;quantity&#92;&quot;:1812.412,&#92;&quot;tariff_rate_pref&#92;&quot;:4.12,&#92;&quot;min_rate_pref&#92;&quot;:3.1,&#92;&quot;max_rate_pref&#92;&quot;:4.4,&#92;&quot;tariff_rate_mfn&#92;&quot;:5.98,&#92;&quot;min_rate_mfn&#92;&quot;:4.5,&#92;&quot;max_rate_mfn&#92;&quot;:6.4,&#92;&quot;effective_tariff&#92;&quot;:4.12,&#92;&quot;unit_value&#92;&quot;:7.224106880775453}]&quot;' data-total-rows='4180602' data-total-columns='14' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;year&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;reporter_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;partner_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;value&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;quantity&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;tariff_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;min_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;max_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;tariff_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;min_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;max_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;effective_tariff&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;unit_value&quot;, [&quot;number&quot;, &quot;f64&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='true' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    }
+  ]
+}

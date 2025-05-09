@@ -23,7 +23,7 @@ def _():
     from functools import partial
     from tqdm import tqdm
     from typing import List
-    return List, functools, mo, operator, pl, px
+    return List, functools, mo, operator, pl, px, tqdm
 
 
 @app.cell
@@ -236,8 +236,8 @@ def _(List, pl):
     return (simple_rebase,)
 
 
-app._unparsable_cell(
-    r"""
+@app.cell
+def _(functools, operator, pl, tqdm):
     def analyze_tariff_changes(
         unified_lf: pl.LazyFrame,
         start_year: str,
@@ -251,7 +251,7 @@ app._unparsable_cell(
         tariff_col_name: str = 'effective_tariff',
         price_col_name: str = 'unit_value'
     ) -> pl.DataFrame:
-        \"\"\"
+        """
         Filters a Polars LazyFrame, identifies tariff changes over a configured period,
         extracts changes in unit value, value, and quantity, and returns these instances.
 
@@ -260,8 +260,8 @@ app._unparsable_cell(
                         Expected columns: 'reporter_country', 'partner_country',
                                           'product_code', 'year', 'effective_tariff',
                                           'unit_value', 'value', 'quantity'.
-            start_year: Starting year for analysis (e.g., \"2000\").
-            end_year: End year for analysis (e.g., \"2023\").
+            start_year: Starting year for analysis (e.g., "2000").
+            end_year: End year for analysis (e.g., "2023").
             year_gap: Gap in years to identify and calculate the tariff change
                       (e.g., if 1, compares year Y with Y+1).
             year_unit_value_end_gap: Year gap from the start of the tariff change period (y1)
@@ -277,24 +277,24 @@ app._unparsable_cell(
         Returns:
             A Polars DataFrame containing instances of tariff changes and their
             relevant information.
-        \"\"\"
+        """
 
         # --- 1. FILTER DATA ---
         filtered_lf = unified_lf
 
         if reporter_countries:
             filtered_lf = filtered_lf.filter(
-                pl.col(\"reporter_country\").is_in(reporter_countries)
+                pl.col("reporter_country").is_in(reporter_countries)
             )
 
         if partner_countries:
             filtered_lf = filtered_lf.filter(
-                pl.col(\"partner_country\").is_in(partner_countries)
+                pl.col("partner_country").is_in(partner_countries)
             )
 
         if product_codes:
             conditions = [
-                pl.col(\"product_code\").str.slice(0, len(p)) == p
+                pl.col("product_code").str.slice(0, len(p)) == p
                 for p in product_codes
             ]
             # Combine conditions with an OR
@@ -307,10 +307,10 @@ app._unparsable_cell(
             for y1_int in range(int(start_year), int(end_year) + 1 - year_gap)
         ]
 
-        group_cols = [\"reporter_country\", \"partner_country\", \"product_code\"]
-        extracted_dfs_list = [
+        group_cols = ["reporter_country", "partner_country", "product_code"]
+        extracted_dfs_list = []
 
-        for y1, y2 in tqdm(year_pairs, desc=\"Processing year pairs\"):
+        for y1, y2 in tqdm(year_pairs, desc="Processing year pairs"):
             # The years between which we want to measure the price change
             year_before_imposition = str(int(y1) - years_before_tariff_change_unit_value)
             year_unit_value_end = str(int(y1) + int(year_unit_value_end_gap))
@@ -321,85 +321,85 @@ app._unparsable_cell(
             )
 
             changed_groups_lf = (
-                filtered_lf.filter(pl.col(\"year\").is_in(relevant_years))
+                filtered_lf.filter(pl.col("year").is_in(relevant_years))
                 .group_by(group_cols, maintain_order=True)
                 .agg(
                     # Tariff difference calculated between y1 and y2
                     (
                         pl.col(tariff_col_name)
-                        .filter(pl.col(\"year\") == y2)
+                        .filter(pl.col("year") == y2)
                         .mean()
                         - pl.col(tariff_col_name)
-                        .filter(pl.col(\"year\") == y1)
+                        .filter(pl.col("year") == y1)
                         .mean()
-                    ).alias(\"tariff_difference\"),
+                    ).alias("tariff_difference"),
                     # Tariff percentage change calculated between y1 and y2
                     (
                         (
                             pl.col(tariff_col_name)
-                            .filter(pl.col(\"year\") == y2)
+                            .filter(pl.col("year") == y2)
                             .mean()
                             - pl.col(tariff_col_name)
-                            .filter(pl.col(\"year\") == y1)
+                            .filter(pl.col("year") == y1)
                             .mean()
                         )
                         / pl.col(tariff_col_name)
-                        .filter(pl.col(\"year\") == y1)
+                        .filter(pl.col("year") == y1)
                         .mean()
                         * 100
-                    ).alias(\"tariff_perc_change\"),
+                    ).alias("tariff_perc_change"),
                     # Unit value percentage change calculated between year_before_imposition and year_unit_value_end
                     ((
                         (
                             pl.col(price_col_name)
-                            .filter(pl.col(\"year\") == year_unit_value_end)
+                            .filter(pl.col("year") == year_unit_value_end)
                             .mean()
                             - pl.col(price_col_name)
-                            .filter(pl.col(\"year\") == year_before_imposition)
+                            .filter(pl.col("year") == year_before_imposition)
                             .mean()
                         )
                         / pl.col(price_col_name)
-                        .filter(pl.col(\"year\") == year_before_imposition)
+                        .filter(pl.col("year") == year_before_imposition)
                         .mean()
-                    ) * 100).alias(\"unit_value_perc_change\"),
+                    ) * 100).alias("unit_value_perc_change"),
                     # Unit value change
                     (
                          pl.col(price_col_name)
-                        .filter(pl.col(\"year\") == year_unit_value_end)
+                        .filter(pl.col("year") == year_unit_value_end)
                         .mean()
                         - pl.col(price_col_name)
-                        .filter(pl.col(\"year\") == year_before_imposition)
+                        .filter(pl.col("year") == year_before_imposition)
                         .mean()
                     ).alias('unit_value_difference'),
                     # Value difference calculated between year_before_imposition and year_unit_value_end
                     (
-                        pl.col(\"value\")
-                        .filter(pl.col(\"year\") == year_unit_value_end)
+                        pl.col("value")
+                        .filter(pl.col("year") == year_unit_value_end)
                         .sum()
-                        - pl.col(\"value\")
-                        .filter(pl.col(\"year\") == year_before_imposition)
+                        - pl.col("value")
+                        .filter(pl.col("year") == year_before_imposition)
                         .sum()
-                    ).alias(\"value_difference\"),
+                    ).alias("value_difference"),
                     # Quantity difference calculated between year_before_imposition and year_unit_value_end
                     (
-                        pl.col(\"quantity\")
-                        .filter(pl.col(\"year\") == year_unit_value_end)
+                        pl.col("quantity")
+                        .filter(pl.col("year") == year_unit_value_end)
                         .sum()
-                        - pl.col(\"quantity\")
-                        .filter(pl.col(\"year\") == year_before_imposition)
+                        - pl.col("quantity")
+                        .filter(pl.col("year") == year_before_imposition)
                         .sum()
-                    ).alias(\"quantity_difference\"),
+                    ).alias("quantity_difference"),
                 )
                 .filter(
-                    (pl.col(\"tariff_difference\").is_not_null())
-                    & (pl.col(\"tariff_difference\") != 0.0)
-                    & (pl.col(\"unit_value_perc_change\").is_not_null())
+                    (pl.col("tariff_difference").is_not_null())
+                    & (pl.col("tariff_difference") != 0.0)
+                    & (pl.col("unit_value_perc_change").is_not_null())
                 )
                 .with_columns(
-                    # pl.lit(y1).alias(\"year_period_start\"),
-                    pl.lit(y1+\"-\"+y2).alias(\"tariff_change_range\"),
-                    pl.lit(year_before_imposition+\"-\"+year_unit_value_end).alias(
-                        \"unit_value_change_range\"
+                    # pl.lit(y1).alias("year_period_start"),
+                    pl.lit(y1+"-"+y2).alias("tariff_change_range"),
+                    pl.lit(year_before_imposition+"-"+year_unit_value_end).alias(
+                        "unit_value_change_range"
                     ),
                 )
             )
@@ -408,9 +408,7 @@ app._unparsable_cell(
 
         combined_df = pl.concat(extracted_dfs_list)
         return combined_df
-    """,
-    name="_"
-)
+    return (analyze_tariff_changes,)
 
 
 @app.cell
@@ -527,32 +525,13 @@ def _(pl):
 
 @app.cell
 def _(pl):
-    # unified_lf = pl.scan_parquet("data/final/unified_filtered_10000val_100c_sample_1000krows_filter")
-    unified_lf = pl.scan_parquet("data/final/unified_trade_tariff_partitioned")
+    unified_lf = pl.scan_parquet("data/final/unified_filtered_10000val_100c_sample_1000krows_filter")
+    # unified_lf = pl.scan_parquet("data/final/unified_trade_tariff_partitioned")
     unified_lf = unified_lf.with_columns(
         (pl.col('value') / pl.col('quantity')).alias('unit_value')
     )
     unified_lf.head().collect()
     return (unified_lf,)
-
-
-@app.cell
-def _(mo):
-    mo.md(
-        r"""
-        # Effect of tariff change on unit price level
-
-        Can we identify a relationship between the unit price level at different intervals and the tariff application?
-
-        What we're essentially looking for, is the change in unit price on the X axis and the tariff application on the Y axis, at different time delays.
-
-        * If there is a change in the tariff level between t and t+x
-        * What is the change in unit price between those
-
-        So first, we need to find those elements where there's a change in the tariff level between t and t+x
-        """
-    )
-    return
 
 
 @app.cell
@@ -916,17 +895,6 @@ def _(mo):
         Where are the new tariffs on this distribution?
         """
     )
-    return
-
-
-@app.cell
-def _(detrended_df_head):
-    # We have the total detrended df:
-    detrended_df_head
-
-    # So now we want to once again identify the tariff impositions (based on our filters) and the corresponding price increases, to put this in a neat table, and to plot it as a scatter.
-
-    # To do this simply, we could just extract the 
     return
 
 
