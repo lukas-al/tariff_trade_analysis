@@ -31,5 +31,9 @@ logs/*
 !.gitkeep
 .aider*
 
-# HTMLS for charts and marimo notebooks
+# HTMLS for charts and marimo notebooks - excl. the charts folder specifically
 *.html
+!charts/*
+
+# Marimo stuff (though it's already in the working tree...)
+__marimo__/*

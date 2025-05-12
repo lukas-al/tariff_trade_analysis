@@ -4,6 +4,7 @@ Analysis Pipeline Script for MPIL Tariff Trade Analysis
 Runs the core Marimo analysis scripts sequentially.
 """
 
+import argparse
 import subprocess
 from pathlib import Path
 
@@ -14,9 +15,14 @@ logger = get_logger(__name__)
 ANALYSIS_SCRIPT_DIR = Path(__file__).parent / "analysis"
 
 PIPELINE_SCRIPTS = [
-    ANALYSIS_SCRIPT_DIR / "DETREND_PIPELINE.py",
-    # Add more analysis scripts here as they are created
+    ANALYSIS_SCRIPT_DIR / "DIRECT_EFFECTS.py",
 ]
+
+parser = argparse.ArgumentParser(description="Marimo visualise unified")
+
+# Add your parameters/arguments here
+parser.add_argument("--fullfat", action="store_true", help="Using this flag will run on all the data")
+args = parser.parse_args()
 
 
 # --- Main Pipeline Function ---
@@ -35,7 +41,12 @@ def run_pipeline():
         # Construct the command to run the Marimo script
         # command = [sys.executable, "-m", "marimo", "run", str(script_path)]
         # command = [sys.executable, str(script_path)]
-        command = ["uv", "run", str(script_path)]
+        if args.fullfat:
+            print("running in fullfat mode - over all the data")
+            command = ["uv", "run", str(script_path), "--fullfat"]
+        else:
+            command = ["uv", "run", str(script_path)]
+
         logger.debug(f"Executing command: {' '.join(command)}")
 
         try:

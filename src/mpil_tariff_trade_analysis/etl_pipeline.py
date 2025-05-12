@@ -5,7 +5,6 @@ Runs the core Marimo ETL scripts sequentially.
 """
 
 import subprocess
-import sys
 from pathlib import Path
 
 from mpil_tariff_trade_analysis.utils.logging_config import get_logger
@@ -19,6 +18,7 @@ PIPELINE_SCRIPTS = [
     ETL_SCRIPT_DIR / "WITS_PIPELINE.py",
     ETL_SCRIPT_DIR / "MERGING_PIPELINE.py",
     ETL_SCRIPT_DIR / "SAMPLE_PIPELINE.py",
+    ETL_SCRIPT_DIR / "DETREND_PIPELINE.py",
 ]
 
 
@@ -36,7 +36,7 @@ def run_pipeline():
 
         logger.info(f"Running script: {script_path.name}...")
         # Construct the command to run the Marimo script
-        command = [sys.executable, "-m", "marimo", "run", str(script_path)]
+        command = ["uv", "run", str(script_path)]
         logger.debug(f"Executing command: {' '.join(command)}")
 
         try:
