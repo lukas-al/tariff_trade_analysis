@@ -34,6 +34,7 @@ logs/*
 # HTMLS for charts and marimo notebooks - excl. the charts folder specifically
 *.html
 !charts/*
+!notebook_outputs/*
 
 # Marimo stuff (though it's already in the working tree...)
 __marimo__/*
