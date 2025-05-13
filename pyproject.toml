@@ -18,6 +18,7 @@ dependencies = [
     "pycountry>=24.6.1",
     "ydata-profiling>=4.16.1",
     "statsmodels>=0.14.4",
+    "pyvis>=0.3.2",
 ]
 
 [build-system]
@@ -42,6 +43,10 @@ testpaths = ["tests", "dev", "utils"]
 [tool.ruff]
 line-length = 150
 target-version = "py312"
+exclude = [
+  "__marimo__",
+  "src/mpil_tariff_trade_analysis/dev2/*"
+]
 
 [tool.ruff.lint]
 select = [
