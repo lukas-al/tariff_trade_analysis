@@ -1,0 +1,165 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.13.8"
+  },
+  "cells": [
+    {
+      "id": "Hbol",
+      "code_hash": "f776ef04e50858321491f689ff8189db",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "MJUe",
+      "code_hash": "8b9d92632239551ad4cf4ced7f33db0c",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"huang-mix-regression-replication\">Huang-Mix Regression replication</h1>\n<span class=\"paragraph\">Replicating the Huang-Mix regression, limiting the rest-of-world to just the UK. </span>\n<span class=\"paragraph\">The Huang-Mix paper, <a href=\"https://drive.google.com/file/d/1DQABGIs2oD2wt9pMN89uppp44Gc6FIm6/view\" rel=\"noopener\" target=\"_blank\">Trade Wars and Rumors of Trade Wars:\nThe Dynamic Effects of the U.S.\u2013China Tariff Hikes</a> is primarily focussed on computing the welfare impacts of tariffs as a trade policy. It focuses on the price impacts of tariffs, including various expectations and uncertainty channels. This is applied through a large general equillibrium DSGE model, including the behaviour of multiple agents. </span>\n<span class=\"paragraph\">We am not interested in replicated in the entirety of the paper. Instead, we are interested in just the panel regression used to inform the elasiticty parameters in the model. Where the paper calculates the redirection of trade values / volumes to the ROW, we're interested in isolating the effect to just the UK. </span>\n<span class=\"paragraph\">To answer, empirically, the following question:</span>\n<blockquote>\n<span class=\"paragraph\">What was the impact of the 2017-20 US-China trade war on UK imports from China.</span>\n</blockquote>\n<h2 id=\"steps\">Steps</h2>\n<h3 id=\"replicate-original-spec\">Replicate original spec</h3>\n<span class=\"paragraph\">We initially want to replicate their original specification, using our data. This is to ensure our data is good and that we're following the correct process. For a first stab we'd do the regression at the bottom of page 7 - essentially the direct effect (in quantities) for US-China. This means we need to:</span>\n<ol>\n<li>replicate the input data as required for the regression.</li>\n<li>set up the regression as specified in the original paper.</li>\n<li>run the regression.</li>\n<li>extract and chart the results.</li>\n</ol>\n<h3 id=\"implement-our-spec\">Implement our spec</h3>\n<ol>\n<li>Design the input data required for the model</li>\n<li>Specify the panel regression as we require, incl. fixed effects. </li>\n<li>Run the regression, estimate the parameters</li>\n<li>Chart the results under a range of specifications, fixed effects, etc. </li>\n</ol>\n<h2 id=\"regression-specification\">Regression Specification</h2>\n<span class=\"paragraph\">\ud83c\udfd7\ufe0f TBD</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "vblA",
+      "code_hash": "12ac065041cb669056098a813d7aaf6c",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"replicating-the-original-specification\">Replicating the original specification</h1>\n<span class=\"paragraph\">Replicating the regression as on page 7 of the paper.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "6a7ac0ba6fb518fb8a8edc3c09ee4cb7",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='bkHC-0' random-id='a424a9ae-6d42-7bac-7e7a-8816a70ca153'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;[{&#92;&quot;year&#92;&quot;:&#92;&quot;1995&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;024&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;528&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;270900&#92;&quot;,&#92;&quot;value&#92;&quot;:15004.342,&#92;&quot;quantity&#92;&quot;:129282.0,&#92;&quot;tariff_rate_pref&#92;&quot;:null,&#92;&quot;min_rate_pref&#92;&quot;:null,&#92;&quot;max_rate_pref&#92;&quot;:null,&#92;&quot;tariff_rate_mfn&#92;&quot;:0.0,&#92;&quot;min_rate_mfn&#92;&quot;:0.0,&#92;&quot;max_rate_mfn&#92;&quot;:0.0,&#92;&quot;effective_tariff&#92;&quot;:0.0},{&#92;&quot;year&#92;&quot;:&#92;&quot;1995&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;012&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;528&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;270900&#92;&quot;,&#92;&quot;value&#92;&quot;:668285.705,&#92;&quot;quantity&#92;&quot;:3737525.37,&#92;&quot;tariff_rate_pref&#92;&quot;:null,&#92;&quot;min_rate_pref&#92;&quot;:null,&#92;&quot;max_rate_pref&#92;&quot;:null,&#92;&quot;tariff_rate_mfn&#92;&quot;:0.0,&#92;&quot;min_rate_mfn&#92;&quot;:0.0,&#92;&quot;max_rate_mfn&#92;&quot;:0.0,&#92;&quot;effective_tariff&#92;&quot;:0.0},{&#92;&quot;year&#92;&quot;:&#92;&quot;1995&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;012&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;528&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;271000&#92;&quot;,&#92;&quot;value&#92;&quot;:214116.967,&#92;&quot;quantity&#92;&quot;:2422991.305,&#92;&quot;tariff_rate_pref&#92;&quot;:null,&#92;&quot;min_rate_pref&#92;&quot;:null,&#92;&quot;max_rate_pref&#92;&quot;:null,&#92;&quot;tariff_rate_mfn&#92;&quot;:5.77,&#92;&quot;min_rate_mfn&#92;&quot;:4.7,&#92;&quot;max_rate_mfn&#92;&quot;:6.5,&#92;&quot;effective_tariff&#92;&quot;:5.77},{&#92;&quot;year&#92;&quot;:&#92;&quot;1995&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;012&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;528&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;271111&#92;&quot;,&#92;&quot;value&#92;&quot;:11785.117,&#92;&quot;quantity&#92;&quot;:112553.936,&#92;&quot;tariff_rate_pref&#92;&quot;:null,&#92;&quot;min_rate_pref&#92;&quot;:null,&#92;&quot;max_rate_pref&#92;&quot;:null,&#92;&quot;tariff_rate_mfn&#92;&quot;:1.0,&#92;&quot;min_rate_mfn&#92;&quot;:1.0,&#92;&quot;max_rate_mfn&#92;&quot;:1.0,&#92;&quot;effective_tariff&#92;&quot;:1.0},{&#92;&quot;year&#92;&quot;:&#92;&quot;1995&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;012&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;528&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;271112&#92;&quot;,&#92;&quot;value&#92;&quot;:19377.957,&#92;&quot;quantity&#92;&quot;:70081.192,&#92;&quot;tariff_rate_pref&#92;&quot;:null,&#92;&quot;min_rate_pref&#92;&quot;:null,&#92;&quot;max_rate_pref&#92;&quot;:null,&#92;&quot;tariff_rate_mfn&#92;&quot;:2.77,&#92;&quot;min_rate_mfn&#92;&quot;:0.0,&#92;&quot;max_rate_mfn&#92;&quot;:14.4,&#92;&quot;effective_tariff&#92;&quot;:2.77}]&quot;' data-total-rows='5' data-total-columns='13' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;year&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;reporter_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;partner_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;value&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;quantity&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;tariff_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;min_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;max_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;tariff_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;min_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;max_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;effective_tariff&quot;, [&quot;number&quot;, &quot;f32&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "9fab80346dd239bcc55fd719f8b182c8",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "PKri",
+      "code_hash": "e78421ca8be1be1de28a9cd5fad5fc56",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Xref",
+      "code_hash": "00df0b663a649c9f0f14274d50eeea35",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Filtered to select only required data:\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "shape: (5, 7)\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502 year \u2506 importer \u2506 exporter \u2506 product_code \u2506 log_value \u2506 log_quantity \u2506 tariff_us_china \u2502\n\u2502 ---  \u2506 ---      \u2506 ---      \u2506 ---          \u2506 ---       \u2506 ---          \u2506 ---             \u2502\n\u2502 str  \u2506 str      \u2506 str      \u2506 str          \u2506 f64       \u2506 f64          \u2506 f32             \u2502\n\u255e\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2561\n\u2502 1995 \u2506 528      \u2506 024      \u2506 270900       \u2506 9.616095  \u2506 11.769751    \u2506 null            \u2502\n\u2502 1995 \u2506 528      \u2506 012      \u2506 270900       \u2506 13.412471 \u2506 15.133934    \u2506 null            \u2502\n\u2502 1995 \u2506 528      \u2506 012      \u2506 271000       \u2506 12.274278 \u2506 14.700513    \u2506 null            \u2502\n\u2502 1995 \u2506 528      \u2506 012      \u2506 271111       \u2506 9.374593  \u2506 11.631188    \u2506 null            \u2502\n\u2502 1995 \u2506 528      \u2506 012      \u2506 271112       \u2506 9.871891  \u2506 11.15741     \u2506 null            \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\nCreated interaction term\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "shape: (5, 12)\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502 year \u2506 importer \u2506 exporter \u2506 product_cod \u2506 \u2026 \u2506 tariff_int \u2506 tariff_int \u2506 tariff_int \u2506 tariff_int \u2502\n\u2502 ---  \u2506 ---      \u2506 ---      \u2506 e           \u2506   \u2506 eraction_2 \u2506 eraction_2 \u2506 eraction_2 \u2506 eraction_2 \u2502\n\u2502 str  \u2506 str      \u2506 str      \u2506 ---         \u2506   \u2506 019        \u2506 020        \u2506 021        \u2506 022        \u2502\n\u2502      \u2506          \u2506          \u2506 str         \u2506   \u2506 ---        \u2506 ---        \u2506 ---        \u2506 ---        \u2502\n\u2502      \u2506          \u2506          \u2506             \u2506   \u2506 f32        \u2506 f32        \u2506 f32        \u2506 f32        \u2502\n\u255e\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2561\n\u2502 1995 \u2506 528      \u2506 024      \u2506 270900      \u2506 \u2026 \u2506 0.0        \u2506 0.0        \u2506 0.0        \u2506 0.0        \u2502\n\u2502 1995 \u2506 528      \u2506 012      \u2506 270900      \u2506 \u2026 \u2506 0.0        \u2506 0.0        \u2506 0.0        \u2506 0.0        \u2502\n\u2502 1995 \u2506 528      \u2506 012      \u2506 271000      \u2506 \u2026 \u2506 0.0        \u2506 0.0        \u2506 0.0        \u2506 0.0        \u2502\n\u2502 1995 \u2506 528      \u2506 012      \u2506 271111      \u2506 \u2026 \u2506 0.0        \u2506 0.0        \u2506 0.0        \u2506 0.0        \u2502\n\u2502 1995 \u2506 528      \u2506 012      \u2506 271112      \u2506 \u2026 \u2506 0.0        \u2506 0.0        \u2506 0.0        \u2506 0.0        \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\nCreated fixed effect terms - these are categorical\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "shape: (5, 15)\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502 year \u2506 importer \u2506 exporter \u2506 product_cod \u2506 \u2026 \u2506 tariff_inte \u2506 alpha_ipt   \u2506 alpha_jpt  \u2506 alpha_ij \u2502\n\u2502 ---  \u2506 ---      \u2506 ---      \u2506 e           \u2506   \u2506 raction_202 \u2506 ---         \u2506 ---        \u2506 ---      \u2502\n\u2502 str  \u2506 str      \u2506 str      \u2506 ---         \u2506   \u2506 2           \u2506 str         \u2506 str        \u2506 str      \u2502\n\u2502      \u2506          \u2506          \u2506 str         \u2506   \u2506 ---         \u2506             \u2506            \u2506          \u2502\n\u2502      \u2506          \u2506          \u2506             \u2506   \u2506 f32         \u2506             \u2506            \u2506          \u2502\n\u255e\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2561\n\u2502 1995 \u2506 528      \u2506 024      \u2506 270900      \u2506 \u2026 \u2506 0.0         \u2506 528^270900^ \u2506 024^270900 \u2506 528^024  \u2502\n\u2502      \u2506          \u2506          \u2506             \u2506   \u2506             \u2506 1995        \u2506 ^1995      \u2506          \u2502\n\u2502 1995 \u2506 528      \u2506 012      \u2506 270900      \u2506 \u2026 \u2506 0.0         \u2506 528^270900^ \u2506 012^270900 \u2506 528^012  \u2502\n\u2502      \u2506          \u2506          \u2506             \u2506   \u2506             \u2506 1995        \u2506 ^1995      \u2506          \u2502\n\u2502 1995 \u2506 528      \u2506 012      \u2506 271000      \u2506 \u2026 \u2506 0.0         \u2506 528^271000^ \u2506 012^271000 \u2506 528^012  \u2502\n\u2502      \u2506          \u2506          \u2506             \u2506   \u2506             \u2506 1995        \u2506 ^1995      \u2506          \u2502\n\u2502 1995 \u2506 528      \u2506 012      \u2506 271111      \u2506 \u2026 \u2506 0.0         \u2506 528^271111^ \u2506 012^271111 \u2506 528^012  \u2502\n\u2502      \u2506          \u2506          \u2506             \u2506   \u2506             \u2506 1995        \u2506 ^1995      \u2506          \u2502\n\u2502 1995 \u2506 528      \u2506 012      \u2506 271112      \u2506 \u2026 \u2506 0.0         \u2506 528^271112^ \u2506 012^271112 \u2506 528^012  \u2502\n\u2502      \u2506          \u2506          \u2506             \u2506   \u2506             \u2506 1995        \u2506 ^1995      \u2506          \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n"
+        }
+      ]
+    },
+    {
+      "id": "SFPL",
+      "code_hash": "c5a3a83fed9ae42ad90a3b5860f2935c",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Regression formula is:\nlog_quantity ~ tariff_interaction_2018 + tariff_interaction_2019 + tariff_interaction_2020 + tariff_interaction_2021 + tariff_interaction_2022 | alpha_ipt + alpha_jpt + alpha_ij\n"
+        }
+      ]
+    },
+    {
+      "id": "BYtC",
+      "code_hash": "2d5dd66674173c8376044a2b346c9636",
+      "outputs": [
+        {
+          "type": "error",
+          "ename": "exception",
+          "evalue": "The Mundlak transform is only supported for models with up to two fixed effects.",
+          "traceback": []
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "RGSE",
+      "code_hash": "4a4a39e190e7e82bdab5272f32386e00",
+      "outputs": [
+        {
+          "type": "error",
+          "ename": "exception",
+          "evalue": "An ancestor raised an exception (NotImplementedError): ",
+          "traceback": []
+        }
+      ],
+      "console": []
+    }
+  ]
+}

@@ -31,97 +31,6 @@ def _(mo):
 
 
 @app.cell
-def _():
-    # def apply_detrending_to_lazyframe(
-    #     target_lf: pl.LazyFrame,
-    #     source_lf: pl.LazyFrame,
-    #     value_column_name: str,
-    #     detrended_output_col_name: str = "detrended_value",
-    #     trend_line_output_col_name: str = "trend_line_value"
-    # ) -> pl.LazyFrame:
-    #     """
-    #     Applies detrending to a Polars LazyFrame.
-
-    #     This function calculates trend parameters (slope and intercept) for each 'product_code'
-    #     group using the 'year' column from `source_for_trend_params_lf` and the specified
-    #     `value_column_name`. It then joins these parameters to `target_lf` and
-    #     calculates the trend line and the detrended values.
-
-    #     It relies on the globally defined `calculate_trend_params_statsmodels` UDF and
-    #     `udf_output_schema_sm` which hardcode 'product_code' as the grouping key and
-    #     'year' as the time variable for OLS regression.
-
-    #     Args:
-    #         target_lf: The LazyFrame to which detrending will be applied.
-    #                        Must contain 'product_code', 'year', and `value_column_name`.
-    #         source_lf: The LazyFrame used to calculate trend parameters.
-    #                                     Must contain 'product_code', 'year', and `value_column_name`.
-    #                                     Can be the same as `target_lf`.
-    #         value_column_name: The name of the column in `source_for_trend_params_lf` (for fitting)
-    #                            and `target_lf` (for detrending) that contains the values to be detrended.
-    #         detrended_output_col_name: The desired name for the new column containing detrended values.
-    #         trend_line_output_col_name: The desired name for the new column containing trend line values.
-
-    #     Returns:
-    #         A new LazyFrame with the added trend line and detrended value columns.
-    #     """
-    #     source_lf = source_lf.with_columns(
-    #             pl.col('year').cast(pl.Float64)
-    #         ).sort('year')
-
-    #     trend_params_lf = source_lf.group_by(
-    #         "product_code", maintain_order=True
-    #     ).agg(
-    #         [
-    #             # Manually calculate the OLS linear regression
-    #             pl.cov(pl.col("year"), pl.col(value_column_name)).alias("cov_xy"),
-    #             pl.col("year").var().alias("var_x"),
-    #             pl.col("year").mean().alias("mean_x"),
-    #             pl.col(value_column_name).mean().alias("mean_y"),
-    #         ]
-    #     )
-
-    #     trend_params_lf = trend_params_lf.with_columns(
-    #         (
-    #             pl.col("cov_xy") / pl.col("var_x")
-    #         ).alias('slope')
-    #     )
-
-    #     trend_params_lf = trend_params_lf.with_columns(
-    #         (
-    #             pl.col("mean_y") - (pl.col("slope") * pl.col("mean_x"))
-    #         ).alias('intercept')
-    #     ).select(['product_code', 'slope', 'intercept'])
-
-    #     # Join trend parameters with the target LazyFrame.
-    #     # The join is on 'product_code'.
-    #     detrended_lf = target_lf.join(
-    #         trend_params_lf,
-    #         on='product_code', # Fixed by the UDF's output
-    #         how='left',
-    #         allow_parallel=True,
-    #     ).sort('year')
-
-    #     # Calculate the global trend at each year and the detrended value.
-    #     # Cast 'year' to Float64 for consistency with OLS fitting in the UDF.
-    #     detrended_lf = detrended_lf.with_columns(
-    #         (
-    #             pl.col("slope") * pl.col("year").cast(pl.Float64) + pl.col("intercept")
-    #         ).alias(trend_line_output_col_name)
-    #     ).with_columns(
-    #         (
-    #             pl.col(value_column_name) - pl.col(trend_line_output_col_name)
-    #         ).alias(detrended_output_col_name)
-    #     ).drop(
-    #         'slope', 'intercept'
-    #     ).sort('year')
-
-    #     return detrended_lf
-
-    return
-
-
-@app.cell
 def _(pl):
     def apply_detrending_to_lazyframe(
         target_lf: pl.LazyFrame,
@@ -191,18 +100,6 @@ def _(pl):
             .select(["product_code", "year", trend_line_output_col_name])
         )
 
-        # try:
-        #     target_lf = target_lf.drop(
-        #         [
-        #             trend_line_output_col_name,
-        #             trend_line_output_col_name+"_right",
-        #         ]
-        #     )
-        #     print("Dropped existing detrended series")
-
-        # except:
-        #     print("No existing detrended series")
-
         detrended_lf = target_lf.join(global_avg_price_trend_lf, on=["product_code", "year"], how="left")
 
         detrended_lf = detrended_lf.with_columns(
@@ -264,7 +161,6 @@ def _(apply_detrending_to_lazyframe, unified_lf):
 
 @app.cell
 def _(pl, unified_lf_detrend):
-    # Apply a log to the unit value
     unified_lf_trf_detrend = unified_lf_detrend.with_columns(
         # pl.when(pl.col("unit_value") > 0)
         #   .then(pl.col("unit_value").log())

@@ -19,6 +19,7 @@ dependencies = [
     "ydata-profiling>=4.16.1",
     "statsmodels>=0.14.4",
     "pyvis>=0.3.2",
+    "pyfixest>=0.29.0",
 ]
 
 [build-system]

@@ -1,5 +1,3 @@
-
-
 import marimo
 
 __generated_with = "0.13.3"
@@ -8,14 +6,15 @@ app = marimo.App(width="medium")
 
 @app.cell
 def _():
-    import marimo as mo
-    import polars as pl
-    import os
     import glob
+    import os
     import re
-    import pandas as pd
-
     from pathlib import Path
+
+    import marimo as mo
+    import pandas as pd
+    import polars as pl
+
     return Path, glob, mo, os, pd, pl, re
 
 
@@ -39,10 +38,7 @@ def _(mo):
 def _(glob, os, pl, re):
     # Load and consolidate all the WITS data
 
-    def consolidate_wits_tariff_data(
-        tariff_type="AVEMFN", base_dir="data/raw/WITS_tariff/"
-    ) -> pl.LazyFrame:
-
+    def consolidate_wits_tariff_data(tariff_type="AVEMFN", base_dir="data/raw/WITS_tariff/") -> pl.LazyFrame:
         tariff_dir = os.path.join(base_dir, tariff_type)
 
         # 1: find all CSV files for this tariff type
@@ -83,43 +79,43 @@ def _(glob, os, pl, re):
 
         # 2: Create a schema for the files
         if tariff_type == "AVEMFN":
-                schema = {
-                    "NomenCode": pl.Utf8,
-                    "Reporter_ISO_N": pl.Utf8,
-                    "Year": pl.Int32,
-                    "ProductCode": pl.Utf8,
-                    "Sum_Of_Rates": pl.Utf8,
-                    "Min_Rate": pl.Utf8,
-                    "Max_Rate": pl.Utf8,
-                    "SimpleAverage": pl.Utf8,
-                    "Nbr_NA_Lines": pl.Int32,
-                    "Nbr_Free_Lines": pl.Int32,
-                    "Nbr_AVE_Lines": pl.Int32,
-                    "Nbr_Dutiable_Lines": pl.Int32,
-                    "TotalNoOfValidLines": pl.Int32,
-                    "TotalNoOfLines": pl.Int32,
-                    "EstCode": pl.Utf8,
-                }
+            schema = {
+                "NomenCode": pl.Utf8,
+                "Reporter_ISO_N": pl.Utf8,
+                "Year": pl.Int32,
+                "ProductCode": pl.Utf8,
+                "Sum_Of_Rates": pl.Utf8,
+                "Min_Rate": pl.Utf8,
+                "Max_Rate": pl.Utf8,
+                "SimpleAverage": pl.Utf8,
+                "Nbr_NA_Lines": pl.Int32,
+                "Nbr_Free_Lines": pl.Int32,
+                "Nbr_AVE_Lines": pl.Int32,
+                "Nbr_Dutiable_Lines": pl.Int32,
+                "TotalNoOfValidLines": pl.Int32,
+                "TotalNoOfLines": pl.Int32,
+                "EstCode": pl.Utf8,
+            }
 
         elif tariff_type == "AVEPref":
-                schema = {
-                    "NomenCode": pl.Utf8,
-                    "Reporter_ISO_N": pl.Utf8,
-                    "Year": pl.Int32,
-                    "ProductCode": pl.Utf8,
-                    "Partner": pl.Utf8,
-                    "Sum_Of_Rates": pl.Utf8,
-                    "Min_Rate": pl.Utf8,
-                    "Max_Rate": pl.Utf8,
-                    "SimpleAverage": pl.Utf8,
-                    "Nbr_NA_Lines": pl.Int32,
-                    "Nbr_Free_Lines": pl.Int32,
-                    "Nbr_AVE_Lines": pl.Int32,
-                    "Nbr_Dutiable_Lines": pl.Int32,
-                    "TotalNoOfValidLines": pl.Int32,
-                    "TotalNoOfLines": pl.Int32,
-                    "EstCode": pl.Utf8,
-                }
+            schema = {
+                "NomenCode": pl.Utf8,
+                "Reporter_ISO_N": pl.Utf8,
+                "Year": pl.Int32,
+                "ProductCode": pl.Utf8,
+                "Partner": pl.Utf8,
+                "Sum_Of_Rates": pl.Utf8,
+                "Min_Rate": pl.Utf8,
+                "Max_Rate": pl.Utf8,
+                "SimpleAverage": pl.Utf8,
+                "Nbr_NA_Lines": pl.Int32,
+                "Nbr_Free_Lines": pl.Int32,
+                "Nbr_AVE_Lines": pl.Int32,
+                "Nbr_Dutiable_Lines": pl.Int32,
+                "TotalNoOfValidLines": pl.Int32,
+                "TotalNoOfLines": pl.Int32,
+                "EstCode": pl.Utf8,
+            }
 
         else:
             raise KeyError("Wrong tariff type")
@@ -136,8 +132,8 @@ def _(glob, os, pl, re):
                 df = pl.scan_csv(
                     file_info["file_path"],
                     schema=schema,
-                    # infer_schema_length=0, 
-                    try_parse_dates=False, 
+                    # infer_schema_length=0,
+                    try_parse_dates=False,
                     separator=",",
                     skip_rows_after_header=0,
                     null_values=["", "NA"],
@@ -147,7 +143,7 @@ def _(glob, os, pl, re):
 
                 dfs.append(df)
                 successful_files += 1
-            except Exception as e:
+            except Exception:
                 # # logger.error(f"Error loading file {file_info['file_path']}: {e}")
                 failed_files += 1
 
@@ -162,10 +158,8 @@ def _(glob, os, pl, re):
 
         # Combine all dataframes
         # # logger.info("Combining all scanned dataframes")
-        print('Combining all scanned dfs')
-        combined_df = pl.concat(
-            dfs, how="vertical_relaxed"
-        )  # Use relaxed to handle potential schema variations if any
+        print("Combining all scanned dfs")
+        combined_df = pl.concat(dfs, how="vertical_relaxed")  # Use relaxed to handle potential schema variations if any
 
         # Add a column for tariff type
         combined_df = combined_df.with_columns(pl.lit(tariff_type).alias("tariff_type"))
@@ -223,10 +217,7 @@ def _(mo):
 @app.cell
 def _(Path, consolidated_lf_AVEMFN, consolidated_lf_AVEPref, pd, pl):
     # --- Step 2: Translate HS codes to H0 ---
-    def vectorized_hs_translation(
-        input_lf: pl.LazyFrame, mapping_dir: str = "data/raw/hs_reference"
-    ) -> pl.LazyFrame:
-
+    def vectorized_hs_translation(input_lf: pl.LazyFrame, mapping_dir: str = "data/raw/hs_reference") -> pl.LazyFrame:
         print("Starting HS code translation to H0 (HS92).")
 
         # Define which HS revisions require mapping (all except H0)
@@ -290,7 +281,7 @@ def _(Path, consolidated_lf_AVEMFN, consolidated_lf_AVEPref, pd, pl):
 
         # Create the translated HS code column: use target_code if available, otherwise fallback to the
         # original code.
-        print(f"DF non H0 before join: {df_non_h0.head().collect()}")
+        print(f"DF non H0 after join: {df_non_h0.head().collect()}")
 
         df_non_h0 = (
             df_non_h0.with_columns(
@@ -306,13 +297,11 @@ def _(Path, consolidated_lf_AVEMFN, consolidated_lf_AVEPref, pd, pl):
         # Optionally drop unnecessary columns from join
         df_non_h0 = df_non_h0.drop(["target_code"])  # Drop the mapping target code column
 
-        print(f"DF non H0 after join: {df_non_h0.head().collect()}")
+        print(f"DF non H0 after join and merge: {df_non_h0.head().collect()}")
 
         # Combine the rows which were already in H0 with the ones translated.
         common_cols = df_h0.collect_schema().names()
-        df_final = pl.concat(
-            [df_h0.select(common_cols), df_non_h0.select(common_cols)], how="vertical_relaxed"
-        )
+        df_final = pl.concat([df_h0.select(common_cols), df_non_h0.select(common_cols)], how="vertical_relaxed")
 
         # logger.info("✅ HS code translation completed.")
         return df_final
@@ -337,16 +326,12 @@ def _(mo):
 @app.cell
 def _(pd, pl, translated_lf_AVEPref):
     # Load the mapping
-    pref_group_mapping = pd.read_csv(
-        "data/raw/WITS_pref_groups/WITS_pref_groups.csv",
-        encoding="iso-8859-1",
-        usecols=[0, 2]
-    )
+    pref_group_mapping = pd.read_csv("data/raw/WITS_pref_groups/WITS_pref_groups.csv", encoding="iso-8859-1", usecols=[0, 2])
 
     # Minor cleans and convert to polars
     pref_group_mapping.columns = ["pref_group_code", "country_iso_num"]
     pref_group_mapping["country_iso_num"] = pref_group_mapping["country_iso_num"].astype(str).str.zfill(3)
-    pref_group_mapping = pref_group_mapping.groupby('pref_group_code').agg(list)
+    pref_group_mapping = pref_group_mapping.groupby("pref_group_code").agg(list)
     pref_group_mapping_lf = pl.from_pandas(pref_group_mapping, include_index=True).lazy()
 
     # Join on the AVEpref dataset
@@ -357,10 +342,8 @@ def _(pd, pl, translated_lf_AVEPref):
     )
 
     # Explode out to create entries for each individual country (memory intensive!)
-    joined_pref_lf_AVEPref = joined_pref_lf_AVEPref.explode('country_iso_num')
-    joined_pref_lf_AVEPref = joined_pref_lf_AVEPref.with_columns(
-        pl.col('country_iso_num').alias('partner_country')
-    ).drop('country_iso_num')
+    joined_pref_lf_AVEPref = joined_pref_lf_AVEPref.explode("country_iso_num")
+    joined_pref_lf_AVEPref = joined_pref_lf_AVEPref.with_columns(pl.col("country_iso_num").alias("partner_country")).drop("country_iso_num")
 
     print(f"Joine Pref LF head:\n{joined_pref_lf_AVEPref.head().collect(engine='streaming')}")
     return (joined_pref_lf_AVEPref,)
@@ -379,7 +362,8 @@ def _(mo):
 
 @app.cell
 def _():
-    from typing import List, Dict
+    from typing import Dict, List
+
     import pycountry
 
     def identify_iso_code(
@@ -397,9 +381,7 @@ def _():
                 "578",
                 "756",
             ],  # Europe EFTA, nes -> Iceland, Liechtenstein, Norway, Switzerland
-            "490": [
-                "158"
-            ],  # Other Asia, nes -> Taiwan (ISO 3166-1 numeric is 158)
+            "490": ["158"],  # Other Asia, nes -> Taiwan (ISO 3166-1 numeric is 158)
             "918": [
                 "040",
                 "056",
@@ -428,8 +410,14 @@ def _():
                 "705",
                 "724",
                 "752",
-                "492", # Monaco
-            ], # European Customs Union incl. Monaco
+                "492",  # Monaco
+            ],  # European Customs Union incl. Monaco
+            "230": ["231"],  # Ethiopia
+            "200": ["203"],  # Czech Republic
+            "729": ["736"],  # Sudan 1
+            "728": ["736"],  # Sudan 2
+            "688": ["891"],  # Serbia
+            "499": ["890"],  # Montenegro
         }
 
         # Check our hardcoded ccs first
@@ -485,9 +473,9 @@ def _():
             except LookupError:
                 print(f"Unable to find any ISO alpha 3 code match for {cc}")
 
-
         print("Failed to match entirely. Returning original code.")
         return [cc]
+
     return (identify_iso_code,)
 
 
@@ -510,9 +498,7 @@ def _(
         # Load our reference data - this is marginally inefficient but feels cleaner
         baci_reference_path = Path("data/raw/BACI_HS92_V202501/country_codes_V202501.csv")
         baci_map = pl.read_csv(baci_reference_path, infer_schema=False, encoding="utf8")
-        baci_map = baci_map.with_columns(
-            pl.col("country_code").str.zfill(3)
-        )
+        baci_map = baci_map.with_columns(pl.col("country_code").str.zfill(3))
         baci_map_names = dict(zip(baci_map["country_code"], baci_map["country_name"], strict=False))
         baci_map_iso3 = dict(zip(baci_map["country_code"], baci_map["country_iso3"], strict=False))
         # print(f"BACI Mapping: {baci_map_names}")
@@ -520,9 +506,7 @@ def _(
 
         wits_reference_path = Path("data/raw/WITS_country_codes.csv")
         wits_map = pl.read_csv(wits_reference_path, infer_schema=False, encoding="utf8")
-        wits_map = wits_map.with_columns(
-            pl.col("Numeric Code").str.zfill(3)
-        )
+        wits_map = wits_map.with_columns(pl.col("Numeric Code").str.zfill(3))
         wits_map_names = dict(zip(wits_map["Numeric Code"], wits_map["Country Name"], strict=False))
         wits_map_iso3 = dict(zip(wits_map["Numeric Code"], wits_map["ISO3"], strict=False))
         # print(f"WITS Mapping: {wits_map_names}")
@@ -535,15 +519,13 @@ def _(
             mapping_data.append({"original_code": cc, "iso_num_list": iso_num_codes})
 
         # Create a df
-        mapping_df = pl.DataFrame(mapping_data).with_columns(
-            pl.col("iso_num_list").cast(pl.List(pl.Utf8))
-        )
+        mapping_df = pl.DataFrame(mapping_data).with_columns(pl.col("iso_num_list").cast(pl.List(pl.Utf8)))
 
         return mapping_df
 
-    mapping_df_AVEPref_reporter = create_mapping_df(joined_pref_lf_AVEPref, 'reporter_country')
-    mapping_df_AVEPref_partner = create_mapping_df(joined_pref_lf_AVEPref, 'partner_country')
-    mapping_df_AVEMFN_reporter = create_mapping_df(translated_lf_AVEMFN, 'reporter_country')
+    mapping_df_AVEPref_reporter = create_mapping_df(joined_pref_lf_AVEPref, "reporter_country")
+    mapping_df_AVEPref_partner = create_mapping_df(joined_pref_lf_AVEPref, "partner_country")
+    mapping_df_AVEMFN_reporter = create_mapping_df(translated_lf_AVEMFN, "reporter_country")
     return (
         mapping_df_AVEMFN_reporter,
         mapping_df_AVEPref_partner,
@@ -575,12 +557,9 @@ def _(
             how="left",
         )
 
-        lf = lf.explode('iso_num_list').with_columns(
-            pl.col('iso_num_list').alias(target_col_name)
-        ).drop('iso_num_list')
+        lf = lf.explode("iso_num_list").with_columns(pl.col("iso_num_list").alias(target_col_name)).drop("iso_num_list")
 
         return lf
-
 
     AVEMFN_lf_clean = apply_mapping(translated_lf_AVEMFN, mapping_df_AVEMFN_reporter, "reporter_country")
 
@@ -605,20 +584,14 @@ def _(mo):
 @app.cell
 def _(AVEMFN_lf_clean):
     print("Sinking AVEMFN")
-    AVEMFN_lf_clean.sink_parquet(
-        "data/intermediate/WITS_AVEMFN_CLEAN.parquet",
-        compression='zstd'
-    )
+    AVEMFN_lf_clean.sink_parquet("data/intermediate/WITS_AVEMFN_CLEAN.parquet", compression="zstd")
     return
 
 
 @app.cell
 def _(AVEPref_lf_clean):
     print("Sinking AVEPREF")
-    AVEPref_lf_clean.sink_parquet(
-        "data/intermediate/WITS_AVEPref_CLEAN.parquet",
-        compression='zstd'
-    )
+    AVEPref_lf_clean.sink_parquet("data/intermediate/WITS_AVEPref_CLEAN.parquet", compression="zstd")
     return
 
 
