@@ -10,7 +10,53 @@ def _():
     import polars as pl
     import pycountry
     import pyfixest as pf
-    return mo, pf, pl, pycountry
+    import plotly.express as px
+    import plotly.graph_objects as go
+    from plotly.subplots import make_subplots
+    return go, make_subplots, mo, pf, pl, pycountry
+
+
+@app.cell
+def _(pl):
+    def fill_column_grouped_sorted(
+        lazy_df: pl.LazyFrame,
+        column_to_fill: str,
+        group_by_cols: list[str],
+        sort_by_col: str,
+    ) -> pl.LazyFrame:
+        """
+        Performs a forward fill then a backward fill on a specified column
+        within groups, sorted by another column.
+
+        Args:
+            lazy_df: The input Polars LazyFrame.
+            column_to_fill: The name of the column to apply fill operations on.
+            group_by_cols: A list of column names to group by.
+            sort_by_col: The name of the column to sort by before filling.
+
+        Returns:
+            A new Polars LazyFrame with the specified column filled.
+        """
+        temp_ffill_col_name = f"__temp_ffill_{column_to_fill}"
+
+        lf_sorted = lazy_df.sort(sort_by_col)
+
+        lf_ffilled = lf_sorted.with_columns(
+            pl.col(column_to_fill)
+            .forward_fill()
+            .over(group_by_cols)
+            .alias(temp_ffill_col_name)
+        )
+
+        lf_bfilled_final = lf_ffilled.with_columns(
+            pl.col(temp_ffill_col_name)
+            .backward_fill()
+            .over(group_by_cols)
+            .alias(column_to_fill)  # Overwrite original column
+        )
+
+        return lf_bfilled_final.drop(temp_ffill_col_name)
+    return (fill_column_grouped_sorted,)
 
 
 @app.cell(hide_code=True)
@@ -64,8 +110,8 @@ def _(mo):
 
 @app.cell
 def _(pl):
-    # raw_data_path = "data/final/unified_trade_tariff_partitioned/"
-    raw_data_path = "data/final/unified_filtered_10000minval_top100countries/"
+    raw_data_path = "data/final/unified_trade_tariff_partitioned/"
+    # raw_data_path = "data/final/unified_filtered_10000minval_top100countries/"
     unified_lf = pl.scan_parquet(raw_data_path)
 
     unified_lf.head().collect()
@@ -82,17 +128,118 @@ def _(pycountry):
     ITALY_CC = pycountry.countries.search_fuzzy("Italy")[0].numeric
     SOUTHAFRICA_CC = pycountry.countries.search_fuzzy("South Africa")[0].numeric
     UK_CC = pycountry.countries.search_fuzzy("United Kingdom")[0].numeric
-    return CHINA_CC, USA_CC
+
+    cc_list = [
+        USA_CC,
+        CHINA_CC,
+        BRAZIL_CC,
+        IRELAND_CC,
+        ITALY_CC,
+        SOUTHAFRICA_CC,
+        UK_CC,
+    ]
+
+    YEAR_RANGE = [str(y) for y in range(1999, 2024)]
+    return CHINA_CC, USA_CC, YEAR_RANGE, cc_list
 
 
 @app.cell
-def _(unified_lf):
-    unique_years = unified_lf.select("year").unique().collect()["year"].to_list()
+def _(cc_list, fill_column_grouped_sorted, pl, unified_lf):
+    ### --- 0. Initial filtering to reduce size and ffill / bfill and report only relevant countries
+    filtered_lf = unified_lf.filter(
+        (
+            pl.col("reporter_country").is_in(cc_list)
+            & pl.col("partner_country").is_in(cc_list),
+        )
+    )
+
+    filtered_lf = fill_column_grouped_sorted(
+        lazy_df=filtered_lf,
+        column_to_fill="effective_tariff",
+        group_by_cols=["reporter_country", "partner_country", "product_code"],
+        sort_by_col="year",
+    )
+
+    print("Input lf post forward/backward fill & filter")
+    print(filtered_lf.head().collect())
+    return (filtered_lf,)
+
+
+@app.cell
+def _(CHINA_CC, USA_CC, filtered_lf, go, make_subplots, pl, unified_lf):
+    # Vis the effect of ffill
+    test_product_code = "911180"
+
+    vis_lf_raw = unified_lf.filter(
+        (
+            (pl.col("partner_country") == USA_CC)
+            & (pl.col("reporter_country") == CHINA_CC)
+            & (pl.col("product_code") == test_product_code)
+        )
+    )
+
+    vis_lf_filtered = filtered_lf.filter(
+        (
+            (pl.col("partner_country") == USA_CC)
+            & (pl.col("reporter_country") == CHINA_CC)
+            & (pl.col("product_code") == test_product_code)
+        )
+    )
+
+    df_plot_raw = vis_lf_raw.collect()
+    df_plot_filtered = vis_lf_filtered.collect()
+
+    fig = make_subplots(
+        rows=2,
+        cols=1,
+        subplot_titles=(
+            "Raw Effective Tariff",
+            "Filtered (ffill) Effective Tariff",
+        ),
+        shared_xaxes=True,
+        vertical_spacing=0.1,
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=df_plot_raw["year"],
+            y=df_plot_raw["effective_tariff"],
+            mode="lines+markers",
+            name="Raw Tariff",
+        ),
+        row=1,
+        col=1,
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=df_plot_filtered["year"],
+            y=df_plot_filtered["effective_tariff"],
+            mode="lines+markers",
+            name="Filtered Tariff (ffill + bfill)",
+            line=dict(color="orange"),
+        ),
+        row=2,
+        col=1,
+    )
+
+    # Update layout properties
+    fig.update_layout(
+        height=700,
+        title_text=f"Comparison of Raw and Filtered Tariffs<br>Product: {test_product_code}, Reporter: {CHINA_CC}, Partner: {USA_CC}",
+        showlegend=False,
+    )
+
+    fig.update_yaxes(title_text="Effective Tariff", row=1, col=1)
+    fig.update_yaxes(title_text="Effective Tariff", row=2, col=1)
+    fig.update_xaxes(title_text="Year", row=2, col=1)
+
+    fig.show()
     return
 
 
 @app.cell
-def _(CHINA_CC, USA_CC, pl, unified_lf):
+def _(CHINA_CC, USA_CC, YEAR_RANGE, filtered_lf, pl):
     ### --- 1. Extract the input data as required
     tariff_us_china_expr = (
         pl.col("effective_tariff")
@@ -107,7 +254,7 @@ def _(CHINA_CC, USA_CC, pl, unified_lf):
         .alias("tariff_us_china")
     )
 
-    input_lf = unified_lf.select(
+    input_lf = filtered_lf.select(
         pl.col("year"),
         pl.col("partner_country").alias("importer"),
         pl.col("reporter_country").alias("exporter"),
@@ -115,7 +262,7 @@ def _(CHINA_CC, USA_CC, pl, unified_lf):
         pl.col("value").log().alias("log_value"),
         pl.col("quantity").log().alias("log_quantity"),
         tariff_us_china_expr,
-    )
+    ).filter(pl.col("year").is_in(YEAR_RANGE))
 
     print("Filtered to select only required data:")
     print(input_lf.head().collect(engine="streaming"))
@@ -145,7 +292,9 @@ def _(CHINA_CC, USA_CC, pl, unified_lf):
                 pl.col("year"),
             ],
             separator="^",
-        ).alias("alpha_ipt"),
+        )
+        .alias("alpha_ipt")
+        .cast(pl.Categorical),
         pl.concat_str(
             [
                 pl.col("exporter"),
@@ -153,15 +302,21 @@ def _(CHINA_CC, USA_CC, pl, unified_lf):
                 pl.col("year"),
             ],
             separator="^",
-        ).alias("alpha_jpt"),
+        )
+        .alias("alpha_jpt")
+        .cast(pl.Categorical),
         pl.concat_str(
             [
                 pl.col("importer"),
                 pl.col("exporter"),
             ],
             separator="^",
-        ).alias("alpha_ij"),
+        )
+        .alias("alpha_ij")
+        .cast(pl.Categorical),
     )
+
+    # Drop any nulls in critical
 
     print("Created fixed effect terms - these are categorical")
     print(input_lf.head().collect(engine="streaming"))
@@ -170,8 +325,18 @@ def _(CHINA_CC, USA_CC, pl, unified_lf):
     input_df = input_lf.collect()
 
     print("Final input data description:")
-    print(input_df.describe())
+    input_df.describe()
     return (input_df,)
+
+
+@app.cell
+def _(input_df):
+    # Deal with some nulls in our key data inputs
+    clean_input_df = input_df.drop_nans(subset=["log_value", "tariff_us_china"])
+
+    print("Final describe of input data")
+    clean_input_df.describe()
+    return (clean_input_df,)
 
 
 @app.cell
@@ -183,7 +348,7 @@ def _():
         [f"tariff_interaction_{year}" for year in range(2018, 2023)]
     )
     regression_formula = (
-        f"log_quantity ~ {regressors} | alpha_ipt + alpha_jpt + alpha_ij"
+        f"log_value ~ {regressors} | alpha_ipt + alpha_jpt + alpha_ij"
     )
 
     print(f"Regression formula is:\n{regression_formula}")
@@ -191,14 +356,33 @@ def _():
 
 
 @app.cell
-def _(input_df, pf, regression_formula):
-    model = pf.feols(regression_formula, input_df) # This takes forever
+def _(clean_input_df, pf, regression_formula):
+    # Default config: robust clustered std errors
+    model = pf.feols(regression_formula, clean_input_df)
     return (model,)
 
 
 @app.cell
 def _(model):
     model.summary()
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(
+        r"""
+    ## Interpreting results: 
+
+    RMSE: standard deviation of the regression residuals (the differences between observed and predicted values).
+
+    R2: X% of the variation in log_quantity is explained by the model including all the fixed effects. Commonly high in FE models given the FE explain a lot of the variation
+
+    R2 Within: measures the proportion of the variation within the fixed effect groups (e.g., within each importer-exporter-product unit over time, after accounting for the broader FEs) that is explained by tariff interaction terms. Low value implies very little variance is in log import_quantities is explained by tariff interaction variables.
+
+
+    """
+    )
     return
 
 
