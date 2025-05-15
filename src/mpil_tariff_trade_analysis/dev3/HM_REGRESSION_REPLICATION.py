@@ -10,10 +10,12 @@ def _():
     import polars as pl
     import pycountry
     import pyfixest as pf
+    import numpy as np
+    import pickle
     import plotly.express as px
     import plotly.graph_objects as go
     from plotly.subplots import make_subplots
-    return go, make_subplots, mo, pf, pl, pycountry
+    return go, make_subplots, mo, pf, pickle, pl, pycountry
 
 
 @app.cell
@@ -129,7 +131,7 @@ def _(pycountry):
     SOUTHAFRICA_CC = pycountry.countries.search_fuzzy("South Africa")[0].numeric
     UK_CC = pycountry.countries.search_fuzzy("United Kingdom")[0].numeric
 
-    cc_list = [
+    cc_list_incl_ROW = [
         USA_CC,
         CHINA_CC,
         BRAZIL_CC,
@@ -139,17 +141,20 @@ def _(pycountry):
         UK_CC,
     ]
 
-    YEAR_RANGE = [str(y) for y in range(1999, 2024)]
-    return CHINA_CC, USA_CC, YEAR_RANGE, cc_list
+    cc_list = [USA_CC, CHINA_CC]
+
+    TOTAL_YEAR_RANGE = [str(y) for y in range(1999, 2024)]
+    EFFECT_YEAR_RANGE = [str(y) for y in range(2018, 2024)]
+    return CHINA_CC, EFFECT_YEAR_RANGE, USA_CC, cc_list_incl_ROW
 
 
 @app.cell
-def _(cc_list, fill_column_grouped_sorted, pl, unified_lf):
+def _(cc_list_incl_ROW, fill_column_grouped_sorted, pl, unified_lf):
     ### --- 0. Initial filtering to reduce size and ffill / bfill and report only relevant countries
     filtered_lf = unified_lf.filter(
         (
-            pl.col("reporter_country").is_in(cc_list)
-            & pl.col("partner_country").is_in(cc_list),
+            pl.col("reporter_country").is_in(cc_list_incl_ROW)
+            & pl.col("partner_country").is_in(cc_list_incl_ROW),
         )
     )
 
@@ -167,7 +172,7 @@ def _(cc_list, fill_column_grouped_sorted, pl, unified_lf):
 
 @app.cell
 def _(CHINA_CC, USA_CC, filtered_lf, go, make_subplots, pl, unified_lf):
-    # Vis the effect of ffill
+    # OPTIONAL: Vis the effect of ffill
     test_product_code = "911180"
 
     vis_lf_raw = unified_lf.filter(
@@ -239,7 +244,7 @@ def _(CHINA_CC, USA_CC, filtered_lf, go, make_subplots, pl, unified_lf):
 
 
 @app.cell
-def _(CHINA_CC, USA_CC, YEAR_RANGE, filtered_lf, pl):
+def _(CHINA_CC, EFFECT_YEAR_RANGE, USA_CC, filtered_lf, pl):
     ### --- 1. Extract the input data as required
     tariff_us_china_expr = (
         pl.col("effective_tariff")
@@ -262,13 +267,13 @@ def _(CHINA_CC, USA_CC, YEAR_RANGE, filtered_lf, pl):
         pl.col("value").log().alias("log_value"),
         pl.col("quantity").log().alias("log_quantity"),
         tariff_us_china_expr,
-    ).filter(pl.col("year").is_in(YEAR_RANGE))
+    ).filter(pl.col("year").is_in(EFFECT_YEAR_RANGE))
 
     print("Filtered to select only required data:")
     print(input_lf.head().collect(engine="streaming"))
 
     ### --- 2. Create the interaction terms
-    for year in range(2018, 2023):
+    for year in EFFECT_YEAR_RANGE:
         input_lf = input_lf.with_columns(
             pl.when(
                 (pl.col("year") == str(year))
@@ -316,8 +321,6 @@ def _(CHINA_CC, USA_CC, YEAR_RANGE, filtered_lf, pl):
         .cast(pl.Categorical),
     )
 
-    # Drop any nulls in critical
-
     print("Created fixed effect terms - these are categorical")
     print(input_lf.head().collect(engine="streaming"))
 
@@ -340,12 +343,12 @@ def _(input_df):
 
 
 @app.cell
-def _():
+def _(EFFECT_YEAR_RANGE):
     ### --- 3. Define our regression formula
 
     # Remember the summation term!
     regressors = " + ".join(
-        [f"tariff_interaction_{year}" for year in range(2018, 2023)]
+        [f"tariff_interaction_{year}" for year in EFFECT_YEAR_RANGE]
     )
     regression_formula = (
         f"log_value ~ {regressors} | alpha_ipt + alpha_jpt + alpha_ij"
@@ -356,10 +359,38 @@ def _():
 
 
 @app.cell
+def _(clean_input_df):
+    clean_input_df.head()
+    return
+
+
+@app.cell
 def _(clean_input_df, pf, regression_formula):
     # Default config: robust clustered std errors
+    # pyfixest is a wrapper of R's fixest package.
+    # This takes about 17m to run.
     model = pf.feols(regression_formula, clean_input_df)
     return (model,)
+
+
+@app.cell
+def _(model, pickle):
+    try:
+        if model:
+            with open(
+                "src/mpil_tariff_trade_analysis/dev3/model_ols_v1.pkl", "wb"
+            ) as file:
+                pickle.dump(model, file)
+    except NameError:
+        print("model not yet defined")
+    return
+
+
+@app.cell
+def _(pickle):
+    with open("src/mpil_tariff_trade_analysis/dev3/model_ols_v1.pkl", "rb") as f:
+        model_loaded = pickle.load(f)
+    return
 
 
 @app.cell
@@ -380,9 +411,91 @@ def _(mo):
 
     R2 Within: measures the proportion of the variation within the fixed effect groups (e.g., within each importer-exporter-product unit over time, after accounting for the broader FEs) that is explained by tariff interaction terms. Low value implies very little variance is in log import_quantities is explained by tariff interaction variables.
 
-
+    ## Replicating Figure 2
+    What does my equivalent 'figure 2' look like? 
     """
     )
+    return
+
+
+@app.cell
+def _(model):
+    coefficients = model.coef()
+    conf_intervals_beta = model.confint()
+
+    print("Fitted coefficients:, ", coefficients)
+    print("Fitted confidence intervals:, ", conf_intervals_beta)
+
+    # Extract relevant beta values and their CIs
+    tariff_vars = [f"tariff_interaction_{year}" for year in range(2018, 2023)]
+
+    beta_s_values = coefficients[tariff_vars].values
+    ci_lower_beta_s = conf_intervals_beta.loc[tariff_vars, "2.5%"].values
+    ci_upper_beta_s = conf_intervals_beta.loc[tariff_vars, "97.5%"].values
+
+    # Calculate Elasticity (E_s = -beta_s) and its CI
+    elasticities_mean = -beta_s_values
+    elasticities_ci_lower = -ci_lower_beta_s
+    elasticities_ci_upper = -ci_upper_beta_s
+    return elasticities_ci_lower, elasticities_ci_upper, elasticities_mean
+
+
+@app.cell
+def _(
+    EFFECT_YEAR_RANGE,
+    elasticities_ci_lower,
+    elasticities_ci_upper,
+    elasticities_mean,
+    go,
+):
+    fig_elasticities = go.Figure()
+
+    fig_elasticities.add_trace(
+        go.Scatter(
+            x=EFFECT_YEAR_RANGE,
+            y=elasticities_ci_upper,
+            mode="lines",
+            line=dict(width=0),  # Make line invisible
+            showlegend=False,
+        )
+    )
+
+    fig_elasticities.add_trace(
+        go.Scatter(
+            x=EFFECT_YEAR_RANGE,
+            y=elasticities_ci_lower,
+            mode="lines",
+            line=dict(width=0),  # Make line invisible
+            fillcolor="rgba(31, 119, 180, 0.2)",  # Light blue with transparency
+            fill="tonexty",  # Fill the area to the previously added trace (upper bound)
+            showlegend=False,
+            name="95% CI (filled area)",
+        )
+    )
+
+
+    fig_elasticities.add_trace(
+        go.Scatter(
+            x=EFFECT_YEAR_RANGE,
+            y=elasticities_mean,
+            mode="lines+markers",
+            name="Estimated Elasticity",
+            line=dict(color="rgb(31, 119, 180)"),
+            marker=dict(size=8),
+        )
+    )
+
+    fig_elasticities.update_layout(
+        xaxis_title="Year estimate", yaxis_title="Estimated elasticity"
+    )
+
+    fig_elasticities.show()
+    return
+
+
+@app.cell
+def _(model):
+    model.coefplot()
     return
 
 
