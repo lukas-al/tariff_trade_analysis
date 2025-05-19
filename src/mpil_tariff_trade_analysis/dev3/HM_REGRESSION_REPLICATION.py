@@ -412,7 +412,7 @@ def _(mo):
     R2 Within: measures the proportion of the variation within the fixed effect groups (e.g., within each importer-exporter-product unit over time, after accounting for the broader FEs) that is explained by tariff interaction terms. Low value implies very little variance is in log import_quantities is explained by tariff interaction variables.
 
     ## Replicating Figure 2
-    What does my equivalent 'figure 2' look like? 
+    What does my equivalent 'figure 2' look like?
     """
     )
     return

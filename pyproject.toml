@@ -20,6 +20,7 @@ dependencies = [
     "statsmodels>=0.14.4",
     "pyvis>=0.3.2",
     "pyfixest>=0.29.0",
+    "pdfplumber>=0.11.6",
 ]
 
 [build-system]
