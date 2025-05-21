@@ -4,6 +4,7 @@ ETL Pipeline Script for MPIL Tariff Trade Analysis
 Runs the core Marimo ETL scripts sequentially.
 """
 
+import os
 import subprocess
 from pathlib import Path
 
@@ -19,6 +20,7 @@ PIPELINE_SCRIPTS = [
     ETL_SCRIPT_DIR / "MERGING_PIPELINE.py",
     ETL_SCRIPT_DIR / "SAMPLE_PIPELINE.py",
     ETL_SCRIPT_DIR / "DETREND_PIPELINE.py",
+    ETL_SCRIPT_DIR / "SPECIFIC_US_TARIFFS.py",
 ]
 
 
@@ -27,6 +29,8 @@ def run_pipeline():
     """Runs the full ETL pipeline by executing Marimo scripts sequentially."""
     logger.info("--- Starting ETL Pipeline ---")
     pipeline_successful = True
+
+    os.environ["POLARS_VERBOSE"] = "0"  # 1 for super busy output
 
     for script_path in PIPELINE_SCRIPTS:
         if not script_path.exists():

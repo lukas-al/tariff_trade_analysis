@@ -1,8 +1,6 @@
-
-
 import marimo
 
-__generated_with = "0.13.2"
+__generated_with = "0.13.8"
 app = marimo.App(width="medium")
 
 
@@ -18,9 +16,9 @@ def _():
 def _(mo):
     mo.md(
         r"""
-        # CREATE UNIFIED DATASET
-        Join trade values and volumes with tariff amounts. Left join on BACI. Simple operation.
-        """
+    # CREATE UNIFIED DATASET
+    Join trade values and volumes with tariff amounts. Left join on BACI. Simple operation.
+    """
     )
     return
 
@@ -102,9 +100,9 @@ def _(baci, pl):
 def _(mo):
     mo.md(
         r"""
-        # Merge Pref and MFN
-        Need to merge these two datasets, ensuring that for each year, each country and product code there is ONLY ONE value.
-        """
+    # Merge Pref and MFN
+    Need to merge these two datasets, ensuring that for each year, each country and product code there is ONLY ONE value.
+    """
     )
     return
 
@@ -121,9 +119,7 @@ def _():
     # test_filtered_avemfn = (
     #     ave_mfn_clean.filter(pl.col("year") == unique_y)
     #     .rename({"reporter_country": "partner_country"})
-    # )  # Rename to flip the reporter to be our importer (partner) They are reporting an import duty. So we need to join this 
-
-
+    # )  # Rename to flip the reporter to be our importer (partner) They are reporting an import duty. So we need to join this
     return
 
 
@@ -190,21 +186,43 @@ def _(ave_mfn_clean, ave_pref_clean, baci_clean, pl):
         print(f"--- Processing Chunk {i + 1}/{len(unique_years)}: Year = {year} ---")
 
         ### 1. Filtering the correct year
-        print('    Filtering for correct year')
-        filtered_baci = baci_clean.filter(pl.col("year") == year)
-        filtered_avepref = ave_pref_clean.filter(pl.col("year") == year).select(
-            "partner_country",
-            "product_code",
-            'reporter_country',
-            "tariff_rate_pref",
-            "min_rate_pref",
-            "max_rate_pref",
+        print("    Filtering for correct year")
+        filtered_baci = baci_clean.filter(pl.col("year") == year).with_columns(
+            [
+                pl.col("reporter_country").cast(pl.Utf8),
+                pl.col("partner_country").cast(pl.Utf8),
+                pl.col("product_code").cast(pl.Utf8),
+            ]
+        )
+        filtered_avepref = (
+            ave_pref_clean.filter(pl.col("year") == year)
+            .with_columns(
+                [
+                    pl.col("reporter_country").cast(pl.Utf8),
+                    pl.col("partner_country").cast(pl.Utf8),
+                    pl.col("product_code").cast(pl.Utf8),
+                ]
+            )
+            .select(
+                "partner_country",
+                "product_code",
+                "reporter_country",
+                "tariff_rate_pref",
+                "min_rate_pref",
+                "max_rate_pref",
+            )
         )
         filtered_avemfn = (
             ave_mfn_clean.filter(pl.col("year") == year)
+            .with_columns(
+                [
+                    pl.col("reporter_country").cast(pl.Utf8),
+                    pl.col("product_code").cast(pl.Utf8),
+                ]
+            )
             .select(
-                "reporter_country",
-                "product_code",
+                "reporter_country",  # Already cast to Utf8
+                "product_code",  # Already cast to Utf8
                 "tariff_rate_mfn",
                 "min_rate_mfn",
                 "max_rate_mfn",
@@ -213,50 +231,54 @@ def _(ave_mfn_clean, ave_pref_clean, baci_clean, pl):
         )  # Rename to flip the reporter to be our importer (partner)
 
         ### 2. Remove duplicate entries by aggregating and selecting the minimum:
-        print('    Removing duplicate entries, selecting minimum')
-        mfn_mins = filtered_avemfn.group_by(
-            ["partner_country", "product_code"]
-        ).agg(
-            [
-                pl.col("tariff_rate_mfn"),
-                pl.col("min_rate_mfn"),
-                pl.col("max_rate_mfn"),
-            ],
-        ).with_columns( # Get the min value of the collected list
-            pl.col("tariff_rate_mfn").list.min(),
-            pl.col("min_rate_mfn").list.min(),
-            pl.col("max_rate_mfn").list.min(),
+        print("    Removing duplicate entries, selecting minimum")
+        mfn_mins = (
+            filtered_avemfn.group_by(["partner_country", "product_code"])
+            .agg(
+                [
+                    pl.col("tariff_rate_mfn"),
+                    pl.col("min_rate_mfn"),
+                    pl.col("max_rate_mfn"),
+                ],
+            )
+            .with_columns(  # Get the min value of the collected list
+                pl.col("tariff_rate_mfn").list.min(),
+                pl.col("min_rate_mfn").list.min(),
+                pl.col("max_rate_mfn").list.min(),
+            )
         )
 
-        pref_mins = filtered_avepref.group_by(
-            ["partner_country", "product_code", "reporter_country"]
-        ).agg(
-            [
-                pl.col("tariff_rate_pref"),
-                pl.col("min_rate_pref"),
-                pl.col("max_rate_pref"),
-            ]
-        ).with_columns(
-            pl.col("tariff_rate_pref").list.min(),
-            pl.col("min_rate_pref").list.min(),
-            pl.col("max_rate_pref").list.min(),
+        pref_mins = (
+            filtered_avepref.group_by(["partner_country", "product_code", "reporter_country"])
+            .agg(
+                [
+                    pl.col("tariff_rate_pref"),
+                    pl.col("min_rate_pref"),
+                    pl.col("max_rate_pref"),
+                ]
+            )
+            .with_columns(
+                pl.col("tariff_rate_pref").list.min(),
+                pl.col("min_rate_pref").list.min(),
+                pl.col("max_rate_pref").list.min(),
+            )
         )
 
         # Join avepref to BACI
         # -> WITS pref tariffs are import duties. The importer in BACI is the 'partner'.
-        print('    Joining table values')
+        print("    Joining table values")
         baci_avepref = filtered_baci.join(
             pref_mins,
             how="left",
             on=["partner_country", "product_code", "reporter_country"],
-            maintain_order='left',
+            maintain_order="left",
         )
         # Join avemfn to BACI
         baci_all = baci_avepref.join(
             mfn_mins,
-            how="left", 
+            how="left",
             on=["partner_country", "product_code"],
-            maintain_order='left',
+            maintain_order="left",
         )
 
         # Coalesce the MFN and AVEPREF tariffs. Pref takes precedent. If neither then None (so we can count)
@@ -282,12 +304,13 @@ def _(ave_mfn_clean, ave_pref_clean, baci_clean, pl):
 
     print(f"Time elapsed = {(time.time() - start_time) / 60} mins")
     print("-----COMPLETE-----")
-    return (unified_baci_lf,)
+    return (unified_baci_lf,)  # type: ignore
 
 
 @app.cell
 def _(unified_baci_lf):
-    unified_baci_lf.tail(100).collect()
+    print("Sample of final unified_lf chunk:")
+    print(unified_baci_lf.tail().collect())
     return
 
 

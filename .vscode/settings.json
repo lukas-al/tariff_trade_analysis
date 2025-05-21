@@ -9,4 +9,7 @@
   },
   "marimo.marimoPath": "uv run marimo",
   "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+  "python.analysis.diagnosticSeverityOverrides": {
+      "reportInvalidTypeForm": "none" // -> Marimo triggers this
+  },
 }

@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.13.3"
+__generated_with = "0.13.8"
 app = marimo.App(width="medium")
 
 
@@ -11,21 +11,21 @@ def _():
     import marimo as mo
     import polars as pl
 
-    return argparse, mo, pl
+    return mo, pl
 
 
 @app.cell
 def _(mo):
     mo.md(
         """
-        # Implement the detrending & further post-processing
-        1. Load the unified data
-        2. Detrend
-        3. Remove outliers
-        4. Save
+    # Implement the detrending & further post-processing
+    1. Load the unified data
+    2. Detrend
+    3. Remove outliers
+    4. Save
 
-        ## First define convenience functions
-        """
+    ## First define convenience functions
+    """
     )
     return
 
@@ -114,7 +114,7 @@ def _(pl):
 
 
 @app.cell
-def _(argparse):
+def _():
     # parser = argparse.ArgumentParser(description="Marimo visualise unified")
 
     # # Add your parameters/arguments here
@@ -123,11 +123,11 @@ def _(argparse):
 
     # args.fullfat
     # return (args,)
-    return ()
+    return
 
 
 @app.cell
-def _(args, pl):
+def _(pl):
     print("Loading Unified DF")
 
     # if args.fullfat:

@@ -1,20 +1,13 @@
 {
   "version": "1",
   "metadata": {
-    "marimo_version": "0.13.3"
+    "marimo_version": "0.13.8"
   },
   "cells": [
     {
       "id": "Hbol",
       "code_hash": "1aa1534ab133e8d5949458aeab9bf241",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/plain": ""
-          }
-        }
-      ],
+      "outputs": [],
       "console": []
     },
     {
@@ -32,14 +25,7 @@
     {
       "id": "bkHC",
       "code_hash": "0336257ab7cbac53590a271f1d2c894e",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h2 id=\"format-the-datasets-to-make-them-joinable\">Format the datasets to make them joinable</h2></span>"
-          }
-        }
-      ],
+      "outputs": [],
       "console": []
     },
     {

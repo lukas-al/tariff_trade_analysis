@@ -160,7 +160,7 @@ def _(cc_list_incl_ROW, fill_column_grouped_sorted, pl, unified_lf):
 
     filtered_lf = fill_column_grouped_sorted(
         lazy_df=filtered_lf,
-        column_to_fill="effective_tariff",
+        column_to_fill="official_effective_tariff",
         group_by_cols=["reporter_country", "partner_country", "product_code"],
         sort_by_col="year",
     )
@@ -208,7 +208,7 @@ def _(CHINA_CC, USA_CC, filtered_lf, go, make_subplots, pl, unified_lf):
     fig.add_trace(
         go.Scatter(
             x=df_plot_raw["year"],
-            y=df_plot_raw["effective_tariff"],
+            y=df_plot_raw["official_effective_tariff"],
             mode="lines+markers",
             name="Raw Tariff",
         ),
@@ -219,7 +219,7 @@ def _(CHINA_CC, USA_CC, filtered_lf, go, make_subplots, pl, unified_lf):
     fig.add_trace(
         go.Scatter(
             x=df_plot_filtered["year"],
-            y=df_plot_filtered["effective_tariff"],
+            y=df_plot_filtered["official_effective_tariff"],
             mode="lines+markers",
             name="Filtered Tariff (ffill + bfill)",
             line=dict(color="orange"),
@@ -247,7 +247,7 @@ def _(CHINA_CC, USA_CC, filtered_lf, go, make_subplots, pl, unified_lf):
 def _(CHINA_CC, EFFECT_YEAR_RANGE, USA_CC, filtered_lf, pl):
     ### --- 1. Extract the input data as required
     tariff_us_china_expr = (
-        pl.col("effective_tariff")
+        pl.col("official_effective_tariff")
         .filter(
             (pl.col("partner_country") == USA_CC)
             & (pl.col("reporter_country") == CHINA_CC)
@@ -378,7 +378,8 @@ def _(model, pickle):
     try:
         if model:
             with open(
-                "src/mpil_tariff_trade_analysis/dev3/model_ols_v1.pkl", "wb"
+                "src/mpil_tariff_trade_analysis/dev3/model_ols_v2_OFFICIAL_INCLUDED.pkl",
+                "wb",
             ) as file:
                 pickle.dump(model, file)
     except NameError:
@@ -388,7 +389,10 @@ def _(model, pickle):
 
 @app.cell
 def _(pickle):
-    with open("src/mpil_tariff_trade_analysis/dev3/model_ols_v1.pkl", "rb") as f:
+    with open(
+        "src/mpil_tariff_trade_analysis/dev3/model_ols_v2_OFFICIAL_INCLUDED.pkl",
+        "rb",
+    ) as f:
         model_loaded = pickle.load(f)
     return
 

@@ -1,12 +1,12 @@
 {
   "version": "1",
   "metadata": {
-    "marimo_version": "0.13.3"
+    "marimo_version": "0.13.8"
   },
   "cells": [
     {
       "id": "Hbol",
-      "code_hash": "073647bbf6639eb0e770eb753bc6fd16",
+      "code_hash": "20da17353be729ee67511823f25996ba",
       "outputs": [
         {
           "type": "data",
@@ -19,7 +19,7 @@
     },
     {
       "id": "MJUe",
-      "code_hash": "9bd1d4e20579a95c8f89c1223a8ae42c",
+      "code_hash": "c3f6a4e328e5abba4d967749b52e40a3",
       "outputs": [
         {
           "type": "data",
@@ -32,7 +32,7 @@
     },
     {
       "id": "vblA",
-      "code_hash": "2e2eb19411d27d4ca206c2c9464d120d",
+      "code_hash": "8a7c6db76528586e56cfe3766d560604",
       "outputs": [
         {
           "type": "data",
@@ -45,7 +45,7 @@
     },
     {
       "id": "bkHC",
-      "code_hash": "287c4534d34c7b914710898e4526cd2b",
+      "code_hash": "5565b48aa801027f64e38cef00dc58f6",
       "outputs": [
         {
           "type": "data",
@@ -54,11 +54,17 @@
           }
         }
       ],
-      "console": []
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Found 29 CSV files to process in */Users/lukasalemu/Documents/00. Bank of England/03. MPIL/tariff_trade_analysis/data/raw/BACI_HS92_V202501*\nSearch pattern: /Users/lukasalemu/Documents/00. Bank of England/03. MPIL/tariff_trade_analysis/data/raw/BACI_HS92_V202501/BACI*.csv\nSuccessfully scanned CSV files into a Polars LazyFrame.\n"
+        }
+      ]
     },
     {
       "id": "lEQa",
-      "code_hash": "4e700ad7e0a79cd31b2176c405eb99c3",
+      "code_hash": "2e454a0e8df54becf0c11f54ab629d14",
       "outputs": [
         {
           "type": "data",
@@ -67,11 +73,17 @@
           }
         }
       ],
-      "console": []
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Raw LF head:\nshape: (5, 6)\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502 t    \u2506 i   \u2506 j   \u2506 k      \u2506 v      \u2506 q      \u2502\n\u2502 ---  \u2506 --- \u2506 --- \u2506 ---    \u2506 ---    \u2506 ---    \u2502\n\u2502 i64  \u2506 i64 \u2506 i64 \u2506 i64    \u2506 f64    \u2506 f64    \u2502\n\u255e\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2561\n\u2502 2007 \u2506 4   \u2506 12  \u2506 71490  \u2506 1.428  \u2506 5.0    \u2502\n\u2502 2007 \u2506 4   \u2506 12  \u2506 80620  \u2506 40.516 \u2506 59.35  \u2502\n\u2502 2007 \u2506 4   \u2506 12  \u2506 90930  \u2506 26.359 \u2506 63.925 \u2502\n\u2502 2007 \u2506 4   \u2506 12  \u2506 91099  \u2506 1.251  \u2506 1.3    \u2502\n\u2502 2007 \u2506 4   \u2506 12  \u2506 121190 \u2506 2.911  \u2506 10.05  \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n"
+        }
+      ]
     },
     {
       "id": "PKri",
-      "code_hash": "2a64b96192831e7f7bd5abe39c1b158f",
+      "code_hash": "3da364dc2f449984e5bef734027928d5",
       "outputs": [
         {
           "type": "data",
@@ -84,33 +96,19 @@
     },
     {
       "id": "Xref",
-      "code_hash": "27a699e05e33dbe1b5999e47ce10f162",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/plain": ""
-          }
-        }
-      ],
+      "code_hash": "1a25d543f3e07554a88529a3004d4de2",
+      "outputs": [],
       "console": []
     },
     {
       "id": "SFPL",
-      "code_hash": "cd438c2891824a8c4aa4e18ebaedb3ce",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/plain": ""
-          }
-        }
-      ],
+      "code_hash": "9f7befb1f61d37d03c9bc8d7f7425308",
+      "outputs": [],
       "console": []
     },
     {
       "id": "BYtC",
-      "code_hash": "684944c203528e69252a49f5c845ba35",
+      "code_hash": "e362e399b4f833b42bdeddb601428d79",
       "outputs": [],
       "console": []
     },
@@ -128,7 +126,7 @@
     },
     {
       "id": "emfo",
-      "code_hash": "1940b2bff61fccb22fd4d54dd562f35a",
+      "code_hash": "f000f1866adb78c85ae808d8212d5f78",
       "outputs": [],
       "console": []
     },
@@ -146,19 +144,20 @@
     },
     {
       "id": "iLit",
-      "code_hash": "6b8fa5169cd8fa9c941c2bfaf84cfbba",
-      "outputs": [],
+      "code_hash": "fd45c8ff921972b5b644ceab76d8450d",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"write-output\">Write output</h1>\n<span class=\"paragraph\">This crashes when run as a marimo notebook - probably a thread / MP worker timeout</span></span>"
+          }
+        }
+      ],
       "console": []
     },
     {
       "id": "ZHCJ",
-      "code_hash": "04fe4b8d23e9683b2b356f4694695c60",
-      "outputs": [],
-      "console": []
-    },
-    {
-      "id": "ROlb",
-      "code_hash": "70034c92c761e3ca2f387f8de5acacd9",
+      "code_hash": "b43bfc421a8044416f068072813283c2",
       "outputs": [],
       "console": []
     }

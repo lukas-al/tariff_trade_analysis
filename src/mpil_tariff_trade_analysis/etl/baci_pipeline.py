@@ -1,39 +1,33 @@
-
-
 import marimo
 
-__generated_with = "0.13.2"
+__generated_with = "0.13.8"
 app = marimo.App(width="medium")
 
 
 @app.cell
 def _():
-    import marimo as mo
-    import os
-    import shutil
     import glob
-    import duckdb
-    import polars as pl
-    import pandas as pd
-
-    from tqdm.auto import tqdm
     from pathlib import Path
-    return Path, duckdb, glob, mo, os, pl, shutil, tqdm
+
+    import marimo as mo
+    import polars as pl
+
+    return Path, glob, mo, pl
 
 
 @app.cell
 def _(mo):
     mo.md(
         r"""
-        # IMPLEMENT THE BACI PIPELINE
+    # IMPLEMENT THE BACI PIPELINE
 
-        Start to finish - implement the BACI cleaning pipeline
+    Start to finish - implement the BACI cleaning pipeline
 
-        ## Structure:
-        1. Load incrememntally and convert from CSV into a Parquet
-        2. Explode any country codes which refer to regions.
-        3. Remap the country codes.
-        """
+    ## Structure:
+    1. Load incrememntally and convert from CSV into a Parquet
+    2. Explode any country codes which refer to regions.
+    3. Remap the country codes.
+    """
     )
     return
 
@@ -50,103 +44,64 @@ def _(Path):
     intermediate_data_dir = base_data_dir / "intermediate"
     final_data_dir = base_data_dir / "final"
 
-    baci_input_folder = raw_data_dir # Parent dir of BACI_HSXX_VYYYYYY CSVs
+    baci_input_folder = raw_data_dir  # Parent dir of BACI_HSXX_VYYYYYY CSVs
 
     # --- Intermediate & Output Paths ---
     # BACI Paths
     baci_intermediate_parquet_name = f"BACI_{hs_code}_V{baci_release}_CLEAN.parquet"
     baci_intermediate_parquet_path = intermediate_data_dir / baci_intermediate_parquet_name
-    return (
-        baci_intermediate_parquet_path,
-        baci_release,
-        hs_code,
-        intermediate_data_dir,
-        raw_data_dir,
-    )
+    return baci_intermediate_parquet_path, baci_release, hs_code, raw_data_dir
 
 
 @app.cell
-def _(
-    baci_release,
-    duckdb,
-    glob,
-    hs_code,
-    intermediate_data_dir,
-    os,
-    raw_data_dir,
-    shutil,
-    tqdm,
-):
-    def baci_to_parquet_incremental(hs, release, input_folder="raw", output_folder="intermediate"):
-        baci_folder = f"BACI_{hs}_V{release}"
-        input_path = input_folder / baci_folder
-        output_file = output_folder / f"{baci_folder}"
+def _(Path, baci_release, glob, hs_code, pl, raw_data_dir):
+    def scan_baci_csv_files(hs, release, input_folder_path, Path_module, glob_module, polars_module):
+        baci_folder_name = f"BACI_{hs}_V{release}"
+        # input_path is the directory containing the actual CSVs, e.g., data/raw/BACI_HS92_V202501/
+        input_path = Path_module(input_folder_path) / baci_folder_name
+        csv_search_pattern = str(input_path / "BACI*.csv")
 
-        print(output_file)
+        csv_files = glob_module.glob(csv_search_pattern)
 
-        if output_folder and not output_folder:
-            os.makedirs(output_folder)
-            # logger.info(f"Created output directory: {output_folder}")
+        print(f"Found {len(csv_files)} CSV files to process in *{input_path}*")
+        print(f"Search pattern: {csv_search_pattern}")
 
-        # Remove existing Parquet file if present.
-        if os.path.exists(output_file):
-            # logger.warning(f"Removing existing output file: {output_file}")
-            shutil.rmtree(output_file)
-            # os.remove(output_file)
+        if not csv_files:
+            raise FileNotFoundError(f"No CSV files found matching pattern: {csv_search_pattern}")
 
-        # logger.info("Running incremental conversion...")
+        # Scan all found CSV files into a single LazyFrame
+        lf = polars_module.scan_csv(csv_files)
 
-        # Get all CSV files matching the pattern
-        # logger.info(f"TEST: {os.path.join(input_path, 'BACI*.csv')}")
-        csv_files = glob.glob(os.path.join(input_path, "BACI*.csv"))
-        # logger.info(f"Found {len(csv_files)} CSV files to process")
+        print("Successfully scanned CSV files into a Polars LazyFrame.")
+        return lf
 
-        for i, csv_file in tqdm(enumerate(csv_files), desc="Processing CSV files"):
-            file_basename = os.path.basename(csv_file)
-            # logger.debug(f"Processing file {i + 1}/{len(csv_files)}: {file_basename}")
-            sql_query = f"""
-                COPY (
-                    SELECT *, '{i}' AS partition_col
-                    FROM read_csv_auto('{csv_file}')
-                )
-                TO '{output_file}'
-                (FORMAT 'parquet', COMPRESSION 'SNAPPY', PARTITION_BY (partition_col), APPEND);
-            """
-            duckdb.sql(sql_query)
-
-        # logger.info(f"'{baci_folder}.parquet' successfully saved in '{output_folder}'.")
-
-        return output_file
-
-    baci_path = baci_to_parquet_incremental(
+    raw_lf = scan_baci_csv_files(
         hs=hs_code,
         release=baci_release,
-        input_folder=raw_data_dir,
-        output_folder=intermediate_data_dir,
+        input_folder_path=raw_data_dir,
+        Path_module=Path,
+        glob_module=glob,
+        polars_module=pl,
     )
-    return (baci_path,)
+    return (raw_lf,)
 
 
 @app.cell
-def _(baci_path, pl):
+def _(raw_lf):
     # Inspect what we've created
-    raw_lf = pl.scan_parquet(baci_path)
-
-    raw_lf = raw_lf.drop("partition_col")
-
     print(f"Raw LF head:\n{raw_lf.head().collect()}")
-    return (raw_lf,)
+    return
 
 
 @app.cell
 def _(mo):
     mo.md(
         r"""
-        # Remap country codes
+    # Remap country codes
 
-        1. Minor recast and padding
-        2. Create a mapping table of these codes to ISO
-        """
+    1. Minor recast and padding
+    2. Create a mapping table of these codes to ISO
+    """
     )
     return
 
@@ -155,15 +110,16 @@ def _(mo):
 def _(pl, raw_lf):
     # 1: Minor recast and padding
     recast_lf = raw_lf.with_columns(
-        pl.col('i').cast(pl.Utf8).str.zfill(3),
-        pl.col('j').cast(pl.Utf8).str.zfill(3)
+        pl.col("i").cast(pl.Utf8).str.zfill(3),
+        pl.col("j").cast(pl.Utf8).str.zfill(3),
     )
     return (recast_lf,)
 
 
 @app.cell
 def _():
-    from typing import List, Dict
+    from typing import Dict, List
+
     import pycountry
 
     def identify_iso_code(
@@ -181,9 +137,7 @@ def _():
                 "578",
                 "756",
             ],  # Europe EFTA, nes -> Iceland, Liechtenstein, Norway, Switzerland
-            "490": [
-                "158"
-            ],  # Other Asia, nes -> Taiwan (ISO 3166-1 numeric is 158)
+            "490": ["158"],  # Other Asia, nes -> Taiwan (ISO 3166-1 numeric is 158)
             "918": [
                 "040",
                 "056",
@@ -212,8 +166,8 @@ def _():
                 "705",
                 "724",
                 "752",
-                "492", # Monaco
-            ], # European Customs Union incl. Monaco
+                "492",  # Monaco
+            ],  # European Customs Union incl. Monaco
         }
 
         # Check our hardcoded ccs first
@@ -248,7 +202,7 @@ def _():
                     fuzzy_matches = pycountry.countries.search_fuzzy(country_name)
 
                     if fuzzy_matches:
-                        iso_nums = [fuzzy_matches[0].numeric]
+                        iso_nums = [fuzzy_matches[0].numeric]  # type: ignore
                         print(f"Mapped {cc} to {iso_nums} using country name *fuzzy*")
                         return iso_nums
 
@@ -269,9 +223,9 @@ def _():
             except LookupError:
                 print(f"Unable to find any ISO alpha 3 code match for {cc}")
 
-
         print("Failed to match entirely. Returning original code.")
         return [cc]
+
     return (identify_iso_code,)
 
 
@@ -289,9 +243,7 @@ def _(Path, identify_iso_code, pl, recast_lf):
         # Load our reference data - this is marginally inefficient but feels cleaner
         baci_reference_path = Path("data/raw/BACI_HS92_V202501/country_codes_V202501.csv")
         baci_map = pl.read_csv(baci_reference_path, infer_schema=False, encoding="utf8")
-        baci_map = baci_map.with_columns(
-            pl.col("country_code").str.zfill(3)
-        )
+        baci_map = baci_map.with_columns(pl.col("country_code").str.zfill(3))
         baci_map_names = dict(zip(baci_map["country_code"], baci_map["country_name"], strict=False))
         baci_map_iso3 = dict(zip(baci_map["country_code"], baci_map["country_iso3"], strict=False))
         # print(f"BACI Mapping: {baci_map_names}")
@@ -299,9 +251,7 @@ def _(Path, identify_iso_code, pl, recast_lf):
 
         wits_reference_path = Path("data/raw/WITS_country_codes.csv")
         wits_map = pl.read_csv(wits_reference_path, infer_schema=False, encoding="utf8")
-        wits_map = wits_map.with_columns(
-            pl.col("Numeric Code").str.zfill(3)
-        )
+        wits_map = wits_map.with_columns(pl.col("Numeric Code").str.zfill(3))
         wits_map_names = dict(zip(wits_map["Numeric Code"], wits_map["Country Name"], strict=False))
         wits_map_iso3 = dict(zip(wits_map["Numeric Code"], wits_map["ISO3"], strict=False))
         # print(f"WITS Mapping: {wits_map_names}")
@@ -314,14 +264,12 @@ def _(Path, identify_iso_code, pl, recast_lf):
             mapping_data.append({"original_code": cc, "iso_num_list": iso_num_codes})
 
         # Create a df
-        mapping_df = pl.DataFrame(mapping_data).with_columns(
-            pl.col("iso_num_list").cast(pl.List(pl.Utf8))
-        )
+        mapping_df = pl.DataFrame(mapping_data).with_columns(pl.col("iso_num_list").cast(pl.List(pl.Utf8)))
 
         return mapping_df
 
-    mapping_df_i = create_mapping_df(recast_lf, 'i')
-    mapping_df_j = create_mapping_df(recast_lf, 'j')
+    mapping_df_i = create_mapping_df(recast_lf, "i")
+    mapping_df_j = create_mapping_df(recast_lf, "j")
     return mapping_df_i, mapping_df_j
 
 
@@ -348,26 +296,22 @@ def _(mapping_df_i, mapping_df_j, pl, recast_lf):
     # --- i
     joined_lf = recast_lf.join(
         mapping_df_i.lazy(),
-        left_on='i',
+        left_on="i",
         right_on="original_code",
         how="left",
     )
 
-    joined_lf = joined_lf.explode('iso_num_list').with_columns(
-        pl.col('iso_num_list').alias('i')
-    ).drop('iso_num_list')
+    joined_lf = joined_lf.explode("iso_num_list").with_columns(pl.col("iso_num_list").alias("i")).drop("iso_num_list")
 
     # --- j
     joined_lf = joined_lf.join(
         mapping_df_j.lazy(),
-        left_on='j',
+        left_on="j",
         right_on="original_code",
         how="left",
     )
 
-    joined_lf = joined_lf.explode('iso_num_list').with_columns(
-        pl.col('iso_num_list').alias('j')
-    ).drop('iso_num_list')
+    joined_lf = joined_lf.explode("iso_num_list").with_columns(pl.col("iso_num_list").alias("j")).drop("iso_num_list")
     return (joined_lf,)
 
 
@@ -380,6 +324,8 @@ def _(joined_lf):
 @app.cell
 def _():
     # joined_lf.select(pl.len()).collect().item() # 258605611 -> Takes 28 mins to calculate...
+    # Cast product codes to string...
+
     return
 
 
@@ -387,26 +333,17 @@ def _():
 def _(mo):
     mo.md(
         r"""
-        # Write output
-        This crashes when run as a marimo notebook - probably a thread / MP worker timeout
-        """
+    # Write output
+    This crashes when run as a marimo notebook - probably a thread / MP worker timeout
+    """
     )
     return
 
 
 @app.cell
 def _(baci_intermediate_parquet_path, joined_lf):
-    print(f'Sinking Parquet output to {baci_intermediate_parquet_path}')
+    print(f"Sinking Parquet output to {baci_intermediate_parquet_path}")
     joined_lf.sink_parquet(baci_intermediate_parquet_path)
-    return
-
-
-@app.cell
-def _(shutil):
-    print(f"Deleting intermediate intermediate folder (from duckdb aggregation)")
-
-    try: shutil.rmtree("data/intermediate/BACI_HS92_V202501")
-    except FileNotFoundError: print("File doensn't exist")
     return
 
 

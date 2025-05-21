@@ -736,11 +736,8 @@ def _(extract_codes_from_pdf):
 
 
 @app.cell
-def _(merged_tariff_df):
-    # Reformat to the HS6 level. Take the average at the HS6
-
-
-    merged_tariff_df.groupby(["Product HS6", "Effective Date"])
+def _(us_tariff_df):
+    us_tariff_df
     return
 
 
@@ -919,9 +916,7 @@ def _(official_us_hs6_tariffs, pl, vectorized_hs_translation):
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""Compare the official_us_hs6_tariffs which I've extracted from the US data, with the WITS dataset."""
-    )
+    mo.md(r"""Compare the official_us_hs6_tariffs which I've extracted from the US data, with the WITS dataset.""")
     return
 
 
@@ -1220,7 +1215,140 @@ def _(filtered_df, pl, px, results_df):
 
 
 @app.cell
-def _():
+def _(results_df):
+    results_df
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(
+        r"""
+    # Trade-weighted average tariff between the US and China
+
+    1. Create a unified df
+    2. Calculate the trade weighted average with and without the new tariffs
+    """
+    )
+    return
+
+
+@app.cell
+def _(filtered_df):
+    filtered_df  # <- Reporter China, partner USA (US Tariffs on China)
+    return
+
+
+@app.cell
+def _(filtered_df):
+    selected_df = filtered_df.select(
+        [
+            "year",
+            "product_code",
+            "value",
+            "quantity",
+            "effective_tariff",
+            "unit_value_detrended",
+        ]
+    )
+
+    selected_df.head()
+    return (selected_df,)
+
+
+@app.cell
+def _(pl, px, results_df, selected_df):
+    official_and_wits_df = selected_df.join(
+        other=results_df.select(
+            ["product_code", "year", "official_tariff_rate_percentage"]
+        ),
+        on=["product_code", "year"],
+        how="left",
+    )
+
+    official_and_wits_df = official_and_wits_df.with_columns(
+        pl.col("official_tariff_rate_percentage")
+        .forward_fill()
+        .over("product_code")  # Apply forward fill partitioned by product_code
+        .fill_null(0)
+    )
+
+    official_and_wits_df = official_and_wits_df.with_columns(
+        (pl.col("effective_tariff") + pl.col("official_tariff_rate_percentage"))
+        .alias("full_tariff")
+        .cast(pl.Float32)
+    )
+
+    # Calculate total value per year for weighting
+    total_value_per_year = official_and_wits_df.group_by("year").agg(
+        pl.sum("value").alias("total_yearly_value")
+    )
+
+    # Calculate weighted tariffs
+    weighted_tariffs_df = (
+        official_and_wits_df.with_columns(
+            (pl.col("effective_tariff") * pl.col("value")).alias(
+                "weighted_effective_tariff_value"
+            ),
+            (pl.col("full_tariff") * pl.col("value")).alias(
+                "weighted_full_tariff_value"
+            ),
+        )
+        .group_by("year")
+        .agg(
+            pl.sum("weighted_effective_tariff_value").alias(
+                "sum_weighted_effective"
+            ),
+            pl.sum("weighted_full_tariff_value").alias("sum_weighted_full"),
+        )
+    )
+
+    # Join with total yearly value and calculate the final trade-weighted tariffs
+    final_weighted_tariffs_df = (
+        weighted_tariffs_df.join(total_value_per_year, on="year", how="left")
+        .with_columns(
+            (
+                pl.col("sum_weighted_effective") / pl.col("total_yearly_value")
+            ).alias("trade_weighted_effective_tariff"),
+            (pl.col("sum_weighted_full") / pl.col("total_yearly_value")).alias(
+                "trade_weighted_full_tariff"
+            ),
+        )
+        .select(
+            [
+                "year",
+                "trade_weighted_effective_tariff",
+                "trade_weighted_full_tariff",
+            ]
+        )
+    )
+
+    # Ensure 'year' is sorted for the line chart
+    final_weighted_tariffs_df = final_weighted_tariffs_df.sort("year")
+
+    plot_df = final_weighted_tariffs_df.unpivot(
+        index="year",
+        on=["trade_weighted_effective_tariff", "trade_weighted_full_tariff"],
+        variable_name="tariff_type",
+        value_name="weighted_tariff_rate",
+    )
+
+    # Create the line chart
+    fig = px.line(
+        plot_df.to_pandas(),
+        x="year",
+        y="weighted_tariff_rate",
+        color="tariff_type",
+        title="Trade-Weighted Effective and Full Tariffs Over Time",
+        labels={
+            "year": "Year",
+            "weighted_tariff_rate": "Trade-Weighted Tariff Rate (%)",
+            "tariff_type": "Tariff Type",
+        },
+    )
+    fig.show()
+
+    # print(final_weighted_tariffs_df)
     return
 
 

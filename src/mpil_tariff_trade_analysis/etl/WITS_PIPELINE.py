@@ -14,7 +14,6 @@ def _():
     import marimo as mo
     import pandas as pd
     import polars as pl
-
     return Path, glob, mo, os, pd, pl, re
 
 
@@ -38,7 +37,10 @@ def _(mo):
 def _(glob, os, pl, re):
     # Load and consolidate all the WITS data
 
-    def consolidate_wits_tariff_data(tariff_type="AVEMFN", base_dir="data/raw/WITS_tariff/") -> pl.LazyFrame:
+
+    def consolidate_wits_tariff_data(
+        tariff_type="AVEMFN", base_dir="data/raw/WITS_tariff/"
+    ) -> pl.LazyFrame:
         tariff_dir = os.path.join(base_dir, tariff_type)
 
         # 1: find all CSV files for this tariff type
@@ -150,19 +152,27 @@ def _(glob, os, pl, re):
         # # logger.info(
         #     f"Successfully scanned {successful_files} files, failed to scan {failed_files} files"
         # )
-        print(f"Successfully scanned {successful_files} files, failed to scan {failed_files} files")
+        print(
+            f"Successfully scanned {successful_files} files, failed to scan {failed_files} files"
+        )
 
         if not dfs:
             # # logger.warning("No valid CSV files found to scan.")
-            raise FileNotFoundError("No WITS CSV files found or scanned successfully.")
+            raise FileNotFoundError(
+                "No WITS CSV files found or scanned successfully."
+            )
 
         # Combine all dataframes
         # # logger.info("Combining all scanned dataframes")
         print("Combining all scanned dfs")
-        combined_df = pl.concat(dfs, how="vertical_relaxed")  # Use relaxed to handle potential schema variations if any
+        combined_df = pl.concat(
+            dfs, how="vertical_relaxed"
+        )  # Use relaxed to handle potential schema variations if any
 
         # Add a column for tariff type
-        combined_df = combined_df.with_columns(pl.lit(tariff_type).alias("tariff_type"))
+        combined_df = combined_df.with_columns(
+            pl.lit(tariff_type).alias("tariff_type")
+        )
 
         combined_df.head().collect()
 
@@ -197,8 +207,13 @@ def _(glob, os, pl, re):
 
         return combined_df
 
-    consolidated_lf_AVEMFN = consolidate_wits_tariff_data("AVEMFN", "data/raw/WITS_tariff/")
-    consolidated_lf_AVEPref = consolidate_wits_tariff_data("AVEPref", "data/raw/WITS_tariff/")
+
+    consolidated_lf_AVEMFN = consolidate_wits_tariff_data(
+        "AVEMFN", "data/raw/WITS_tariff/"
+    )
+    consolidated_lf_AVEPref = consolidate_wits_tariff_data(
+        "AVEPref", "data/raw/WITS_tariff/"
+    )
     return consolidated_lf_AVEMFN, consolidated_lf_AVEPref
 
 
@@ -217,11 +232,20 @@ def _(mo):
 @app.cell
 def _(Path, consolidated_lf_AVEMFN, consolidated_lf_AVEPref, pd, pl):
     # --- Step 2: Translate HS codes to H0 ---
-    def vectorized_hs_translation(input_lf: pl.LazyFrame, mapping_dir: str = "data/raw/hs_reference") -> pl.LazyFrame:
+    def vectorized_hs_translation(
+        input_lf: pl.LazyFrame, mapping_dir: str = "data/raw/hs_reference"
+    ) -> pl.LazyFrame:
         print("Starting HS code translation to H0 (HS92).")
 
         # Define which HS revisions require mapping (all except H0)
-        hs_versions = ["H1", "H2", "H3", "H4", "H5", "H6"]  # H1, H2, H3, H4, H5, H6
+        hs_versions = [
+            "H1",
+            "H2",
+            "H3",
+            "H4",
+            "H5",
+            "H6",
+        ]  # H1, H2, H3, H4, H5, H6
 
         mapping_dfs_pd = []  # List to hold pandas DataFrames
         for hs_version in hs_versions:
@@ -244,11 +268,15 @@ def _(Path, consolidated_lf_AVEMFN, consolidated_lf_AVEPref, pd, pl):
 
             except FileNotFoundError as e:
                 # # logger.warning(f"Mapping file not found for {hs_version}: {path}. Skipping.")
-                raise ValueError(f"Error loading mapping file for {hs_version}: \n {e}") from e
+                raise ValueError(
+                    f"Error loading mapping file for {hs_version}: \n {e}"
+                ) from e
 
             except Exception as e:
                 # # logger.error(f"Error loading mapping file for {hs_version}: {path}. Error: {e}")
-                raise ValueError(f"Error loading mapping file for {hs_version}: \n {e}") from e
+                raise ValueError(
+                    f"Error loading mapping file for {hs_version}: \n {e}"
+                ) from e
 
         if not mapping_dfs_pd:
             # # logger.warning("No HS mapping files loaded.")
@@ -258,8 +286,14 @@ def _(Path, consolidated_lf_AVEMFN, consolidated_lf_AVEPref, pd, pl):
         mapping_all_pd = pd.concat(mapping_dfs_pd, ignore_index=True)
 
         # Convert the combined pandas DataFrame to a Polars LazyFrame.
-        schema = {"source_code": pl.Utf8, "target_code": pl.Utf8, "hs_revision": pl.Utf8}
-        mapping_all = pl.from_pandas(mapping_all_pd, schema_overrides=schema).lazy()
+        schema = {
+            "source_code": pl.Utf8,
+            "target_code": pl.Utf8,
+            "hs_revision": pl.Utf8,
+        }
+        mapping_all = pl.from_pandas(
+            mapping_all_pd, schema_overrides=schema
+        ).lazy()
 
         df = input_lf
         # df = df.with_columns(
@@ -285,7 +319,9 @@ def _(Path, consolidated_lf_AVEMFN, consolidated_lf_AVEPref, pd, pl):
 
         df_non_h0 = (
             df_non_h0.with_columns(
-                pl.when(pl.col("target_code").is_not_null())  # Check if target_code exists from join
+                pl.when(
+                    pl.col("target_code").is_not_null()
+                )  # Check if target_code exists from join
                 .then(pl.col("target_code"))
                 .otherwise(pl.col("product_code"))  # Keep original if no match
                 .alias("product_code_translated")  # Use a temporary name
@@ -295,16 +331,22 @@ def _(Path, consolidated_lf_AVEMFN, consolidated_lf_AVEPref, pd, pl):
         )
 
         # Optionally drop unnecessary columns from join
-        df_non_h0 = df_non_h0.drop(["target_code"])  # Drop the mapping target code column
+        df_non_h0 = df_non_h0.drop(
+            ["target_code"]
+        )  # Drop the mapping target code column
 
         print(f"DF non H0 after join and merge: {df_non_h0.head().collect()}")
 
         # Combine the rows which were already in H0 with the ones translated.
         common_cols = df_h0.collect_schema().names()
-        df_final = pl.concat([df_h0.select(common_cols), df_non_h0.select(common_cols)], how="vertical_relaxed")
+        df_final = pl.concat(
+            [df_h0.select(common_cols), df_non_h0.select(common_cols)],
+            how="vertical_relaxed",
+        )
 
         # logger.info("✅ HS code translation completed.")
         return df_final
+
 
     translated_lf_AVEMFN = vectorized_hs_translation(consolidated_lf_AVEMFN)
     translated_lf_AVEPref = vectorized_hs_translation(consolidated_lf_AVEPref)
@@ -313,7 +355,9 @@ def _(Path, consolidated_lf_AVEMFN, consolidated_lf_AVEPref, pd, pl):
 
 @app.cell
 def _(translated_lf_AVEPref):
-    print(f"Translated lf avepref head, post H0 translation:\n{translated_lf_AVEPref.head().collect()}")
+    print(
+        f"Translated lf avepref head, post H0 translation:\n{translated_lf_AVEPref.head().collect()}"
+    )
     return
 
 
@@ -326,13 +370,21 @@ def _(mo):
 @app.cell
 def _(pd, pl, translated_lf_AVEPref):
     # Load the mapping
-    pref_group_mapping = pd.read_csv("data/raw/WITS_pref_groups/WITS_pref_groups.csv", encoding="iso-8859-1", usecols=[0, 2])
+    pref_group_mapping = pd.read_csv(
+        "data/raw/WITS_pref_groups/WITS_pref_groups.csv",
+        encoding="iso-8859-1",
+        usecols=[0, 2],
+    )
 
     # Minor cleans and convert to polars
     pref_group_mapping.columns = ["pref_group_code", "country_iso_num"]
-    pref_group_mapping["country_iso_num"] = pref_group_mapping["country_iso_num"].astype(str).str.zfill(3)
+    pref_group_mapping["country_iso_num"] = (
+        pref_group_mapping["country_iso_num"].astype(str).str.zfill(3)
+    )
     pref_group_mapping = pref_group_mapping.groupby("pref_group_code").agg(list)
-    pref_group_mapping_lf = pl.from_pandas(pref_group_mapping, include_index=True).lazy()
+    pref_group_mapping_lf = pl.from_pandas(
+        pref_group_mapping, include_index=True
+    ).lazy()
 
     # Join on the AVEpref dataset
     joined_pref_lf_AVEPref = translated_lf_AVEPref.join(
@@ -343,9 +395,13 @@ def _(pd, pl, translated_lf_AVEPref):
 
     # Explode out to create entries for each individual country (memory intensive!)
     joined_pref_lf_AVEPref = joined_pref_lf_AVEPref.explode("country_iso_num")
-    joined_pref_lf_AVEPref = joined_pref_lf_AVEPref.with_columns(pl.col("country_iso_num").alias("partner_country")).drop("country_iso_num")
+    joined_pref_lf_AVEPref = joined_pref_lf_AVEPref.with_columns(
+        pl.col("country_iso_num").alias("partner_country")
+    ).drop("country_iso_num")
 
-    print(f"Joine Pref LF head:\n{joined_pref_lf_AVEPref.head().collect(engine='streaming')}")
+    print(
+        f"Joine Pref LF head:\n{joined_pref_lf_AVEPref.head().collect(engine='streaming')}"
+    )
     return (joined_pref_lf_AVEPref,)
 
 
@@ -366,6 +422,7 @@ def _():
 
     import pycountry
 
+
     def identify_iso_code(
         cc: str,
         baci_map_names: Dict[str, str],
@@ -381,7 +438,9 @@ def _():
                 "578",
                 "756",
             ],  # Europe EFTA, nes -> Iceland, Liechtenstein, Norway, Switzerland
-            "490": ["158"],  # Other Asia, nes -> Taiwan (ISO 3166-1 numeric is 158)
+            "490": [
+                "158"
+            ],  # Other Asia, nes -> Taiwan (ISO 3166-1 numeric is 158)
             "918": [
                 "040",
                 "056",
@@ -433,7 +492,9 @@ def _():
             print(f"Mapped {cc} to {iso_nums}")
             return iso_nums
         except LookupError:
-            print(f"Direct pycountry lookup for code '{cc}' failed. Trying name and iso3 alpha lookup.")
+            print(
+                f"Direct pycountry lookup for code '{cc}' failed. Trying name and iso3 alpha lookup."
+            )
 
         # If that fails, try get the name of the country from the provided mappings and use that for pycountry
         country_name = baci_map_names.get(cc) or wits_map_names.get(cc)
@@ -453,14 +514,18 @@ def _():
 
                     if fuzzy_matches:
                         iso_nums = [fuzzy_matches[0].numeric]
-                        print(f"Mapped {cc} to {iso_nums} using country name *fuzzy*")
+                        print(
+                            f"Mapped {cc} to {iso_nums} using country name *fuzzy*"
+                        )
                         return iso_nums
 
                     else:
                         pass
 
                 except LookupError:
-                    print(f"Unable to fuzzy find a match for {country_name}. Code {cc}.")
+                    print(
+                        f"Unable to fuzzy find a match for {country_name}. Code {cc}."
+                    )
 
         if iso3_code:
             print(f"Trying ISO3 alpha code for country {cc}.")
@@ -475,7 +540,6 @@ def _():
 
         print("Failed to match entirely. Returning original code.")
         return [cc]
-
     return (identify_iso_code,)
 
 
@@ -489,43 +553,72 @@ def _(
 ):
     def create_mapping_df(lf: pl.LazyFrame, col_name: str) -> pl.DataFrame:
         # Get the unique codes from the series
-        unique_codes = lf.select(pl.col(col_name).unique()).collect().to_series().to_list()
+        unique_codes = (
+            lf.select(pl.col(col_name).unique()).collect().to_series().to_list()
+        )
 
         #! FOR TESTING ONLY!
         # unique_codes.append("697")
         # print(unique_codes)
 
         # Load our reference data - this is marginally inefficient but feels cleaner
-        baci_reference_path = Path("data/raw/BACI_HS92_V202501/country_codes_V202501.csv")
-        baci_map = pl.read_csv(baci_reference_path, infer_schema=False, encoding="utf8")
+        baci_reference_path = Path(
+            "data/raw/BACI_HS92_V202501/country_codes_V202501.csv"
+        )
+        baci_map = pl.read_csv(
+            baci_reference_path, infer_schema=False, encoding="utf8"
+        )
         baci_map = baci_map.with_columns(pl.col("country_code").str.zfill(3))
-        baci_map_names = dict(zip(baci_map["country_code"], baci_map["country_name"], strict=False))
-        baci_map_iso3 = dict(zip(baci_map["country_code"], baci_map["country_iso3"], strict=False))
+        baci_map_names = dict(
+            zip(baci_map["country_code"], baci_map["country_name"], strict=False)
+        )
+        baci_map_iso3 = dict(
+            zip(baci_map["country_code"], baci_map["country_iso3"], strict=False)
+        )
         # print(f"BACI Mapping: {baci_map_names}")
         # print(f"BACI Mapping: {baci_map_iso3}")
 
         wits_reference_path = Path("data/raw/WITS_country_codes.csv")
-        wits_map = pl.read_csv(wits_reference_path, infer_schema=False, encoding="utf8")
+        wits_map = pl.read_csv(
+            wits_reference_path, infer_schema=False, encoding="utf8"
+        )
         wits_map = wits_map.with_columns(pl.col("Numeric Code").str.zfill(3))
-        wits_map_names = dict(zip(wits_map["Numeric Code"], wits_map["Country Name"], strict=False))
-        wits_map_iso3 = dict(zip(wits_map["Numeric Code"], wits_map["ISO3"], strict=False))
+        wits_map_names = dict(
+            zip(wits_map["Numeric Code"], wits_map["Country Name"], strict=False)
+        )
+        wits_map_iso3 = dict(
+            zip(wits_map["Numeric Code"], wits_map["ISO3"], strict=False)
+        )
         # print(f"WITS Mapping: {wits_map_names}")
         # print(f"WITS Mapping: {wits_map_iso3}")
 
         # Map the codes
         mapping_data = []
         for cc in unique_codes:
-            iso_num_codes = identify_iso_code(cc, baci_map_names, baci_map_iso3, wits_map_names, wits_map_iso3)
-            mapping_data.append({"original_code": cc, "iso_num_list": iso_num_codes})
+            iso_num_codes = identify_iso_code(
+                cc, baci_map_names, baci_map_iso3, wits_map_names, wits_map_iso3
+            )
+            mapping_data.append(
+                {"original_code": cc, "iso_num_list": iso_num_codes}
+            )
 
         # Create a df
-        mapping_df = pl.DataFrame(mapping_data).with_columns(pl.col("iso_num_list").cast(pl.List(pl.Utf8)))
+        mapping_df = pl.DataFrame(mapping_data).with_columns(
+            pl.col("iso_num_list").cast(pl.List(pl.Utf8))
+        )
 
         return mapping_df
 
-    mapping_df_AVEPref_reporter = create_mapping_df(joined_pref_lf_AVEPref, "reporter_country")
-    mapping_df_AVEPref_partner = create_mapping_df(joined_pref_lf_AVEPref, "partner_country")
-    mapping_df_AVEMFN_reporter = create_mapping_df(translated_lf_AVEMFN, "reporter_country")
+
+    mapping_df_AVEPref_reporter = create_mapping_df(
+        joined_pref_lf_AVEPref, "reporter_country"
+    )
+    mapping_df_AVEPref_partner = create_mapping_df(
+        joined_pref_lf_AVEPref, "partner_country"
+    )
+    mapping_df_AVEMFN_reporter = create_mapping_df(
+        translated_lf_AVEMFN, "reporter_country"
+    )
     return (
         mapping_df_AVEMFN_reporter,
         mapping_df_AVEPref_partner,
@@ -549,7 +642,9 @@ def _(
     translated_lf_AVEMFN,
 ):
     # Apply these mappings
-    def apply_mapping(lf: pl.LazyFrame, mapping_df: pl.DataFrame, target_col_name: str) -> pl.LazyFrame:
+    def apply_mapping(
+        lf: pl.LazyFrame, mapping_df: pl.DataFrame, target_col_name: str
+    ) -> pl.LazyFrame:
         lf = lf.join(
             mapping_df.lazy(),
             left_on=target_col_name,
@@ -557,21 +652,40 @@ def _(
             how="left",
         )
 
-        lf = lf.explode("iso_num_list").with_columns(pl.col("iso_num_list").alias(target_col_name)).drop("iso_num_list")
+        lf = (
+            lf.explode("iso_num_list")
+            .with_columns(pl.col("iso_num_list").alias(target_col_name))
+            .drop("iso_num_list")
+        )
 
         return lf
 
-    AVEMFN_lf_clean = apply_mapping(translated_lf_AVEMFN, mapping_df_AVEMFN_reporter, "reporter_country")
+
+    AVEMFN_lf_clean = apply_mapping(
+        translated_lf_AVEMFN, mapping_df_AVEMFN_reporter, "reporter_country"
+    )
 
     # Apply mapping twice, once for reporter and partner country for the AVEPref
-    AVEPref_lf_clean = apply_mapping(joined_pref_lf_AVEPref, mapping_df_AVEPref_reporter, "reporter_country")
-    AVEPref_lf_clean = apply_mapping(AVEPref_lf_clean, mapping_df_AVEPref_partner, "partner_country")
+    AVEPref_lf_clean = apply_mapping(
+        joined_pref_lf_AVEPref, mapping_df_AVEPref_reporter, "reporter_country"
+    )
+    AVEPref_lf_clean = apply_mapping(
+        AVEPref_lf_clean, mapping_df_AVEPref_partner, "partner_country"
+    )
     return AVEMFN_lf_clean, AVEPref_lf_clean
 
 
 @app.cell
 def _(AVEMFN_lf_clean):
-    print(f"AVEMFN lf head, collected:\n{AVEMFN_lf_clean.head().collect(engine='streaming')}")
+    print(
+        f"AVEMFN lf head, collected:\n{AVEMFN_lf_clean.head().collect(engine='streaming')}"
+    )
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(r""" """)
     return
 
 
@@ -584,14 +698,18 @@ def _(mo):
 @app.cell
 def _(AVEMFN_lf_clean):
     print("Sinking AVEMFN")
-    AVEMFN_lf_clean.sink_parquet("data/intermediate/WITS_AVEMFN_CLEAN.parquet", compression="zstd")
+    AVEMFN_lf_clean.sink_parquet(
+        "data/intermediate/WITS_AVEMFN_CLEAN.parquet", compression="zstd"
+    )
     return
 
 
 @app.cell
 def _(AVEPref_lf_clean):
     print("Sinking AVEPREF")
-    AVEPref_lf_clean.sink_parquet("data/intermediate/WITS_AVEPref_CLEAN.parquet", compression="zstd")
+    AVEPref_lf_clean.sink_parquet(
+        "data/intermediate/WITS_AVEPref_CLEAN.parquet", compression="zstd"
+    )
     return
 
 
