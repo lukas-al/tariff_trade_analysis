@@ -1209,11 +1209,17 @@ def _(pd, pdfplumber, re):
         return df
 
 
-    pdf_file_path = "data/raw/us_raw_tariff_data/HTS_HEADING_TO_HS_CODE.pdf"
+    pdf_file_path = "data/raw/us_raw_tariff_data/HTS_HEADING_TO_HS_CODE_M25.pdf"
     hs_to_ch99_mapping = extract_codes_from_pdf(pdf_file_path)
 
     hs_to_ch99_mapping
     return (hs_to_ch99_mapping,)
+
+
+@app.cell
+def _(hs_to_ch99_mapping):
+    hs_to_ch99_mapping.to_csv("test_hstoch99")
+    return
 
 
 @app.cell
@@ -1223,7 +1229,7 @@ def _(mo):
 
 
 @app.cell
-def _(pd):
+def _(np, pd):
     def map_tariff_rates(
         extracted_codes_df: pd.DataFrame, tariff_rates_df: pd.DataFrame
     ) -> pd.DataFrame:
@@ -1284,8 +1290,8 @@ def _(pd):
 
         data_for_final_df = []
         default_tariff_info = {
-            "date": "Date not in provided DF",
-            "rate": "Rate not in provided DF",
+            "date": np.nan,
+            "rate": np.nan,
         }
 
         for _, row in extracted_codes_df.iterrows():
@@ -1323,6 +1329,10 @@ def _(pd):
 @app.cell
 def _(hs_to_ch99_mapping, map_tariff_rates, us_tariff_df):
     us_tariff_df_mapped = map_tariff_rates(hs_to_ch99_mapping, us_tariff_df)
+    us_tariff_df_mapped["Tariff Rate Applied"] = us_tariff_df_mapped[
+        "Tariff Rate Applied"
+    ].astype(float)
+
     us_tariff_df_mapped
     return (us_tariff_df_mapped,)
 
@@ -1552,7 +1562,7 @@ def _(official_us_hs6_tariffs, pl, vectorized_hs_translation):
 def _(official_us_hs6_tariffs_remapped):
     official_us_tariffs_df = official_us_hs6_tariffs_remapped.collect().to_pandas()
     official_us_tariffs_df
-    return (official_us_tariffs_df,)
+    return
 
 
 @app.cell
@@ -1736,6 +1746,11 @@ def _(Optional, pd, pl):
             .alias("official_effective_tariff")
         )
 
+        # Multiply by 100 to bring into same space as the effective_tariff previously
+        unified_lf = unified_lf.with_columns(
+            pl.col("official_effective_tariff") * 100
+        )
+
         unified_lf = unified_lf.with_columns(
             (
                 pl.col("effective_tariff") + pl.col("official_effective_tariff")
@@ -1749,14 +1764,63 @@ def _(Optional, pd, pl):
 
 
 @app.cell
+def _(mo):
+    mo.md(
+        r"""
+    ## Perform the join
+
+    Testing the use of the data extracted from their website, vs tariffs in Carter Mix (which are date appropriate)
+    """
+    )
+    return
+
+
+@app.cell
+def _(Path, pd, pl):
+    base_dir = Path("data/raw/CarterMix/")
+    list1 = pl.read_csv(base_dir / "Tariffs" / "part1.csv")
+    list2 = pl.read_csv(base_dir / "Tariffs" / "part2.csv")
+    list3 = pl.read_csv(base_dir / "Tariffs" / "part3.csv")
+    list4 = pl.read_csv(base_dir / "Tariffs" / "part4a.csv")
+
+    cm_us_tariffs = pl.concat([list1, list2, list3, list4]).to_pandas()
+    cm_us_tariffs["time"] = pd.to_datetime(cm_us_tariffs["time"], format="%Ym%m")
+    cm_us_tariffs["hs_code"] = cm_us_tariffs["hs_code"].astype(str)
+
+    # Shorten the codes
+    cm_us_tariffs["hs_code"] = cm_us_tariffs["hs_code"].apply(lambda x: x[:-2])
+    cm_us_tariffs = cm_us_tariffs.rename(
+        columns={
+            "hs_code": "product_code",
+            "time": "Effective Date",
+            "tariff_add": "Tariff Rate Applied",
+        }
+    )
+    cm_us_tariffs = cm_us_tariffs.groupby("product_code").mean()
+    cm_us_tariffs["hs_revision"] = "HS6"
+    cm_us_tariffs = cm_us_tariffs.reset_index()
+    cm_us_tariffs["Tariff Rate Applied"] = (
+        cm_us_tariffs["Tariff Rate Applied"] * 100
+    )
+
+    cm_us_tariffs.head(1)
+
+    cm_us_tariffs.to_csv("data/intermediate/carter_mix_hs6_tariffs.csv")
+    return (cm_us_tariffs,)
+
+
+@app.cell
 def _(
+    cm_us_tariffs,
     combine_us_official_tariffs_with_unified_optimized,
-    official_us_tariffs_df,
     pl,
     unified_lf,
 ):
     enhanced_unified_lf = combine_us_official_tariffs_with_unified_optimized(
-        unified_lf, official_us_tariffs_df, max_year_for_ffill=2023
+        # unified_lf, official_us_tariffs_df, max_year_for_ffill=2023
+        unified_lf,
+        cm_us_tariffs,
+        max_year_for_ffill=2023,
     )
 
     enhanced_unified_lf = enhanced_unified_lf.with_columns(
@@ -1784,6 +1848,100 @@ def _(enhanced_unified_lf, pl, unified_path):
         ),
         mkdir=True,
     )
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(r"""# Compare with data in Carter-Mix replication materials""")
+    return
+
+
+@app.cell
+def _():
+    # base_dir = Path("data/raw/CarterMix/")
+    # list1 = pl.read_csv(base_dir / "Tariffs" / "part1.csv")
+    # list2 = pl.read_csv(base_dir / "Tariffs" / "part2.csv")
+    # list3 = pl.read_csv(base_dir / "Tariffs" / "part3.csv")
+    # list4 = pl.read_csv(base_dir / "Tariffs" / "part4a.csv")
+
+    # cm_us_tariffs = pl.concat([list1, list2, list3, list4]).to_pandas()
+    # cm_us_tariffs["time"] = pd.to_datetime(cm_us_tariffs["time"], format="%Ym%m")
+    # cm_us_tariffs["hs_code"] = cm_us_tariffs["hs_code"].astype(str)
+
+    # # Shorten the codes
+    # cm_us_tariffs["hs_code"] = cm_us_tariffs["hs_code"].apply(lambda x: x[:-2])
+    # cm_us_tariffs = cm_us_tariffs.rename(columns={"hs_code": "product_code"})
+    # cm_us_tariffs = cm_us_tariffs.groupby("product_code").mean()
+    # cm_us_tariffs["hs_revision"] = "HS6"
+    # cm_us_tariffs = cm_us_tariffs.reset_index()
+    # cm_us_tariffs["tariff_add"] = cm_us_tariffs["tariff_add"] * 100
+    # #
+    # cm_us_tariffs
+    # # cm_us_tariffs = vectorized_hs_translation(cm_us_tariffs)
+    return
+
+
+@app.cell
+def _():
+    # official_us_tariffs_df.sort_values("product_code")
+    return
+
+
+@app.cell
+def _():
+    # cm_us_tariffs["month_year"] = cm_us_tariffs["time"].dt.to_period("M")
+    # official_us_tariffs_df["month_year"] = official_us_tariffs_df[
+    #     "Effective Date"
+    # ].dt.to_period("M")
+
+    # # Perform the merge
+    # comparison_df = pd.merge(
+    #     cm_us_tariffs,
+    #     official_us_tariffs_df,
+    #     left_on=["product_code", "month_year", "tariff_add"],
+    #     right_on=["product_code", "month_year", "Tariff Rate Applied"],
+    #     how="inner",
+    # )
+
+    # # Display rows where all three conditions match
+    # comparison_df
+
+    # # cm_us_tariffs["month_year"] = cm_us_tariffs["time"].dt.to_period("M")
+    # # official_us_tariffs_df["month_year"] = official_us_tariffs_df[
+    # #     "Effective Date"
+    # # ].dt.to_period("M")
+
+    # # # Perform an outer merge with an indicator
+    # # comparison_df_outer = pd.merge(
+    # #     cm_us_tariffs,
+    # #     official_us_tariffs_df,
+    # #     left_on=["product_code", "month_year", "tariff_add"],
+    # #     right_on=["product_code", "month_year", "Tariff Rate Applied"],
+    # #     how="outer",
+    # #     indicator=True,
+    # # )
+
+    # # # Filter for rows that are not in both DataFrames
+    # # non_matching_rows = comparison_df_outer[
+    # #     comparison_df_outer["_merge"] != "both"
+    # # ]
+
+    # # # Display non-matching rows
+    # # print("Rows in cm_us_tariffs but not in official_us_tariffs_df:")
+    # # print(non_matching_rows[non_matching_rows["_merge"] == "left_only"])
+
+    # # print("\nRows in official_us_tariffs_df but not in cm_us_tariffs:")
+    # # print(non_matching_rows[non_matching_rows["_merge"] == "right_only"])
+    return
+
+
+@app.cell
+def _():
+    # # Try load the hs6 tariff data from CM
+    # cm_hs6_tariffs = pd.read_stata(base_dir / "PanelElasticity" / "HS6Tariffs.dta")
+    # cm_hs6_tariffs = pd.read_stata(base_dir / "PanelElasticity" / "HS6TariffsNonChina.dta")
+    # cm_hs6_tariffs
     return
 
 

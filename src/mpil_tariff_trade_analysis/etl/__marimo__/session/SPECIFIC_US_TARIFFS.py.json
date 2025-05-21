@@ -7,139 +7,523 @@
     {
       "id": "Hbol",
       "code_hash": "fecb77b768218c01c57aacf84ca8316c",
-      "outputs": [],
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
       "console": []
     },
     {
       "id": "MJUe",
       "code_hash": "f0054b8cc8f939ae400197c9d8467ae9",
-      "outputs": [],
-      "console": []
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Adding manually identified US-China tariffs\n"
+        }
+      ]
     },
     {
       "id": "vblA",
       "code_hash": "cbd8922c1209f1efa69843ab219d72a4",
-      "outputs": [],
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"add-usa-exceptional-tariffs-to-the-data\">Add USA exceptional tariffs to the data</h1>\n<ol>\n<li>Hard coded mapping of Chapter 99 codes to tariff rate and applied date. These come from detailed reading of the announcement documents.</li>\n<li>Extract hscode to ch99 mapping from UCITS PDF documents.</li>\n<li>Aggregate the 10 digit codes and calculate an average tariff for them using the HS-CH99 mapping.</li>\n<li>Join these onto the unified dataset, specifically for US exports to China.</li>\n</ol></span>"
+          }
+        }
+      ],
       "console": []
     },
     {
       "id": "bkHC",
       "code_hash": "5e426a524b39f161cc7d6017af26ab9e",
-      "outputs": [],
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"manual-records\">Manual Records</h1>\n<span class=\"paragraph\">Data which was manually collected on Trade War 1 tariffs.</span></span>"
+          }
+        }
+      ],
       "console": []
     },
     {
       "id": "lEQa",
       "code_hash": "1803996b015309acd69ab90044e4e3e8",
-      "outputs": [],
-      "console": []
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='lEQa-0' random-id='73b58ee6-8743-94c6-4292-443e85f1db5a'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;[{&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2018-03-23T00:00:00.000&#92;&quot;,&#92;&quot;Action Entity&#92;&quot;:&#92;&quot;USA&#92;&quot;,&#92;&quot;Tariff Target&#92;&quot;:&#92;&quot;Aluminum imports from various countries&#92;&quot;,&#92;&quot;Legal Basis&#92;&quot;:&#92;&quot;Section 232&#92;&quot;,&#92;&quot;Trade Value (USD)&#92;&quot;:null,&#92;&quot;Applied Rate&#92;&quot;:0.1,&#92;&quot;Status&#92;&quot;:&#92;&quot;Active&#92;&quot;,&#92;&quot;HTS Heading&#92;&quot;:null},{&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2018-03-23T00:00:00.000&#92;&quot;,&#92;&quot;Action Entity&#92;&quot;:&#92;&quot;USA&#92;&quot;,&#92;&quot;Tariff Target&#92;&quot;:&#92;&quot;Steel imports from various countries&#92;&quot;,&#92;&quot;Legal Basis&#92;&quot;:&#92;&quot;Section 232&#92;&quot;,&#92;&quot;Trade Value (USD)&#92;&quot;:null,&#92;&quot;Applied Rate&#92;&quot;:0.25,&#92;&quot;Status&#92;&quot;:&#92;&quot;Active&#92;&quot;,&#92;&quot;HTS Heading&#92;&quot;:null},{&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2018-04-02T00:00:00.000&#92;&quot;,&#92;&quot;Action Entity&#92;&quot;:&#92;&quot;China&#92;&quot;,&#92;&quot;Tariff Target&#92;&quot;:&#92;&quot;128 U.S. products (Retaliation to Sec 232)&#92;&quot;,&#92;&quot;Legal Basis&#92;&quot;:&#92;&quot;Retaliation&#92;&quot;,&#92;&quot;Trade Value (USD)&#92;&quot;:3000000000.0,&#92;&quot;Applied Rate&#92;&quot;:0.15,&#92;&quot;Status&#92;&quot;:&#92;&quot;Active&#92;&quot;,&#92;&quot;HTS Heading&#92;&quot;:null},{&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2018-04-02T00:00:00.000&#92;&quot;,&#92;&quot;Action Entity&#92;&quot;:&#92;&quot;China&#92;&quot;,&#92;&quot;Tariff Target&#92;&quot;:&#92;&quot;128 U.S. products (Retaliation to Sec 232)&#92;&quot;,&#92;&quot;Legal Basis&#92;&quot;:&#92;&quot;Retaliation&#92;&quot;,&#92;&quot;Trade Value (USD)&#92;&quot;:3000000000.0,&#92;&quot;Applied Rate&#92;&quot;:0.25,&#92;&quot;Status&#92;&quot;:&#92;&quot;Active&#92;&quot;,&#92;&quot;HTS Heading&#92;&quot;:null},{&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2018-07-06T00:00:00.000&#92;&quot;,&#92;&quot;Action Entity&#92;&quot;:&#92;&quot;China&#92;&quot;,&#92;&quot;Tariff Target&#92;&quot;:&#92;&quot;545 U.S. products (Retaliation to List 1)&#92;&quot;,&#92;&quot;Legal Basis&#92;&quot;:&#92;&quot;Retaliation&#92;&quot;,&#92;&quot;Trade Value (USD)&#92;&quot;:34000000000.0,&#92;&quot;Applied Rate&#92;&quot;:0.25,&#92;&quot;Status&#92;&quot;:&#92;&quot;Active&#92;&quot;,&#92;&quot;HTS Heading&#92;&quot;:null},{&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2018-07-06T00:00:00.000&#92;&quot;,&#92;&quot;Action Entity&#92;&quot;:&#92;&quot;USA&#92;&quot;,&#92;&quot;Tariff Target&#92;&quot;:&#92;&quot;Chinese products (List 1)&#92;&quot;,&#92;&quot;Legal Basis&#92;&quot;:&#92;&quot;Section 301&#92;&quot;,&#92;&quot;Trade Value (USD)&#92;&quot;:34000000000.0,&#92;&quot;Applied Rate&#92;&quot;:0.25,&#92;&quot;Status&#92;&quot;:&#92;&quot;Active&#92;&quot;,&#92;&quot;HTS Heading&#92;&quot;:&#92;&quot;9903.88.01&#92;&quot;},{&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2018-08-23T00:00:00.000&#92;&quot;,&#92;&quot;Action Entity&#92;&quot;:&#92;&quot;China&#92;&quot;,&#92;&quot;Tariff Target&#92;&quot;:&#92;&quot;333 U.S. products (Retaliation to List 2)&#92;&quot;,&#92;&quot;Legal Basis&#92;&quot;:&#92;&quot;Retaliation&#92;&quot;,&#92;&quot;Trade Value (USD)&#92;&quot;:16000000000.0,&#92;&quot;Applied Rate&#92;&quot;:0.25,&#92;&quot;Status&#92;&quot;:&#92;&quot;Active&#92;&quot;,&#92;&quot;HTS Heading&#92;&quot;:null},{&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2018-08-23T00:00:00.000&#92;&quot;,&#92;&quot;Action Entity&#92;&quot;:&#92;&quot;USA&#92;&quot;,&#92;&quot;Tariff Target&#92;&quot;:&#92;&quot;Chinese products (List 2)&#92;&quot;,&#92;&quot;Legal Basis&#92;&quot;:&#92;&quot;Section 301&#92;&quot;,&#92;&quot;Trade Value (USD)&#92;&quot;:16000000000.0,&#92;&quot;Applied Rate&#92;&quot;:0.25,&#92;&quot;Status&#92;&quot;:&#92;&quot;Active&#92;&quot;,&#92;&quot;HTS Heading&#92;&quot;:&#92;&quot;9903.88.02&#92;&quot;},{&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2018-09-24T00:00:00.000&#92;&quot;,&#92;&quot;Action Entity&#92;&quot;:&#92;&quot;China&#92;&quot;,&#92;&quot;Tariff Target&#92;&quot;:&#92;&quot;U.S. products (Retaliation to List 3)&#92;&quot;,&#92;&quot;Legal Basis&#92;&quot;:&#92;&quot;Retaliation&#92;&quot;,&#92;&quot;Trade Value (USD)&#92;&quot;:60000000000.0,&#92;&quot;Applied Rate&#92;&quot;:0.05,&#92;&quot;Status&#92;&quot;:&#92;&quot;Active&#92;&quot;,&#92;&quot;HTS Heading&#92;&quot;:null},{&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2018-09-24T00:00:00.000&#92;&quot;,&#92;&quot;Action Entity&#92;&quot;:&#92;&quot;China&#92;&quot;,&#92;&quot;Tariff Target&#92;&quot;:&#92;&quot;U.S. products (Retaliation to List 3)&#92;&quot;,&#92;&quot;Legal Basis&#92;&quot;:&#92;&quot;Retaliation&#92;&quot;,&#92;&quot;Trade Value (USD)&#92;&quot;:60000000000.0,&#92;&quot;Applied Rate&#92;&quot;:0.1,&#92;&quot;Status&#92;&quot;:&#92;&quot;Active&#92;&quot;,&#92;&quot;HTS Heading&#92;&quot;:null}]&quot;' data-total-rows='30' data-total-columns='8' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;Effective Date&quot;, [&quot;datetime&quot;, &quot;datetime64[ns]&quot;]], [&quot;Action Entity&quot;, [&quot;string&quot;, &quot;object&quot;]], [&quot;Tariff Target&quot;, [&quot;string&quot;, &quot;object&quot;]], [&quot;Legal Basis&quot;, [&quot;string&quot;, &quot;object&quot;]], [&quot;Trade Value (USD)&quot;, [&quot;number&quot;, &quot;float64&quot;]], [&quot;Applied Rate&quot;, [&quot;number&quot;, &quot;float64&quot;]], [&quot;Status&quot;, [&quot;string&quot;, &quot;object&quot;]], [&quot;HTS Heading&quot;, [&quot;string&quot;, &quot;object&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='true' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "/var/folders/df/j998nyn11sdf0w5cf48pny6m0000gn/T/marimo_85635/__marimo__cell_lEQa_.py:360: FutureWarning: The behavior of DataFrame concatenation with empty or all-NA entries is deprecated. In a future version, this will no longer exclude empty or all-NA columns when determining the result dtypes. To retain the old behavior, exclude the relevant entries before the concat operation.\n  us_tariff_df = pd.concat(\n"
+        }
+      ]
     },
     {
       "id": "PKri",
       "code_hash": "1f8493d09ab553e68f8d12dcc402228d",
-      "outputs": [],
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='PKri-0' random-id='a4236344-3cbf-7a89-4500-b10fae68e145'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;[{&#92;&quot;hts_code&#92;&quot;:&#92;&quot;8412.21.0075&#92;&quot;,&#92;&quot;date_of_exclusion_start&#92;&quot;:&#92;&quot;2018-07-06&#92;&quot;,&#92;&quot;chapter_99_code&#92;&quot;:&#92;&quot;9903.88.05&#92;&quot;,&#92;&quot;source_document_url&#92;&quot;:&#92;&quot;https://ustr.gov/sites/default/files/enforcement/301Investigations/2018-28277.pdf&#92;&quot;},{&#92;&quot;hts_code&#92;&quot;:&#92;&quot;8418.69.0120&#92;&quot;,&#92;&quot;date_of_exclusion_start&#92;&quot;:&#92;&quot;2018-07-06&#92;&quot;,&#92;&quot;chapter_99_code&#92;&quot;:&#92;&quot;9903.88.05&#92;&quot;,&#92;&quot;source_document_url&#92;&quot;:&#92;&quot;https://ustr.gov/sites/default/files/enforcement/301Investigations/2018-28277.pdf&#92;&quot;},{&#92;&quot;hts_code&#92;&quot;:&#92;&quot;8480.71.8045&#92;&quot;,&#92;&quot;date_of_exclusion_start&#92;&quot;:&#92;&quot;2018-07-06&#92;&quot;,&#92;&quot;chapter_99_code&#92;&quot;:&#92;&quot;9903.88.05&#92;&quot;,&#92;&quot;source_document_url&#92;&quot;:&#92;&quot;https://ustr.gov/sites/default/files/enforcement/301Investigations/2018-28277.pdf&#92;&quot;},{&#92;&quot;hts_code&#92;&quot;:&#92;&quot;8482.10.5044&#92;&quot;,&#92;&quot;date_of_exclusion_start&#92;&quot;:&#92;&quot;2018-07-06&#92;&quot;,&#92;&quot;chapter_99_code&#92;&quot;:&#92;&quot;9903.88.05&#92;&quot;,&#92;&quot;source_document_url&#92;&quot;:&#92;&quot;https://ustr.gov/sites/default/files/enforcement/301Investigations/2018-28277.pdf&#92;&quot;},{&#92;&quot;hts_code&#92;&quot;:&#92;&quot;8482.10.5048&#92;&quot;,&#92;&quot;date_of_exclusion_start&#92;&quot;:&#92;&quot;2018-07-06&#92;&quot;,&#92;&quot;chapter_99_code&#92;&quot;:&#92;&quot;9903.88.05&#92;&quot;,&#92;&quot;source_document_url&#92;&quot;:&#92;&quot;https://ustr.gov/sites/default/files/enforcement/301Investigations/2018-28277.pdf&#92;&quot;},{&#92;&quot;hts_code&#92;&quot;:&#92;&quot;8482.10.5052&#92;&quot;,&#92;&quot;date_of_exclusion_start&#92;&quot;:&#92;&quot;2018-07-06&#92;&quot;,&#92;&quot;chapter_99_code&#92;&quot;:&#92;&quot;9903.88.05&#92;&quot;,&#92;&quot;source_document_url&#92;&quot;:&#92;&quot;https://ustr.gov/sites/default/files/enforcement/301Investigations/2018-28277.pdf&#92;&quot;},{&#92;&quot;hts_code&#92;&quot;:&#92;&quot;8525.60.1010&#92;&quot;,&#92;&quot;date_of_exclusion_start&#92;&quot;:&#92;&quot;2018-07-06&#92;&quot;,&#92;&quot;chapter_99_code&#92;&quot;:&#92;&quot;9903.88.05&#92;&quot;,&#92;&quot;source_document_url&#92;&quot;:&#92;&quot;https://ustr.gov/sites/default/files/enforcement/301Investigations/2018-28277.pdf&#92;&quot;},{&#92;&quot;hts_code&#92;&quot;:&#92;&quot;8412.21.0045&#92;&quot;,&#92;&quot;date_of_exclusion_start&#92;&quot;:&#92;&quot;2018-07-06&#92;&quot;,&#92;&quot;chapter_99_code&#92;&quot;:&#92;&quot;9903.88.06&#92;&quot;,&#92;&quot;source_document_url&#92;&quot;:&#92;&quot;https://ustr.gov/sites/default/files/enforcement/301Investigations/84_FR_11152.pdf&#92;&quot;},{&#92;&quot;hts_code&#92;&quot;:&#92;&quot;8430.31.0040&#92;&quot;,&#92;&quot;date_of_exclusion_start&#92;&quot;:&#92;&quot;2018-07-06&#92;&quot;,&#92;&quot;chapter_99_code&#92;&quot;:&#92;&quot;9903.88.06&#92;&quot;,&#92;&quot;source_document_url&#92;&quot;:&#92;&quot;https://ustr.gov/sites/default/files/enforcement/301Investigations/84_FR_11152.pdf&#92;&quot;},{&#92;&quot;hts_code&#92;&quot;:&#92;&quot;8607.21.1000&#92;&quot;,&#92;&quot;date_of_exclusion_start&#92;&quot;:&#92;&quot;2018-07-06&#92;&quot;,&#92;&quot;chapter_99_code&#92;&quot;:&#92;&quot;9903.88.06&#92;&quot;,&#92;&quot;source_document_url&#92;&quot;:&#92;&quot;https://ustr.gov/sites/default/files/enforcement/301Investigations/84_FR_11152.pdf&#92;&quot;}]&quot;' data-total-rows='98' data-total-columns='4' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;hts_code&quot;, [&quot;string&quot;, &quot;object&quot;]], [&quot;date_of_exclusion_start&quot;, [&quot;string&quot;, &quot;object&quot;]], [&quot;chapter_99_code&quot;, [&quot;string&quot;, &quot;object&quot;]], [&quot;source_document_url&quot;, [&quot;string&quot;, &quot;object&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='true' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
       "console": []
     },
     {
       "id": "Xref",
       "code_hash": "ef57b37e9a03b16b580ad1373b5f1cb9",
-      "outputs": [],
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"extract-data-from-pdf\">Extract data from PDF</h1></span>"
+          }
+        }
+      ],
       "console": []
     },
     {
       "id": "SFPL",
-      "code_hash": "003cee5096ed733c8dd2e91378026567",
-      "outputs": [],
+      "code_hash": "3692ccfb1d090bfa77b1153116f73975",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='SFPL-0' random-id='2fa196b8-5c91-b37d-762e-f22f709a0278'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;[{&#92;&quot;Product HS Code&#92;&quot;:&#92;&quot;0101.21.00&#92;&quot;,&#92;&quot;Chapter 99 Heading&#92;&quot;:&#92;&quot;9903.88.15&#92;&quot;},{&#92;&quot;Product HS Code&#92;&quot;:&#92;&quot;0101.29.00&#92;&quot;,&#92;&quot;Chapter 99 Heading&#92;&quot;:&#92;&quot;9903.88.15&#92;&quot;},{&#92;&quot;Product HS Code&#92;&quot;:&#92;&quot;0101.30.00&#92;&quot;,&#92;&quot;Chapter 99 Heading&#92;&quot;:&#92;&quot;9903.88.15&#92;&quot;},{&#92;&quot;Product HS Code&#92;&quot;:&#92;&quot;0101.90.30&#92;&quot;,&#92;&quot;Chapter 99 Heading&#92;&quot;:&#92;&quot;9903.88.15&#92;&quot;},{&#92;&quot;Product HS Code&#92;&quot;:&#92;&quot;0101.90.40&#92;&quot;,&#92;&quot;Chapter 99 Heading&#92;&quot;:&#92;&quot;9903.88.15&#92;&quot;},{&#92;&quot;Product HS Code&#92;&quot;:&#92;&quot;0102.21.00&#92;&quot;,&#92;&quot;Chapter 99 Heading&#92;&quot;:&#92;&quot;9903.88.15&#92;&quot;},{&#92;&quot;Product HS Code&#92;&quot;:&#92;&quot;0102.29.20&#92;&quot;,&#92;&quot;Chapter 99 Heading&#92;&quot;:&#92;&quot;9903.88.15&#92;&quot;},{&#92;&quot;Product HS Code&#92;&quot;:&#92;&quot;0102.29.40&#92;&quot;,&#92;&quot;Chapter 99 Heading&#92;&quot;:&#92;&quot;9903.88.15&#92;&quot;},{&#92;&quot;Product HS Code&#92;&quot;:&#92;&quot;0102.31.00&#92;&quot;,&#92;&quot;Chapter 99 Heading&#92;&quot;:&#92;&quot;9903.88.15&#92;&quot;},{&#92;&quot;Product HS Code&#92;&quot;:&#92;&quot;0102.39.00&#92;&quot;,&#92;&quot;Chapter 99 Heading&#92;&quot;:&#92;&quot;9903.88.15&#92;&quot;}]&quot;' data-total-rows='10457' data-total-columns='2' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;Product HS Code&quot;, [&quot;string&quot;, &quot;object&quot;]], [&quot;Chapter 99 Heading&quot;, [&quot;string&quot;, &quot;object&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='true' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
       "console": []
     },
     {
       "id": "BYtC",
       "code_hash": "ed08a31ca7b73e69261f5be873c0c2c3",
-      "outputs": [],
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"map-tariff-rates-to-hs-codes-using-ch99-mapping-and-manual-data\">Map tariff rates to HS codes using CH99 mapping and manual data</h1></span>"
+          }
+        }
+      ],
       "console": []
     },
     {
       "id": "RGSE",
-      "code_hash": "b9e71f76fa4ac974d72bd7f04836187f",
-      "outputs": [],
+      "code_hash": "6b34931b63cf6b2172b73fc4aea8746d",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
       "console": []
     },
     {
       "id": "Kclp",
-      "code_hash": "daab9205858e08e892af28d88bdcd514",
-      "outputs": [],
+      "code_hash": "e16b1f7c981df56d2e1df8af9746a3a3",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='Kclp-0' random-id='7fe5f3d8-7c30-1aa7-f9b8-5a2e425d3add'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;[{&#92;&quot;Product HS Code&#92;&quot;:&#92;&quot;0101.21.00&#92;&quot;,&#92;&quot;Tariff Rate Applied&#92;&quot;:0.075,&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2020-02-14&#92;&quot;,&#92;&quot;Chapter 99 Heading&#92;&quot;:&#92;&quot;9903.88.15&#92;&quot;},{&#92;&quot;Product HS Code&#92;&quot;:&#92;&quot;0101.29.00&#92;&quot;,&#92;&quot;Tariff Rate Applied&#92;&quot;:0.075,&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2020-02-14&#92;&quot;,&#92;&quot;Chapter 99 Heading&#92;&quot;:&#92;&quot;9903.88.15&#92;&quot;},{&#92;&quot;Product HS Code&#92;&quot;:&#92;&quot;0101.30.00&#92;&quot;,&#92;&quot;Tariff Rate Applied&#92;&quot;:0.075,&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2020-02-14&#92;&quot;,&#92;&quot;Chapter 99 Heading&#92;&quot;:&#92;&quot;9903.88.15&#92;&quot;},{&#92;&quot;Product HS Code&#92;&quot;:&#92;&quot;0101.90.30&#92;&quot;,&#92;&quot;Tariff Rate Applied&#92;&quot;:0.075,&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2020-02-14&#92;&quot;,&#92;&quot;Chapter 99 Heading&#92;&quot;:&#92;&quot;9903.88.15&#92;&quot;},{&#92;&quot;Product HS Code&#92;&quot;:&#92;&quot;0101.90.40&#92;&quot;,&#92;&quot;Tariff Rate Applied&#92;&quot;:0.075,&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2020-02-14&#92;&quot;,&#92;&quot;Chapter 99 Heading&#92;&quot;:&#92;&quot;9903.88.15&#92;&quot;},{&#92;&quot;Product HS Code&#92;&quot;:&#92;&quot;0102.21.00&#92;&quot;,&#92;&quot;Tariff Rate Applied&#92;&quot;:0.075,&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2020-02-14&#92;&quot;,&#92;&quot;Chapter 99 Heading&#92;&quot;:&#92;&quot;9903.88.15&#92;&quot;},{&#92;&quot;Product HS Code&#92;&quot;:&#92;&quot;0102.29.20&#92;&quot;,&#92;&quot;Tariff Rate Applied&#92;&quot;:0.075,&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2020-02-14&#92;&quot;,&#92;&quot;Chapter 99 Heading&#92;&quot;:&#92;&quot;9903.88.15&#92;&quot;},{&#92;&quot;Product HS Code&#92;&quot;:&#92;&quot;0102.29.40&#92;&quot;,&#92;&quot;Tariff Rate Applied&#92;&quot;:0.075,&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2020-02-14&#92;&quot;,&#92;&quot;Chapter 99 Heading&#92;&quot;:&#92;&quot;9903.88.15&#92;&quot;},{&#92;&quot;Product HS Code&#92;&quot;:&#92;&quot;0102.31.00&#92;&quot;,&#92;&quot;Tariff Rate Applied&#92;&quot;:0.075,&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2020-02-14&#92;&quot;,&#92;&quot;Chapter 99 Heading&#92;&quot;:&#92;&quot;9903.88.15&#92;&quot;},{&#92;&quot;Product HS Code&#92;&quot;:&#92;&quot;0102.39.00&#92;&quot;,&#92;&quot;Tariff Rate Applied&#92;&quot;:0.075,&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2020-02-14&#92;&quot;,&#92;&quot;Chapter 99 Heading&#92;&quot;:&#92;&quot;9903.88.15&#92;&quot;}]&quot;' data-total-rows='10457' data-total-columns='4' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;Product HS Code&quot;, [&quot;string&quot;, &quot;object&quot;]], [&quot;Tariff Rate Applied&quot;, [&quot;number&quot;, &quot;float64&quot;]], [&quot;Effective Date&quot;, [&quot;string&quot;, &quot;object&quot;]], [&quot;Chapter 99 Heading&quot;, [&quot;string&quot;, &quot;object&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='true' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
       "console": []
     },
     {
       "id": "emfo",
       "code_hash": "acb28ebba9ea33247746edc6e4b72090",
-      "outputs": [],
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='emfo-0' random-id='c38eef84-44c8-76d9-05d5-5400c176586d'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;[{&#92;&quot;product_code&#92;&quot;:&#92;&quot;010121&#92;&quot;,&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2020-02-14T00:00:00.000&#92;&quot;,&#92;&quot;Tariff Rate Applied&#92;&quot;:0.075,&#92;&quot;hs_revision&#92;&quot;:&#92;&quot;HS6&#92;&quot;},{&#92;&quot;product_code&#92;&quot;:&#92;&quot;010129&#92;&quot;,&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2020-02-14T00:00:00.000&#92;&quot;,&#92;&quot;Tariff Rate Applied&#92;&quot;:0.075,&#92;&quot;hs_revision&#92;&quot;:&#92;&quot;HS6&#92;&quot;},{&#92;&quot;product_code&#92;&quot;:&#92;&quot;010130&#92;&quot;,&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2020-02-14T00:00:00.000&#92;&quot;,&#92;&quot;Tariff Rate Applied&#92;&quot;:0.075,&#92;&quot;hs_revision&#92;&quot;:&#92;&quot;HS6&#92;&quot;},{&#92;&quot;product_code&#92;&quot;:&#92;&quot;010190&#92;&quot;,&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2020-02-14T00:00:00.000&#92;&quot;,&#92;&quot;Tariff Rate Applied&#92;&quot;:0.075,&#92;&quot;hs_revision&#92;&quot;:&#92;&quot;HS6&#92;&quot;},{&#92;&quot;product_code&#92;&quot;:&#92;&quot;010221&#92;&quot;,&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2020-02-14T00:00:00.000&#92;&quot;,&#92;&quot;Tariff Rate Applied&#92;&quot;:0.075,&#92;&quot;hs_revision&#92;&quot;:&#92;&quot;HS6&#92;&quot;}]&quot;' data-total-rows='5' data-total-columns='4' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;product_code&quot;, [&quot;string&quot;, &quot;object&quot;]], [&quot;Effective Date&quot;, [&quot;datetime&quot;, &quot;datetime64[ns]&quot;]], [&quot;Tariff Rate Applied&quot;, [&quot;number&quot;, &quot;float64&quot;]], [&quot;hs_revision&quot;, [&quot;string&quot;, &quot;object&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
       "console": []
     },
     {
       "id": "Hstk",
       "code_hash": "706de3bbbe4f6e03abc51cfd2e500240",
-      "outputs": [],
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"remap-the-hs6-codes-to-hs-nom-0\">Remap the HS6 codes to HS Nom 0</h1></span>"
+          }
+        }
+      ],
       "console": []
     },
     {
       "id": "nWHF",
       "code_hash": "460669d2ebe88706b1ce4440630c6dd5",
-      "outputs": [],
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
       "console": []
     },
     {
       "id": "iLit",
       "code_hash": "dd6dc4c11b03688f5e2e2c16eb9fe6e8",
-      "outputs": [],
-      "console": []
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Starting HS code translation to H0 (HS92).\n"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "/var/folders/df/j998nyn11sdf0w5cf48pny6m0000gn/T/marimo_85635/__marimo__cell_nWHF_.py:76: PerformanceWarning: Determining the column names of a LazyFrame requires resolving its schema, which is a potentially expensive operation. Use `LazyFrame.collect_schema().names()` to get the column names without this warning.\n  if \"product_code\" in df.columns:\n/var/folders/df/j998nyn11sdf0w5cf48pny6m0000gn/T/marimo_85635/__marimo__cell_nWHF_.py:114: PerformanceWarning: Determining the column names of a LazyFrame requires resolving its schema, which is a potentially expensive operation. Use `LazyFrame.collect_schema().names()` to get the column names without this warning.\n  if \"target_code\" in df_non_h0_instrumented.columns:\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "\n--- No actual remappings occurred (target_code was null or same as product_code for non-H0). ---\n\n"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "/var/folders/df/j998nyn11sdf0w5cf48pny6m0000gn/T/marimo_85635/__marimo__cell_nWHF_.py:151: PerformanceWarning: Determining the column names of a LazyFrame requires resolving its schema, which is a potentially expensive operation. Use `LazyFrame.collect_schema().names()` to get the column names without this warning.\n  \"source_code\" in df_non_h0.columns\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "\u2705 HS code translation completed.\n"
+        }
+      ]
     },
     {
       "id": "ZHCJ",
       "code_hash": "a9f37d192d26bd3fdfa876bec61fb85f",
-      "outputs": [],
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='ZHCJ-0' random-id='b77047c3-3098-b8f7-64f5-05f2b45547af'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;[{&#92;&quot;product_code&#92;&quot;:&#92;&quot;010121&#92;&quot;,&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2020-02-14T00:00:00.000&#92;&quot;,&#92;&quot;Tariff Rate Applied&#92;&quot;:0.075,&#92;&quot;hs_revision&#92;&quot;:&#92;&quot;HS6&#92;&quot;},{&#92;&quot;product_code&#92;&quot;:&#92;&quot;010129&#92;&quot;,&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2020-02-14T00:00:00.000&#92;&quot;,&#92;&quot;Tariff Rate Applied&#92;&quot;:0.075,&#92;&quot;hs_revision&#92;&quot;:&#92;&quot;HS6&#92;&quot;},{&#92;&quot;product_code&#92;&quot;:&#92;&quot;010130&#92;&quot;,&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2020-02-14T00:00:00.000&#92;&quot;,&#92;&quot;Tariff Rate Applied&#92;&quot;:0.075,&#92;&quot;hs_revision&#92;&quot;:&#92;&quot;HS6&#92;&quot;},{&#92;&quot;product_code&#92;&quot;:&#92;&quot;010190&#92;&quot;,&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2020-02-14T00:00:00.000&#92;&quot;,&#92;&quot;Tariff Rate Applied&#92;&quot;:0.075,&#92;&quot;hs_revision&#92;&quot;:&#92;&quot;HS6&#92;&quot;},{&#92;&quot;product_code&#92;&quot;:&#92;&quot;010221&#92;&quot;,&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2020-02-14T00:00:00.000&#92;&quot;,&#92;&quot;Tariff Rate Applied&#92;&quot;:0.075,&#92;&quot;hs_revision&#92;&quot;:&#92;&quot;HS6&#92;&quot;},{&#92;&quot;product_code&#92;&quot;:&#92;&quot;010229&#92;&quot;,&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2020-02-14T00:00:00.000&#92;&quot;,&#92;&quot;Tariff Rate Applied&#92;&quot;:0.075,&#92;&quot;hs_revision&#92;&quot;:&#92;&quot;HS6&#92;&quot;},{&#92;&quot;product_code&#92;&quot;:&#92;&quot;010231&#92;&quot;,&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2020-02-14T00:00:00.000&#92;&quot;,&#92;&quot;Tariff Rate Applied&#92;&quot;:0.075,&#92;&quot;hs_revision&#92;&quot;:&#92;&quot;HS6&#92;&quot;},{&#92;&quot;product_code&#92;&quot;:&#92;&quot;010239&#92;&quot;,&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2020-02-14T00:00:00.000&#92;&quot;,&#92;&quot;Tariff Rate Applied&#92;&quot;:0.075,&#92;&quot;hs_revision&#92;&quot;:&#92;&quot;HS6&#92;&quot;},{&#92;&quot;product_code&#92;&quot;:&#92;&quot;010290&#92;&quot;,&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2020-02-14T00:00:00.000&#92;&quot;,&#92;&quot;Tariff Rate Applied&#92;&quot;:0.075,&#92;&quot;hs_revision&#92;&quot;:&#92;&quot;HS6&#92;&quot;},{&#92;&quot;product_code&#92;&quot;:&#92;&quot;010310&#92;&quot;,&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2020-02-14T00:00:00.000&#92;&quot;,&#92;&quot;Tariff Rate Applied&#92;&quot;:0.075,&#92;&quot;hs_revision&#92;&quot;:&#92;&quot;HS6&#92;&quot;}]&quot;' data-total-rows='5515' data-total-columns='4' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;product_code&quot;, [&quot;string&quot;, &quot;object&quot;]], [&quot;Effective Date&quot;, [&quot;datetime&quot;, &quot;datetime64[ns]&quot;]], [&quot;Tariff Rate Applied&quot;, [&quot;number&quot;, &quot;float64&quot;]], [&quot;hs_revision&quot;, [&quot;string&quot;, &quot;object&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='true' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
       "console": []
     },
     {
       "id": "ROlb",
       "code_hash": "d55ab905ce62825ac48eebfad2abb4c4",
-      "outputs": [],
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"join-with-the-existing-dataset\">Join with the existing dataset</h1></span>"
+          }
+        }
+      ],
       "console": []
     },
     {
       "id": "qnkX",
       "code_hash": "77be86fbd4182f19125b6911b3b1f3c2",
-      "outputs": [],
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='qnkX-0' random-id='0804b1db-a9e3-92c5-88d9-21d11635b676'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;[{&#92;&quot;year&#92;&quot;:&#92;&quot;1995&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;032&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;068&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;110812&#92;&quot;,&#92;&quot;value&#92;&quot;:100.526,&#92;&quot;quantity&#92;&quot;:348.236,&#92;&quot;tariff_rate_pref&#92;&quot;:null,&#92;&quot;min_rate_pref&#92;&quot;:null,&#92;&quot;max_rate_pref&#92;&quot;:null,&#92;&quot;tariff_rate_mfn&#92;&quot;:null,&#92;&quot;min_rate_mfn&#92;&quot;:null,&#92;&quot;max_rate_mfn&#92;&quot;:null,&#92;&quot;effective_tariff&#92;&quot;:null,&#92;&quot;unit_value&#92;&quot;:0.28867204998908785,&#92;&quot;product_global_trend&#92;&quot;:0.4706129469426199,&#92;&quot;unit_value_detrended&#92;&quot;:-0.18194089695353205,&#92;&quot;unit_value_arcsinh&#92;&quot;:0.28480608642380856,&#92;&quot;unit_value_arcsinh_detrended&#92;&quot;:-0.1809517784944541,&#92;&quot;effective_tariff_arcsinh&#92;&quot;:null,&#92;&quot;official_effective_tariff&#92;&quot;:null},{&#92;&quot;year&#92;&quot;:&#92;&quot;1995&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;032&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;068&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;271490&#92;&quot;,&#92;&quot;value&#92;&quot;:961.685,&#92;&quot;quantity&#92;&quot;:6075.179,&#92;&quot;tariff_rate_pref&#92;&quot;:null,&#92;&quot;min_rate_pref&#92;&quot;:null,&#92;&quot;max_rate_pref&#92;&quot;:null,&#92;&quot;tariff_rate_mfn&#92;&quot;:null,&#92;&quot;min_rate_mfn&#92;&quot;:null,&#92;&quot;max_rate_mfn&#92;&quot;:null,&#92;&quot;effective_tariff&#92;&quot;:null,&#92;&quot;unit_value&#92;&quot;:0.1582973933772157,&#92;&quot;product_global_trend&#92;&quot;:0.061382249211809736,&#92;&quot;unit_value_detrended&#92;&quot;:0.09691514416540598,&#92;&quot;unit_value_arcsinh&#92;&quot;:0.15764363435803658,&#92;&quot;unit_value_arcsinh_detrended&#92;&quot;:0.09676406852997199,&#92;&quot;effective_tariff_arcsinh&#92;&quot;:null,&#92;&quot;official_effective_tariff&#92;&quot;:null},{&#92;&quot;year&#92;&quot;:&#92;&quot;1995&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;032&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;068&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;293212&#92;&quot;,&#92;&quot;value&#92;&quot;:9.345,&#92;&quot;quantity&#92;&quot;:4.147,&#92;&quot;tariff_rate_pref&#92;&quot;:null,&#92;&quot;min_rate_pref&#92;&quot;:null,&#92;&quot;max_rate_pref&#92;&quot;:null,&#92;&quot;tariff_rate_mfn&#92;&quot;:null,&#92;&quot;min_rate_mfn&#92;&quot;:null,&#92;&quot;max_rate_mfn&#92;&quot;:null,&#92;&quot;effective_tariff&#92;&quot;:null,&#92;&quot;unit_value&#92;&quot;:2.2534362189534605,&#92;&quot;product_global_trend&#92;&quot;:1.194558954153518,&#92;&quot;unit_value_detrended&#92;&quot;:1.0588772647999425,&#92;&quot;unit_value_arcsinh&#92;&quot;:1.5515526483547306,&#92;&quot;unit_value_arcsinh_detrended&#92;&quot;:0.9223994343712705,&#92;&quot;effective_tariff_arcsinh&#92;&quot;:null,&#92;&quot;official_effective_tariff&#92;&quot;:null},{&#92;&quot;year&#92;&quot;:&#92;&quot;1995&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;032&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;068&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;330112&#92;&quot;,&#92;&quot;value&#92;&quot;:25.471,&#92;&quot;quantity&#92;&quot;:5.945,&#92;&quot;tariff_rate_pref&#92;&quot;:null,&#92;&quot;min_rate_pref&#92;&quot;:null,&#92;&quot;max_rate_pref&#92;&quot;:null,&#92;&quot;tariff_rate_mfn&#92;&quot;:null,&#92;&quot;min_rate_mfn&#92;&quot;:null,&#92;&quot;max_rate_mfn&#92;&quot;:null,&#92;&quot;effective_tariff&#92;&quot;:null,&#92;&quot;unit_value&#92;&quot;:4.28444070647603,&#92;&quot;product_global_trend&#92;&quot;:4.375438473030848,&#92;&quot;unit_value_detrended&#92;&quot;:-0.0909977665548185,&#92;&quot;unit_value_arcsinh&#92;&quot;:2.1614863114575877,&#92;&quot;unit_value_arcsinh_detrended&#92;&quot;:-0.09087264630852908,&#92;&quot;effective_tariff_arcsinh&#92;&quot;:null,&#92;&quot;official_effective_tariff&#92;&quot;:null},{&#92;&quot;year&#92;&quot;:&#92;&quot;1995&#92;&quot;,&#92;&quot;reporter_country&#92;&quot;:&#92;&quot;032&#92;&quot;,&#92;&quot;partner_country&#92;&quot;:&#92;&quot;068&#92;&quot;,&#92;&quot;product_code&#92;&quot;:&#92;&quot;401010&#92;&quot;,&#92;&quot;value&#92;&quot;:13.036,&#92;&quot;quantity&#92;&quot;:1.6,&#92;&quot;tariff_rate_pref&#92;&quot;:null,&#92;&quot;min_rate_pref&#92;&quot;:null,&#92;&quot;max_rate_pref&#92;&quot;:null,&#92;&quot;tariff_rate_mfn&#92;&quot;:null,&#92;&quot;min_rate_mfn&#92;&quot;:null,&#92;&quot;max_rate_mfn&#92;&quot;:null,&#92;&quot;effective_tariff&#92;&quot;:null,&#92;&quot;unit_value&#92;&quot;:8.147499999999999,&#92;&quot;product_global_trend&#92;&quot;:11.333204355378907,&#92;&quot;unit_value_detrended&#92;&quot;:-3.185704355378908,&#92;&quot;unit_value_arcsinh&#92;&quot;:2.794603308390635,&#92;&quot;unit_value_arcsinh_detrended&#92;&quot;:-1.8755908514721653,&#92;&quot;effective_tariff_arcsinh&#92;&quot;:null,&#92;&quot;official_effective_tariff&#92;&quot;:null}]&quot;' data-total-rows='5' data-total-columns='20' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;year&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;reporter_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;partner_country&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;product_code&quot;, [&quot;string&quot;, &quot;str&quot;]], [&quot;value&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;quantity&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;tariff_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;min_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;max_rate_pref&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;tariff_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;min_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;max_rate_mfn&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;effective_tariff&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;unit_value&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;product_global_trend&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;unit_value_detrended&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;unit_value_arcsinh&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;unit_value_arcsinh_detrended&quot;, [&quot;number&quot;, &quot;f64&quot;]], [&quot;effective_tariff_arcsinh&quot;, [&quot;number&quot;, &quot;f32&quot;]], [&quot;official_effective_tariff&quot;, [&quot;number&quot;, &quot;f32&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
       "console": []
     },
     {
       "id": "TqIu",
       "code_hash": null,
-      "outputs": [],
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
       "console": []
     },
     {
       "id": "Vxnm",
-      "code_hash": "6b5ca4f4760ccc1fe26a8fdde16e77bf",
-      "outputs": [],
+      "code_hash": "0d827a179fdec8d7a287051cdf261afd",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
       "console": []
     },
     {
       "id": "DnEU",
-      "code_hash": "3a74441b052b42b3c116500dd36f90fc",
-      "outputs": [],
-      "console": []
+      "code_hash": "171994ac65e394d7c9a560caf92896d6",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "New schema for unified_lf:  Schema({'year': String, 'reporter_country': String, 'partner_country': String, 'product_code': String, 'value': Float64, 'quantity': Float64, 'tariff_rate_pref': Float32, 'min_rate_pref': Float32, 'max_rate_pref': Float32, 'tariff_rate_mfn': Float32, 'min_rate_mfn': Float32, 'max_rate_mfn': Float32, 'effective_tariff': Float32, 'unit_value': Float64, 'product_global_trend': Float64, 'unit_value_detrended': Float64, 'unit_value_arcsinh': Float64, 'unit_value_arcsinh_detrended': Float64, 'effective_tariff_arcsinh': Float32, 'official_effective_tariff': Float32})\n"
+        }
+      ]
     },
     {
       "id": "ulZA",
       "code_hash": "39aea30f623b30c6ed8083690e93c6c4",
-      "outputs": [],
-      "console": []
+      "outputs": [
+        {
+          "type": "error",
+          "ename": "exception",
+          "evalue": "parquet: File out of specification: The page header reported the wrong page size",
+          "traceback": []
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "<span class=\"codehilite\"><div class=\"highlight\"><pre><span></span><span class=\"gt\">Traceback (most recent call last):</span>\n  File <span class=\"nb\">&quot;/Users/lukasalemu/Documents/00. Bank of England/03. MPIL/tariff_trade_analysis/.venv/lib/python3.13/site-packages/marimo/_runtime/executor.py&quot;</span>, line <span class=\"m\">123</span>, in <span class=\"n\">execute_cell</span>\n<span class=\"w\">    </span><span class=\"k\">return</span> <span class=\"nb\">eval</span><span class=\"p\">(</span><span class=\"n\">cell</span><span class=\"o\">.</span><span class=\"n\">last_expr</span><span class=\"p\">,</span> <span class=\"n\">glbls</span><span class=\"p\">)</span>\n  File <span class=\"nb\">&quot;/var/folders/df/j998nyn11sdf0w5cf48pny6m0000gn/T/marimo_85635/__marimo__cell_ulZA_.py&quot;</span>, line <span class=\"m\">1</span>, in <span class=\"n\">&lt;module&gt;</span>\n<span class=\"w\">    </span><span class=\"nb\">print</span><span class=\"p\">(</span><span class=\"n\">enhanced_unified_lf</span><span class=\"o\">.</span><span class=\"n\">head</span><span class=\"p\">()</span><span class=\"o\">.</span><span class=\"n\">collect</span><span class=\"p\">(</span><span class=\"n\">engine</span><span class=\"o\">=</span><span class=\"s2\">&quot;streaming&quot;</span><span class=\"p\">))</span>\n<span class=\"w\">          </span><span class=\"pm\">~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^</span>\n  File <span class=\"nb\">&quot;/Users/lukasalemu/Documents/00. Bank of England/03. MPIL/tariff_trade_analysis/.venv/lib/python3.13/site-packages/polars/_utils/deprecation.py&quot;</span>, line <span class=\"m\">93</span>, in <span class=\"n\">wrapper</span>\n<span class=\"w\">    </span><span class=\"k\">return</span> <span class=\"n\">function</span><span class=\"p\">(</span><span class=\"o\">*</span><span class=\"n\">args</span><span class=\"p\">,</span> <span class=\"o\">**</span><span class=\"n\">kwargs</span><span class=\"p\">)</span>\n  File <span class=\"nb\">&quot;/Users/lukasalemu/Documents/00. Bank of England/03. MPIL/tariff_trade_analysis/.venv/lib/python3.13/site-packages/polars/lazyframe/frame.py&quot;</span>, line <span class=\"m\">2224</span>, in <span class=\"n\">collect</span>\n<span class=\"w\">    </span><span class=\"k\">return</span> <span class=\"n\">wrap_df</span><span class=\"p\">(</span><span class=\"n\">ldf</span><span class=\"o\">.</span><span class=\"n\">collect</span><span class=\"p\">(</span><span class=\"n\">engine</span><span class=\"p\">,</span> <span class=\"n\">callback</span><span class=\"p\">))</span>\n<span class=\"w\">                   </span><span class=\"pm\">~~~~~~~~~~~^^^^^^^^^^^^^^^^^^</span>\n<span class=\"gr\">polars.exceptions.ComputeError</span>: <span class=\"n\">parquet: File out of specification: The page header reported the wrong page size</span>\n</pre></div>\n</span>"
+        }
+      ]
     },
     {
       "id": "ecfG",
       "code_hash": "a8e7437460040048efd000eff33065a1",
-      "outputs": [],
+      "outputs": [
+        {
+          "type": "error",
+          "ename": "exception",
+          "evalue": "parquet: File out of specification: The page header reported the wrong page size",
+          "traceback": []
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Sinking back to unified_lf\n"
+        },
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "<span class=\"codehilite\"><div class=\"highlight\"><pre><span></span><span class=\"gt\">Traceback (most recent call last):</span>\n  File <span class=\"nb\">&quot;/Users/lukasalemu/Documents/00. Bank of England/03. MPIL/tariff_trade_analysis/.venv/lib/python3.13/site-packages/marimo/_runtime/executor.py&quot;</span>, line <span class=\"m\">123</span>, in <span class=\"n\">execute_cell</span>\n<span class=\"w\">    </span><span class=\"k\">return</span> <span class=\"nb\">eval</span><span class=\"p\">(</span><span class=\"n\">cell</span><span class=\"o\">.</span><span class=\"n\">last_expr</span><span class=\"p\">,</span> <span class=\"n\">glbls</span><span class=\"p\">)</span>\n  File <span class=\"nb\">&quot;/var/folders/df/j998nyn11sdf0w5cf48pny6m0000gn/T/marimo_85635/__marimo__cell_ecfG_.py&quot;</span>, line <span class=\"m\">3</span>, in <span class=\"n\">&lt;module&gt;</span>\n<span class=\"w\">    </span><span class=\"n\">enhanced_unified_lf</span><span class=\"o\">.</span><span class=\"n\">sink_parquet</span><span class=\"p\">(</span>\n<span class=\"w\">    </span><span class=\"pm\">~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^</span>\n<span class=\"w\">    </span>    <span class=\"n\">pl</span><span class=\"o\">.</span><span class=\"n\">PartitionByKey</span><span class=\"p\">(</span>\n<span class=\"w\">        </span><span class=\"pm\">^^^^^^^^^^^^^^^^^^</span>\n<span class=\"w\">    </span><span class=\"o\">...&lt;</span><span class=\"mi\">3</span> <span class=\"n\">lines</span><span class=\"o\">&gt;...</span>\n<span class=\"w\">    </span>    <span class=\"n\">mkdir</span><span class=\"o\">=</span><span class=\"kc\">True</span><span class=\"p\">,</span>\n<span class=\"w\">        </span><span class=\"pm\">^^^^^^^^^^^</span>\n<span class=\"w\">    </span><span class=\"p\">)</span>\n<span class=\"w\">    </span><span class=\"pm\">^</span>\n  File <span class=\"nb\">&quot;/Users/lukasalemu/Documents/00. Bank of England/03. MPIL/tariff_trade_analysis/.venv/lib/python3.13/site-packages/polars/_utils/unstable.py&quot;</span>, line <span class=\"m\">58</span>, in <span class=\"n\">wrapper</span>\n<span class=\"w\">    </span><span class=\"k\">return</span> <span class=\"n\">function</span><span class=\"p\">(</span><span class=\"o\">*</span><span class=\"n\">args</span><span class=\"p\">,</span> <span class=\"o\">**</span><span class=\"n\">kwargs</span><span class=\"p\">)</span>\n  File <span class=\"nb\">&quot;/Users/lukasalemu/Documents/00. Bank of England/03. MPIL/tariff_trade_analysis/.venv/lib/python3.13/site-packages/polars/lazyframe/frame.py&quot;</span>, line <span class=\"m\">2721</span>, in <span class=\"n\">sink_parquet</span>\n<span class=\"w\">    </span><span class=\"n\">lf</span><span class=\"o\">.</span><span class=\"n\">collect</span><span class=\"p\">(</span><span class=\"n\">engine</span><span class=\"o\">=</span><span class=\"n\">engine</span><span class=\"p\">)</span>\n<span class=\"w\">    </span><span class=\"pm\">~~~~~~~~~~^^^^^^^^^^^^^^^</span>\n  File <span class=\"nb\">&quot;/Users/lukasalemu/Documents/00. Bank of England/03. MPIL/tariff_trade_analysis/.venv/lib/python3.13/site-packages/polars/_utils/deprecation.py&quot;</span>, line <span class=\"m\">93</span>, in <span class=\"n\">wrapper</span>\n<span class=\"w\">    </span><span class=\"k\">return</span> <span class=\"n\">function</span><span class=\"p\">(</span><span class=\"o\">*</span><span class=\"n\">args</span><span class=\"p\">,</span> <span class=\"o\">**</span><span class=\"n\">kwargs</span><span class=\"p\">)</span>\n  File <span class=\"nb\">&quot;/Users/lukasalemu/Documents/00. Bank of England/03. MPIL/tariff_trade_analysis/.venv/lib/python3.13/site-packages/polars/lazyframe/frame.py&quot;</span>, line <span class=\"m\">2224</span>, in <span class=\"n\">collect</span>\n<span class=\"w\">    </span><span class=\"k\">return</span> <span class=\"n\">wrap_df</span><span class=\"p\">(</span><span class=\"n\">ldf</span><span class=\"o\">.</span><span class=\"n\">collect</span><span class=\"p\">(</span><span class=\"n\">engine</span><span class=\"p\">,</span> <span class=\"n\">callback</span><span class=\"p\">))</span>\n<span class=\"w\">                   </span><span class=\"pm\">~~~~~~~~~~~^^^^^^^^^^^^^^^^^^</span>\n<span class=\"gr\">polars.exceptions.ComputeError</span>: <span class=\"n\">parquet: File out of specification: The page header reported the wrong page size</span>\n</pre></div>\n</span>"
+        }
+      ]
+    },
+    {
+      "id": "nMcK",
+      "code_hash": "efd41998f2ed13e4229fc268fae14bed",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"compare-with-data-in-carter-mix-replication-materials\">Compare with data in Carter-Mix replication materials</h1></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "gITE",
+      "code_hash": "96682d2d54e0f1113cc8e1facdec3f90",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "iRUF",
+      "code_hash": "f647a7082d069f360689bc9f3bf81f3b",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "FrfI",
+      "code_hash": "fdc4f0bb30d921ed1b52b4944260c3bf",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "bLJU",
+      "code_hash": "4c4242acee87ac25c0f84c25d6a9fce8",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "sdCM",
+      "code_hash": "b54c651b895ce2dc8af74b4e7e364800",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='sdCM-0' random-id='02bc3748-a058-7580-df06-62b406331fed'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;[{&#92;&quot;product_code&#92;&quot;:&#92;&quot;100111&#92;&quot;,&#92;&quot;time&#92;&quot;:&#92;&quot;2018-12-31T00:00:00.000&#92;&quot;,&#92;&quot;tariff_add&#92;&quot;:0.175,&#92;&quot;hs_revision&#92;&quot;:&#92;&quot;HS6&#92;&quot;,&#92;&quot;month_year&#92;&quot;:&#92;&quot;2018-12&#92;&quot;},{&#92;&quot;product_code&#92;&quot;:&#92;&quot;100119&#92;&quot;,&#92;&quot;time&#92;&quot;:&#92;&quot;2019-11-16T12:00:00.000&#92;&quot;,&#92;&quot;tariff_add&#92;&quot;:0.1125000065,&#92;&quot;hs_revision&#92;&quot;:&#92;&quot;HS6&#92;&quot;,&#92;&quot;month_year&#92;&quot;:&#92;&quot;2019-11&#92;&quot;},{&#92;&quot;product_code&#92;&quot;:&#92;&quot;100191&#92;&quot;,&#92;&quot;time&#92;&quot;:&#92;&quot;2019-11-16T12:00:00.000&#92;&quot;,&#92;&quot;tariff_add&#92;&quot;:0.1125000065,&#92;&quot;hs_revision&#92;&quot;:&#92;&quot;HS6&#92;&quot;,&#92;&quot;month_year&#92;&quot;:&#92;&quot;2019-11&#92;&quot;},{&#92;&quot;product_code&#92;&quot;:&#92;&quot;100199&#92;&quot;,&#92;&quot;time&#92;&quot;:&#92;&quot;2018-12-31T00:00:00.000&#92;&quot;,&#92;&quot;tariff_add&#92;&quot;:0.175,&#92;&quot;hs_revision&#92;&quot;:&#92;&quot;HS6&#92;&quot;,&#92;&quot;month_year&#92;&quot;:&#92;&quot;2018-12&#92;&quot;},{&#92;&quot;product_code&#92;&quot;:&#92;&quot;100210&#92;&quot;,&#92;&quot;time&#92;&quot;:&#92;&quot;2019-11-16T12:00:00.000&#92;&quot;,&#92;&quot;tariff_add&#92;&quot;:0.1125000065,&#92;&quot;hs_revision&#92;&quot;:&#92;&quot;HS6&#92;&quot;,&#92;&quot;month_year&#92;&quot;:&#92;&quot;2019-11&#92;&quot;},{&#92;&quot;product_code&#92;&quot;:&#92;&quot;100290&#92;&quot;,&#92;&quot;time&#92;&quot;:&#92;&quot;2019-11-16T12:00:00.000&#92;&quot;,&#92;&quot;tariff_add&#92;&quot;:0.1125000065,&#92;&quot;hs_revision&#92;&quot;:&#92;&quot;HS6&#92;&quot;,&#92;&quot;month_year&#92;&quot;:&#92;&quot;2019-11&#92;&quot;},{&#92;&quot;product_code&#92;&quot;:&#92;&quot;100310&#92;&quot;,&#92;&quot;time&#92;&quot;:&#92;&quot;2018-12-31T00:00:00.000&#92;&quot;,&#92;&quot;tariff_add&#92;&quot;:0.175,&#92;&quot;hs_revision&#92;&quot;:&#92;&quot;HS6&#92;&quot;,&#92;&quot;month_year&#92;&quot;:&#92;&quot;2018-12&#92;&quot;},{&#92;&quot;product_code&#92;&quot;:&#92;&quot;100390&#92;&quot;,&#92;&quot;time&#92;&quot;:&#92;&quot;2018-12-31T00:00:00.000&#92;&quot;,&#92;&quot;tariff_add&#92;&quot;:0.175,&#92;&quot;hs_revision&#92;&quot;:&#92;&quot;HS6&#92;&quot;,&#92;&quot;month_year&#92;&quot;:&#92;&quot;2018-12&#92;&quot;},{&#92;&quot;product_code&#92;&quot;:&#92;&quot;100410&#92;&quot;,&#92;&quot;time&#92;&quot;:&#92;&quot;2018-12-31T00:00:00.000&#92;&quot;,&#92;&quot;tariff_add&#92;&quot;:0.175,&#92;&quot;hs_revision&#92;&quot;:&#92;&quot;HS6&#92;&quot;,&#92;&quot;month_year&#92;&quot;:&#92;&quot;2018-12&#92;&quot;},{&#92;&quot;product_code&#92;&quot;:&#92;&quot;100490&#92;&quot;,&#92;&quot;time&#92;&quot;:&#92;&quot;2018-12-31T00:00:00.000&#92;&quot;,&#92;&quot;tariff_add&#92;&quot;:0.175,&#92;&quot;hs_revision&#92;&quot;:&#92;&quot;HS6&#92;&quot;,&#92;&quot;month_year&#92;&quot;:&#92;&quot;2018-12&#92;&quot;}]&quot;' data-total-rows='4873' data-total-columns='5' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;product_code&quot;, [&quot;string&quot;, &quot;object&quot;]], [&quot;time&quot;, [&quot;datetime&quot;, &quot;datetime64[ns]&quot;]], [&quot;tariff_add&quot;, [&quot;number&quot;, &quot;float64&quot;]], [&quot;hs_revision&quot;, [&quot;string&quot;, &quot;object&quot;]], [&quot;month_year&quot;, [&quot;unknown&quot;, &quot;period[M]&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='true' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "AmXE",
+      "code_hash": "69297e922c0ae7277df4d38cea12161f",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "<class 'pandas.core.frame.DataFrame'>\nIndex: 4873 entries, 100111 to 970600\nData columns (total 4 columns):\n #   Column       Non-Null Count  Dtype         \n---  ------       --------------  -----         \n 0   time         4873 non-null   datetime64[ns]\n 1   tariff_add   4873 non-null   float64       \n 2   hs_revision  4873 non-null   object        \n 3   month_year   4873 non-null   period[M]     \ndtypes: datetime64[ns](1), float64(1), object(1), period[M](1)\nmemory usage: 190.4+ KB\n"
+        }
+      ]
+    },
+    {
+      "id": "RWPp",
+      "code_hash": "5547fa685e72af849e73f80f0f448c11",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "QpVJ",
+      "code_hash": "539a0e36cf3c469800d1266931a2fb66",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h2 id=\"perform-the-join\">Perform the join</h2>\n<span class=\"paragraph\">Testing the use of the data extracted from their website, vs tariffs in Carter Mix (which are date appropriate)</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "qYUp",
+      "code_hash": "d26dae1cb23ce9f3892a44c8470cf5bc",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ePCV",
+      "code_hash": "9b80f28fd53b3b2b7d8a3b2e0086297e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='ePCV-0' random-id='292a9253-531d-5dca-1407-592a1e8272ff'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;[{&#92;&quot;product_code&#92;&quot;:&#92;&quot;010121&#92;&quot;,&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2020-02-14T00:00:00.000&#92;&quot;,&#92;&quot;Tariff Rate Applied&#92;&quot;:0.075,&#92;&quot;hs_revision&#92;&quot;:&#92;&quot;HS6&#92;&quot;,&#92;&quot;month_year&#92;&quot;:&#92;&quot;2020-02&#92;&quot;}]&quot;' data-total-rows='1' data-total-columns='5' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;product_code&quot;, [&quot;string&quot;, &quot;object&quot;]], [&quot;Effective Date&quot;, [&quot;datetime&quot;, &quot;datetime64[ns]&quot;]], [&quot;Tariff Rate Applied&quot;, [&quot;number&quot;, &quot;float64&quot;]], [&quot;hs_revision&quot;, [&quot;string&quot;, &quot;object&quot;]], [&quot;month_year&quot;, [&quot;unknown&quot;, &quot;period[M]&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Bsns",
+      "code_hash": "8112585123c4b8220e350c0a77a58eef",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='Bsns-0' random-id='df13c6af-99e9-e77d-ca5c-2b2562d696fc'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;[{&#92;&quot;product_code&#92;&quot;:&#92;&quot;100111&#92;&quot;,&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2018-12-31T00:00:00.000&#92;&quot;,&#92;&quot;Tariff Rate Applied&#92;&quot;:17.5,&#92;&quot;hs_revision&#92;&quot;:&#92;&quot;HS6&#92;&quot;}]&quot;' data-total-rows='1' data-total-columns='4' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;product_code&quot;, [&quot;string&quot;, &quot;object&quot;]], [&quot;Effective Date&quot;, [&quot;datetime&quot;, &quot;datetime64[ns]&quot;]], [&quot;Tariff Rate Applied&quot;, [&quot;number&quot;, &quot;float64&quot;]], [&quot;hs_revision&quot;, [&quot;string&quot;, &quot;object&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
       "console": []
     }
   ]
