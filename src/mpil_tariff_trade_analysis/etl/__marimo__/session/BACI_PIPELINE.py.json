@@ -6,97 +6,43 @@
   "cells": [
     {
       "id": "Hbol",
-      "code_hash": "20da17353be729ee67511823f25996ba",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/plain": ""
-          }
-        }
-      ],
+      "code_hash": "a13690a9b136b9977e65ca90e6361075",
+      "outputs": [],
       "console": []
     },
     {
       "id": "MJUe",
       "code_hash": "c3f6a4e328e5abba4d967749b52e40a3",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"implement-the-baci-pipeline\">IMPLEMENT THE BACI PIPELINE</h1>\n<span class=\"paragraph\">Start to finish - implement the BACI cleaning pipeline</span>\n<h2 id=\"structure\">Structure:</h2>\n<ol>\n<li>Load incrememntally and convert from CSV into a Parquet</li>\n<li>Explode any country codes which refer to regions.</li>\n<li>Remap the country codes.</li>\n</ol></span>"
-          }
-        }
-      ],
+      "outputs": [],
       "console": []
     },
     {
       "id": "vblA",
       "code_hash": "8a7c6db76528586e56cfe3766d560604",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/plain": ""
-          }
-        }
-      ],
+      "outputs": [],
       "console": []
     },
     {
       "id": "bkHC",
       "code_hash": "5565b48aa801027f64e38cef00dc58f6",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/plain": ""
-          }
-        }
-      ],
-      "console": [
-        {
-          "type": "stream",
-          "name": "stdout",
-          "text": "Found 29 CSV files to process in */Users/lukasalemu/Documents/00. Bank of England/03. MPIL/tariff_trade_analysis/data/raw/BACI_HS92_V202501*\nSearch pattern: /Users/lukasalemu/Documents/00. Bank of England/03. MPIL/tariff_trade_analysis/data/raw/BACI_HS92_V202501/BACI*.csv\nSuccessfully scanned CSV files into a Polars LazyFrame.\n"
-        }
-      ]
+      "outputs": [],
+      "console": []
     },
     {
       "id": "lEQa",
       "code_hash": "2e454a0e8df54becf0c11f54ab629d14",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/plain": ""
-          }
-        }
-      ],
-      "console": [
-        {
-          "type": "stream",
-          "name": "stdout",
-          "text": "Raw LF head:\nshape: (5, 6)\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502 t    \u2506 i   \u2506 j   \u2506 k      \u2506 v      \u2506 q      \u2502\n\u2502 ---  \u2506 --- \u2506 --- \u2506 ---    \u2506 ---    \u2506 ---    \u2502\n\u2502 i64  \u2506 i64 \u2506 i64 \u2506 i64    \u2506 f64    \u2506 f64    \u2502\n\u255e\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2561\n\u2502 2007 \u2506 4   \u2506 12  \u2506 71490  \u2506 1.428  \u2506 5.0    \u2502\n\u2502 2007 \u2506 4   \u2506 12  \u2506 80620  \u2506 40.516 \u2506 59.35  \u2502\n\u2502 2007 \u2506 4   \u2506 12  \u2506 90930  \u2506 26.359 \u2506 63.925 \u2502\n\u2502 2007 \u2506 4   \u2506 12  \u2506 91099  \u2506 1.251  \u2506 1.3    \u2502\n\u2502 2007 \u2506 4   \u2506 12  \u2506 121190 \u2506 2.911  \u2506 10.05  \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n"
-        }
-      ]
+      "outputs": [],
+      "console": []
     },
     {
       "id": "PKri",
       "code_hash": "3da364dc2f449984e5bef734027928d5",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"remap-country-codes\">Remap country codes</h1>\n<ol>\n<li>Minor recast and padding</li>\n<li>Create a mapping table of these codes to ISO</li>\n</ol></span>"
-          }
-        }
-      ],
+      "outputs": [],
       "console": []
     },
     {
       "id": "Xref",
-      "code_hash": "1a25d543f3e07554a88529a3004d4de2",
+      "code_hash": "928d20800524f4f66d2cad46a1788cb3",
       "outputs": [],
       "console": []
     },
@@ -138,21 +84,14 @@
     },
     {
       "id": "nWHF",
-      "code_hash": "91631dec1573172bd335735939153afd",
+      "code_hash": "f396befb6720376cdaeecbba45b5aeab",
       "outputs": [],
       "console": []
     },
     {
       "id": "iLit",
       "code_hash": "fd45c8ff921972b5b644ceab76d8450d",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"write-output\">Write output</h1>\n<span class=\"paragraph\">This crashes when run as a marimo notebook - probably a thread / MP worker timeout</span></span>"
-          }
-        }
-      ],
+      "outputs": [],
       "console": []
     },
     {

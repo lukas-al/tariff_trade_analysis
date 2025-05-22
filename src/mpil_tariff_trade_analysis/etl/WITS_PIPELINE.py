@@ -14,7 +14,10 @@ def _():
     import marimo as mo
     import pandas as pd
     import polars as pl
-    return Path, glob, mo, os, pd, pl, re
+
+    from typing import Dict, List
+    import pycountry
+    return Dict, List, Path, glob, mo, os, pd, pl, pycountry, re
 
 
 @app.cell
@@ -36,8 +39,6 @@ def _(mo):
 @app.cell
 def _(glob, os, pl, re):
     # Load and consolidate all the WITS data
-
-
     def consolidate_wits_tariff_data(
         tariff_type="AVEMFN", base_dir="data/raw/WITS_tariff/"
     ) -> pl.LazyFrame:
@@ -183,9 +184,18 @@ def _(glob, os, pl, re):
                     pl.col("Reporter_ISO_N").alias("reporter_country"),
                     pl.col("ProductCode").alias("product_code"),
                     pl.col("NomenCode").alias("hs_revision"),
-                    pl.col("SimpleAverage").alias("tariff_rate"),
-                    pl.col("Min_Rate").alias("min_rate"),
-                    pl.col("Max_Rate").alias("max_rate"),
+                    pl.col("SimpleAverage")
+                    .alias("tariff_rate")
+                    .str.strip_chars()
+                    .cast(pl.Float32),
+                    pl.col("Min_Rate")
+                    .alias("min_rate")
+                    .str.strip_chars()
+                    .cast(pl.Float32),
+                    pl.col("Max_Rate")
+                    .alias("max_rate")
+                    .str.strip_chars()
+                    .cast(pl.Float32),
                     pl.col("tariff_type"),
                 ]
             )
@@ -198,9 +208,18 @@ def _(glob, os, pl, re):
                     pl.col("Partner").alias("partner_country"),
                     pl.col("ProductCode").alias("product_code"),
                     pl.col("NomenCode").alias("hs_revision"),
-                    pl.col("SimpleAverage").alias("tariff_rate"),
-                    pl.col("Min_Rate").alias("min_rate"),
-                    pl.col("Max_Rate").alias("max_rate"),
+                    pl.col("SimpleAverage")
+                    .alias("tariff_rate")
+                    .str.strip_chars()
+                    .cast(pl.Float32),
+                    pl.col("Min_Rate")
+                    .alias("min_rate")
+                    .str.strip_chars()
+                    .cast(pl.Float32),
+                    pl.col("Max_Rate")
+                    .alias("max_rate")
+                    .str.strip_chars()
+                    .cast(pl.Float32),
                     pl.col("tariff_type"),
                 ]
             )
@@ -218,8 +237,9 @@ def _(glob, os, pl, re):
 
 
 @app.cell
-def _(consolidated_lf_AVEMFN):
+def _(consolidated_lf_AVEMFN, consolidated_lf_AVEPref):
     print(f"Consolidated lf avemfn:\n{consolidated_lf_AVEMFN.head().collect()}")
+    print(f"Consolidated lf avepref:\n{consolidated_lf_AVEPref.head().collect()}")
     return
 
 
@@ -230,135 +250,150 @@ def _(mo):
 
 
 @app.cell
-def _(Path, consolidated_lf_AVEMFN, consolidated_lf_AVEPref, pd, pl):
+def _(Path, consolidated_lf_AVEMFN, consolidated_lf_AVEPref, pl):
     # --- Step 2: Translate HS codes to H0 ---
     def vectorized_hs_translation(
         input_lf: pl.LazyFrame, mapping_dir: str = "data/raw/hs_reference"
     ) -> pl.LazyFrame:
-        print("Starting HS code translation to H0 (HS92).")
+        hs_versions = ["H1", "H2", "H3", "H4", "H5", "H6"]
+        original_columns = input_lf.collect_schema().names()
 
-        # Define which HS revisions require mapping (all except H0)
-        hs_versions = [
-            "H1",
-            "H2",
-            "H3",
-            "H4",
-            "H5",
-            "H6",
-        ]  # H1, H2, H3, H4, H5, H6
+        # Instrumentation: Unique codes before
+        unique_codes_before = (
+            input_lf.select(pl.col("product_code").n_unique()).collect().item()
+        )
+        print(
+            f"Number of unique product codes before translation: {unique_codes_before}"
+        )
 
-        mapping_dfs_pd = []  # List to hold pandas DataFrames
+        mapping_lfs = []
         for hs_version in hs_versions:
-            # Build mapping file path (assumes file naming convention like H1_to_H0.CSV)
             path = Path(mapping_dir) / f"{hs_version}_to_H0.CSV"
 
-            try:
-                mapping_pd = pd.read_csv(
-                    path,
-                    dtype=str,
-                    usecols=[0, 2],
-                    encoding="iso-8859-1",
-                )
+            current_mapping_df = pl.read_csv(
+                source=path,
+                has_header=True,
+                columns=[0, 2],
+                new_columns=["source_code", "target_code"],
+                encoding="iso-8859-1",
+                schema_overrides={"source_code": pl.Utf8, "target_code": pl.Utf8},
+            )
 
-                mapping_pd.columns = ["source_code", "target_code"]
-                mapping_pd["hs_revision"] = hs_version
-                mapping_pd["source_code"] = mapping_pd["source_code"].astype(str)
+            current_mapping_lf = current_mapping_df.with_columns(
+                pl.lit(hs_version).cast(pl.Utf8).alias("hs_revision")
+            ).lazy()
+            mapping_lfs.append(current_mapping_lf)
 
-                mapping_dfs_pd.append(mapping_pd)
+        mapping_all = pl.concat(mapping_lfs)
 
-            except FileNotFoundError as e:
-                # # logger.warning(f"Mapping file not found for {hs_version}: {path}. Skipping.")
-                raise ValueError(
-                    f"Error loading mapping file for {hs_version}: \n {e}"
-                ) from e
+        df_h0 = input_lf.filter(pl.col("hs_revision") == "H0")
+        df_non_h0 = input_lf.filter(pl.col("hs_revision") != "H0")
 
-            except Exception as e:
-                # # logger.error(f"Error loading mapping file for {hs_version}: {path}. Error: {e}")
-                raise ValueError(
-                    f"Error loading mapping file for {hs_version}: \n {e}"
-                ) from e
+        # Instrumentation: Count H0 codes
+        count_h0_codes = df_h0.select(pl.len()).collect().item()
+        print(f"Number of H0 codes (not translated): {count_h0_codes}")
 
-        if not mapping_dfs_pd:
-            # # logger.warning("No HS mapping files loaded.")
-            raise
-
-        # Combine all pandas mapping DataFrames into one.
-        mapping_all_pd = pd.concat(mapping_dfs_pd, ignore_index=True)
-
-        # Convert the combined pandas DataFrame to a Polars LazyFrame.
-        schema = {
-            "source_code": pl.Utf8,
-            "target_code": pl.Utf8,
-            "hs_revision": pl.Utf8,
-        }
-        mapping_all = pl.from_pandas(
-            mapping_all_pd, schema_overrides=schema
-        ).lazy()
-
-        df = input_lf
-        # df = df.with_columns(
-        #     # pl.col("source_code").str.pad_end(6, fill_char="0"),
-        #     pl.col("product_code").str.pad_end(6, fill_char="0")
-        # )
-
-        # Split rows where translation is not needed (H0) from those that need translation.
-        df_h0 = df.filter(pl.col("hs_revision") == "H0")
-        df_non_h0 = df.filter(pl.col("hs_revision") != "H0")
-
-        # Perform a vectorized join between df_non_h0 and the mapping dataframe.
-        df_non_h0 = df_non_h0.join(
+        df_non_h0_joined = df_non_h0.join(
             mapping_all,
             left_on=["hs_revision", "product_code"],
             right_on=["hs_revision", "source_code"],
             how="left",
         )
 
-        # Create the translated HS code column: use target_code if available, otherwise fallback to the
-        # original code.
-        print(f"DF non H0 after join: {df_non_h0.head().collect()}")
-
-        df_non_h0 = (
-            df_non_h0.with_columns(
-                pl.when(
-                    pl.col("target_code").is_not_null()
-                )  # Check if target_code exists from join
-                .then(pl.col("target_code"))
-                .otherwise(pl.col("product_code"))  # Keep original if no match
-                .alias("product_code_translated")  # Use a temporary name
-            )
-            .drop("product_code")
-            .rename({"product_code_translated": "product_code"})
+        # Instrumentation: Codes renamed (translated)
+        count_translated_lf = df_non_h0_joined.filter(
+            pl.col("target_code").is_not_null()
+        )
+        number_translated = count_translated_lf.select(pl.len()).collect().item()
+        print(
+            f"Number of HS codes successfully translated (renamed): {number_translated}"
         )
 
-        # Optionally drop unnecessary columns from join
-        df_non_h0 = df_non_h0.drop(
-            ["target_code"]
-        )  # Drop the mapping target code column
+        # Instrumentation: Codes left alone
+        count_left_alone_lf = df_non_h0_joined.filter(
+            pl.col("target_code").is_null()
+        )
+        number_left_alone = count_left_alone_lf.select(pl.len()).collect().item()
+        print(
+            f"Number of non-H0 HS codes left alone (no translation found): {number_left_alone}"
+        )
 
-        print(f"DF non H0 after join and merge: {df_non_h0.head().collect()}")
+        df_non_h0_translated = df_non_h0_joined.with_columns(
+            pl.coalesce(pl.col("target_code"), pl.col("product_code")).alias(
+                "product_code"
+            )
+        )
 
-        # Combine the rows which were already in H0 with the ones translated.
-        common_cols = df_h0.collect_schema().names()
+        processed_df_non_h0 = df_non_h0_translated.select(original_columns)
+
         df_final = pl.concat(
-            [df_h0.select(common_cols), df_non_h0.select(common_cols)],
+            [df_h0.select(original_columns), processed_df_non_h0],
             how="vertical_relaxed",
         )
 
-        # logger.info("✅ HS code translation completed.")
+        # Instrumentation: Unique codes after
+        unique_codes_after = (
+            df_final.select(pl.col("product_code").n_unique()).collect().item()
+        )
+        print(
+            f"Number of unique product codes after translation: {unique_codes_after}"
+        )
+
+        df_final = df_final.drop("hs_revision")
+
         return df_final
 
 
+    print("--- TRANSLATING AVEMFN ---")
     translated_lf_AVEMFN = vectorized_hs_translation(consolidated_lf_AVEMFN)
+    print("--- TRANSLATING AVEPref ---")
     translated_lf_AVEPref = vectorized_hs_translation(consolidated_lf_AVEPref)
     return translated_lf_AVEMFN, translated_lf_AVEPref
 
 
 @app.cell
-def _(translated_lf_AVEPref):
-    print(
-        f"Translated lf avepref head, post H0 translation:\n{translated_lf_AVEPref.head().collect()}"
-    )
+def _(translated_lf_AVEMFN):
+    translated_lf_AVEMFN.head().collect()
     return
+
+
+@app.cell
+def _(pl, translated_lf_AVEMFN):
+    # Now we've created duplicates, we need to join these duplicate product codes together
+    aggregated_lf_AVEMFN = translated_lf_AVEMFN.group_by(
+        ["reporter_country", "year", "product_code", "tariff_type"]
+    ).agg(
+        pl.mean("tariff_rate"),
+        pl.mean("min_rate"),
+        pl.mean("max_rate"),
+    )
+
+    print(
+        f"Translated and regaggregated lf AVEMFN head:\n{aggregated_lf_AVEMFN.head().collect()}"
+    )
+    return (aggregated_lf_AVEMFN,)
+
+
+@app.cell
+def _(pl, translated_lf_AVEPref):
+    aggregated_lf_AVEPref = translated_lf_AVEPref.group_by(
+        [
+            "reporter_country",
+            "partner_country",
+            "year",
+            "product_code",
+            "tariff_type",
+        ]
+    ).agg(
+        pl.mean("tariff_rate"),
+        pl.mean("min_rate"),
+        pl.mean("max_rate"),
+    )
+
+    print(
+        f"Translated and regaggregated lf AVEPref head:\n{aggregated_lf_AVEPref.head().collect()}"
+    )
+    return (aggregated_lf_AVEPref,)
 
 
 @app.cell
@@ -368,7 +403,7 @@ def _(mo):
 
 
 @app.cell
-def _(pd, pl, translated_lf_AVEPref):
+def _(aggregated_lf_AVEPref, pd, pl):
     # Load the mapping
     pref_group_mapping = pd.read_csv(
         "data/raw/WITS_pref_groups/WITS_pref_groups.csv",
@@ -387,7 +422,7 @@ def _(pd, pl, translated_lf_AVEPref):
     ).lazy()
 
     # Join on the AVEpref dataset
-    joined_pref_lf_AVEPref = translated_lf_AVEPref.join(
+    joined_pref_lf_AVEPref = aggregated_lf_AVEPref.join(
         pref_group_mapping_lf,
         left_on="partner_country",
         right_on="pref_group_code",
@@ -400,7 +435,7 @@ def _(pd, pl, translated_lf_AVEPref):
     ).drop("country_iso_num")
 
     print(
-        f"Joine Pref LF head:\n{joined_pref_lf_AVEPref.head().collect(engine='streaming')}"
+        f"Joined Pref LF head, post explode:\n{joined_pref_lf_AVEPref.head().collect(engine='streaming')}"
     )
     return (joined_pref_lf_AVEPref,)
 
@@ -417,12 +452,7 @@ def _(mo):
 
 
 @app.cell
-def _():
-    from typing import Dict, List
-
-    import pycountry
-
-
+def _(Dict, List, pycountry):
     def identify_iso_code(
         cc: str,
         baci_map_names: Dict[str, str],
@@ -546,10 +576,10 @@ def _():
 @app.cell
 def _(
     Path,
+    aggregated_lf_AVEMFN,
     identify_iso_code,
     joined_pref_lf_AVEPref,
     pl,
-    translated_lf_AVEMFN,
 ):
     def create_mapping_df(lf: pl.LazyFrame, col_name: str) -> pl.DataFrame:
         # Get the unique codes from the series
@@ -617,7 +647,7 @@ def _(
         joined_pref_lf_AVEPref, "partner_country"
     )
     mapping_df_AVEMFN_reporter = create_mapping_df(
-        translated_lf_AVEMFN, "reporter_country"
+        aggregated_lf_AVEMFN, "reporter_country"
     )
     return (
         mapping_df_AVEMFN_reporter,
@@ -634,12 +664,12 @@ def _(mapping_df_AVEPref_reporter):
 
 @app.cell
 def _(
+    aggregated_lf_AVEMFN,
     joined_pref_lf_AVEPref,
     mapping_df_AVEMFN_reporter,
     mapping_df_AVEPref_partner,
     mapping_df_AVEPref_reporter,
     pl,
-    translated_lf_AVEMFN,
 ):
     # Apply these mappings
     def apply_mapping(
@@ -662,7 +692,7 @@ def _(
 
 
     AVEMFN_lf_clean = apply_mapping(
-        translated_lf_AVEMFN, mapping_df_AVEMFN_reporter, "reporter_country"
+        aggregated_lf_AVEMFN, mapping_df_AVEMFN_reporter, "reporter_country"
     )
 
     # Apply mapping twice, once for reporter and partner country for the AVEPref
@@ -676,16 +706,14 @@ def _(
 
 
 @app.cell
-def _(AVEMFN_lf_clean):
+def _(AVEMFN_lf_clean, AVEPref_lf_clean):
     print(
-        f"AVEMFN lf head, collected:\n{AVEMFN_lf_clean.head().collect(engine='streaming')}"
+        f"AVEMFN lf head, collected post retranslation, explosion, aggregation:\n{AVEMFN_lf_clean.head().collect(engine='streaming')}"
     )
-    return
 
-
-@app.cell
-def _(mo):
-    mo.md(r""" """)
+    print(
+        f"AVEPref lf head, collected post retranslation, explosion, aggregation:\n{AVEPref_lf_clean.head().collect(engine='streaming')}"
+    )
     return
 
 
