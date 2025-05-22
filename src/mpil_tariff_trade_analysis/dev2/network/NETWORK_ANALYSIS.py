@@ -6,12 +6,13 @@ app = marimo.App(width="medium")
 
 @app.cell
 def _():
+    import os
+
     import marimo as mo
     import networkx as nx
     import polars as pl
-    import pyvis
     import pycountry
-    import os
+    import pyvis
     return mo, nx, os, pl, pycountry, pyvis
 
 
@@ -102,7 +103,7 @@ def _(mo, nx, pl, product_code_len, pycountry, unified_lf, unique_years):
                 ["reporter_country", "partner_country", "product_code"]
             ).agg(
                 (
-                    (pl.col("effective_tariff") * pl.col("value")).sum()
+                    (pl.col("average_tariff_official") * pl.col("value")).sum()
                     / pl.col("value").sum()
                 ).alias("weighted_tariff"),
                 pl.sum("value"),
@@ -115,7 +116,7 @@ def _(mo, nx, pl, product_code_len, pycountry, unified_lf, unique_years):
                 ["reporter_country", "partner_country"]
             ).agg(
                 (
-                    (pl.col("effective_tariff") * pl.col("value")).sum()
+                    (pl.col("average_tariff_official") * pl.col("value")).sum()
                     / pl.col("value").sum()
                 ).alias("weighted_tariff"),
                 pl.sum("value"),

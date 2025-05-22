@@ -6,21 +6,23 @@ app = marimo.App(width="medium")
 
 @app.cell
 def _():
-    import marimo as mo
-    import polars as pl
-    import pandas as pd
-    import numpy as np
-    import re
-    import pdfplumber
-
-    from typing import Optional
     from pathlib import Path
-    return Optional, Path, mo, np, pd, pdfplumber, pl, re
+    from typing import Optional
+
+    import marimo as mo
+    import numpy as np
+    import pandas as pd
+    import polars as pl
+
+    from mpil_tariff_trade_analysis.utils.pipeline_funcs import (
+        vectorized_hs_translation,
+    )
+    return Optional, Path, mo, np, pd, pl, vectorized_hs_translation
 
 
 @app.cell
 def _():
-    print("Adding manually identified US-China tariffs")
+    print("--- Adding manually identified US-China tariffs --- ")
     return
 
 
@@ -34,8 +36,117 @@ def _(mo):
     2. Extract hscode to ch99 mapping from UCITS PDF documents.
     3. Aggregate the 10 digit codes and calculate an average tariff for them using the HS-CH99 mapping.
     4. Join these onto the unified dataset, specifically for US exports to China.
+
+    ## Option 1: Manually extract from CH99 filings.
+    ## Option 2: Use Carter-Mix for replication purposes
+
+    Going with option 2 for now...
     """
     )
+    return
+
+
+@app.cell
+def _(np, pd):
+    def map_tariff_rates(
+        extracted_codes_df: pd.DataFrame, tariff_rates_df: pd.DataFrame
+    ) -> pd.DataFrame:
+        """
+        Maps tariff rates from tariff_rates_df onto the extracted codes DataFrame.
+        """
+        final_columns = [
+            "Product HS Code",
+            "Tariff Rate Applied",
+            "Effective Date",
+            "Chapter 99 Heading",
+        ]
+        if extracted_codes_df.empty:
+            return pd.DataFrame(columns=final_columns)
+
+        tariff_lookup = {}
+        if tariff_rates_df is not None and not tariff_rates_df.empty:
+            required_columns = ["HTS Heading", "Effective Date", "Applied Rate"]
+            if not all(col in tariff_rates_df.columns for col in required_columns):
+                print(
+                    f"Error: tariff_rates_df missing one or more required columns: {required_columns}"
+                )
+                # Populate with default "not specified" values if lookup fails due to missing columns
+                data_for_final_df = []
+                for _, row in extracted_codes_df.iterrows():
+                    data_for_final_df.append(
+                        {
+                            "Product HS Code": row["Product HS Code"],
+                            "Tariff Rate Applied": "Rate not in provided DF",
+                            "Effective Date": "Date not in provided DF",
+                            "Chapter 99 Heading": row["Chapter 99 Heading"],
+                        }
+                    )
+                final_df = pd.DataFrame(data_for_final_df, columns=final_columns)
+            else:
+                for _, row in tariff_rates_df.iterrows():
+                    hts_heading = str(row["HTS Heading"]).strip()
+                    try:
+                        effective_date = pd.to_datetime(
+                            row["Effective Date"]
+                        ).strftime("%Y-%m-%d")
+                    except ValueError:
+                        effective_date = str(row["Effective Date"])
+
+                    try:
+                        applied_rate_numeric = float(row["Applied Rate"])
+                    except ValueError:
+                        applied_rate_numeric = 0.0
+
+                    tariff_lookup[hts_heading] = {
+                        "date": effective_date,
+                        "rate": applied_rate_numeric,
+                    }
+        else:
+            print(
+                "Warning: tariff_rates_df is empty or None. Rates/dates will be 'not specified'."
+            )
+
+        data_for_final_df = []
+        default_tariff_info = {
+            "date": np.nan,
+            "rate": np.nan,
+        }
+
+        for _, row in extracted_codes_df.iterrows():
+            hs_code = row["Product HS Code"]
+            ch99_heading = row["Chapter 99 Heading"]
+
+            tariff_info = tariff_lookup.get(ch99_heading, default_tariff_info)
+
+            data_for_final_df.append(
+                {
+                    "Product HS Code": hs_code,
+                    "Tariff Rate Applied": tariff_info["rate"],
+                    "Effective Date": tariff_info["date"],
+                    "Chapter 99 Heading": ch99_heading,
+                }
+            )
+
+        if (
+            not data_for_final_df
+        ):  # Should not happen if extracted_codes_df is not empty
+            return pd.DataFrame(columns=final_columns)
+
+        final_df = pd.DataFrame(data_for_final_df, columns=final_columns)
+        if not final_df.empty:
+            final_df["Product HS Code"] = final_df["Product HS Code"].astype(str)
+            final_df.drop_duplicates(
+                subset=["Product HS Code", "Chapter 99 Heading"],
+                inplace=True,
+                keep="first",
+            )
+        return final_df
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(r"""# V1 - Scraping UCITS documents""")
     return
 
 
@@ -43,7 +154,7 @@ def _(mo):
 def _(mo):
     mo.md(
         r"""
-    # Manual Records
+    ## Manual Records
     Data which was manually collected on Trade War 1 tariffs.
     """
     )
@@ -302,7 +413,6 @@ def _(np, pd):
         "HTS Heading",
     ] = "9903.88.15"
 
-
     new_hts_records_list = [
         {
             "Effective Date": pd.to_datetime("2018-09-24"),
@@ -421,7 +531,7 @@ def _(np, pd):
     ).reset_index(drop=True)
 
     us_tariff_df
-    return (us_tariff_df,)
+    return
 
 
 @app.cell(hide_code=True)
@@ -1142,432 +1252,202 @@ def _(pd):
 
 @app.cell
 def _(mo):
-    mo.md(r"""# Extract data from PDF""")
+    mo.md(r"""## Extract data from PDF""")
     return
 
 
 @app.cell
-def _(pd, pdfplumber, re):
-    def extract_codes_from_pdf(pdf_path: str) -> pd.DataFrame:
-        """
-        Loads a PDF from the given path, extracts HS codes and Chapter 99 headings.
-        Returns a DataFrame with "Product HS Code" and "Chapter 99 Heading".
-        """
-        document_text = ""
-        try:
-            with pdfplumber.open(pdf_path) as pdf:
-                for page in pdf.pages:
-                    page_text = page.extract_text(x_tolerance=1, y_tolerance=1)
-                    if page_text:
-                        document_text += page_text + "\n"
-        except FileNotFoundError:
-            print(f"Error: PDF file not found at {pdf_path}")
-            return pd.DataFrame(columns=["Product HS Code", "Chapter 99 Heading"])
-        except Exception as e:
-            print(f"Error reading or processing PDF {pdf_path}: {e}")
-            return pd.DataFrame(columns=["Product HS Code", "Chapter 99 Heading"])
+def _():
+    # def extract_codes_from_pdf(pdf_path: str) -> pd.DataFrame:
+    #     """
+    #     Loads a PDF from the given path, extracts HS codes and Chapter 99 headings.
+    #     Returns a DataFrame with "Product HS Code" and "Chapter 99 Heading".
+    #     """
+    #     document_text = ""
+    #     try:
+    #         with pdfplumber.open(pdf_path) as pdf:
+    #             for page in pdf.pages:
+    #                 page_text = page.extract_text(x_tolerance=1, y_tolerance=1)
+    #                 if page_text:
+    #                     document_text += page_text + "\n"
+    #     except FileNotFoundError:
+    #         print(f"Error: PDF file not found at {pdf_path}")
+    #         return pd.DataFrame(columns=["Product HS Code", "Chapter 99 Heading"])
+    #     except Exception as e:
+    #         print(f"Error reading or processing PDF {pdf_path}: {e}")
+    #         return pd.DataFrame(columns=["Product HS Code", "Chapter 99 Heading"])
 
-        if not document_text:
-            print(f"No text could be extracted from PDF: {pdf_path}")
-            return pd.DataFrame(columns=["Product HS Code", "Chapter 99 Heading"])
+    #     if not document_text:
+    #         print(f"No text could be extracted from PDF: {pdf_path}")
+    #         return pd.DataFrame(columns=["Product HS Code", "Chapter 99 Heading"])
 
-        # Regex to find lines containing an HS code followed by a Chapter 99 code.
-        # HS Code: XXXX.XX.XX or XXXX.XX.XXXX
-        # Chapter 99 Code: XXXX.XX.XX
-        # Assumes they are on the same line, separated by whitespace.
-        pattern = re.compile(
-            r"^([0-9]{4}\.[0-9]{2}\.[0-9]{2}(?:[0-9]{2})?)\s+([0-9]{4}\.[0-9]{2}\.[0-9]{2})$",
-            re.MULTILINE,
-        )
+    #     # Regex to find lines containing an HS code followed by a Chapter 99 code.
+    #     # HS Code: XXXX.XX.XX or XXXX.XX.XXXX
+    #     # Chapter 99 Code: XXXX.XX.XX
+    #     # Assumes they are on the same line, separated by whitespace.
+    #     pattern = re.compile(
+    #         r"^([0-9]{4}\.[0-9]{2}\.[0-9]{2}(?:[0-9]{2})?)\s+([0-9]{4}\.[0-9]{2}\.[0-9]{2})$",
+    #         re.MULTILINE,
+    #     )
 
-        extracted_pairs = []
-        matches = pattern.findall(document_text)
+    #     extracted_pairs = []
+    #     matches = pattern.findall(document_text)
 
-        for hs_code_str, ch99_code_str in matches:
-            extracted_pairs.append(
-                {
-                    "Product HS Code": hs_code_str,
-                    "Chapter 99 Heading": ch99_code_str,
-                }
-            )
+    #     for hs_code_str, ch99_code_str in matches:
+    #         extracted_pairs.append(
+    #             {
+    #                 "Product HS Code": hs_code_str,
+    #                 "Chapter 99 Heading": ch99_code_str,
+    #             }
+    #         )
 
-        if not extracted_pairs:
-            print(
-                f"No HS code / Chapter 99 pairs found in PDF with the pattern: {pattern.pattern}"
-            )
-            print(
-                "Please check the PDF structure or the regex if an empty DataFrame is unexpected."
-            )
-            return pd.DataFrame(columns=["Product HS Code", "Chapter 99 Heading"])
+    #     if not extracted_pairs:
+    #         print(
+    #             f"No HS code / Chapter 99 pairs found in PDF with the pattern: {pattern.pattern}"
+    #         )
+    #         print(
+    #             "Please check the PDF structure or the regex if an empty DataFrame is unexpected."
+    #         )
+    #         return pd.DataFrame(columns=["Product HS Code", "Chapter 99 Heading"])
 
-        df = pd.DataFrame(
-            extracted_pairs, columns=["Product HS Code", "Chapter 99 Heading"]
-        )
-        if not df.empty:
-            df["Product HS Code"] = df["Product HS Code"].astype(str)
-            df["Chapter 99 Heading"] = df["Chapter 99 Heading"].astype(str)
-        return df
+    #     df = pd.DataFrame(
+    #         extracted_pairs, columns=["Product HS Code", "Chapter 99 Heading"]
+    #     )
+    #     if not df.empty:
+    #         df["Product HS Code"] = df["Product HS Code"].astype(str)
+    #         df["Chapter 99 Heading"] = df["Chapter 99 Heading"].astype(str)
+    #     return df
 
+    # pdf_file_path = "data/raw/us_raw_tariff_data/HTS_HEADING_TO_HS_CODE_M25.pdf"
+    # hs_to_ch99_mapping = extract_codes_from_pdf(pdf_file_path)
 
-    pdf_file_path = "data/raw/us_raw_tariff_data/HTS_HEADING_TO_HS_CODE_M25.pdf"
-    hs_to_ch99_mapping = extract_codes_from_pdf(pdf_file_path)
-
-    hs_to_ch99_mapping
-    return (hs_to_ch99_mapping,)
+    # hs_to_ch99_mapping
+    return
 
 
 @app.cell
-def _(hs_to_ch99_mapping):
-    hs_to_ch99_mapping.to_csv("test_hstoch99")
+def _():
+    # hs_to_ch99_mapping.to_csv("test_hstoch99")
     return
 
 
 @app.cell
 def _(mo):
-    mo.md(r"""# Map tariff rates to HS codes using CH99 mapping and manual data""")
+    mo.md(
+        r"""## Map tariff rates to HS codes using CH99 mapping and manual data"""
+    )
     return
 
 
 @app.cell
-def _(np, pd):
-    def map_tariff_rates(
-        extracted_codes_df: pd.DataFrame, tariff_rates_df: pd.DataFrame
-    ) -> pd.DataFrame:
-        """
-        Maps tariff rates from tariff_rates_df onto the extracted codes DataFrame.
-        """
-        final_columns = [
-            "Product HS Code",
-            "Tariff Rate Applied",
-            "Effective Date",
-            "Chapter 99 Heading",
-        ]
-        if extracted_codes_df.empty:
-            return pd.DataFrame(columns=final_columns)
+def _():
+    # us_tariff_df_mapped = map_tariff_rates(hs_to_ch99_mapping, us_tariff_df)
+    # us_tariff_df_mapped["Tariff Rate Applied"] = us_tariff_df_mapped[
+    #     "Tariff Rate Applied"
+    # ].astype(float)
 
-        tariff_lookup = {}
-        if tariff_rates_df is not None and not tariff_rates_df.empty:
-            required_columns = ["HTS Heading", "Effective Date", "Applied Rate"]
-            if not all(col in tariff_rates_df.columns for col in required_columns):
-                print(
-                    f"Error: tariff_rates_df missing one or more required columns: {required_columns}"
-                )
-                # Populate with default "not specified" values if lookup fails due to missing columns
-                data_for_final_df = []
-                for _, row in extracted_codes_df.iterrows():
-                    data_for_final_df.append(
-                        {
-                            "Product HS Code": row["Product HS Code"],
-                            "Tariff Rate Applied": "Rate not in provided DF",
-                            "Effective Date": "Date not in provided DF",
-                            "Chapter 99 Heading": row["Chapter 99 Heading"],
-                        }
-                    )
-                final_df = pd.DataFrame(data_for_final_df, columns=final_columns)
-            else:
-                for _, row in tariff_rates_df.iterrows():
-                    hts_heading = str(row["HTS Heading"]).strip()
-                    try:
-                        effective_date = pd.to_datetime(
-                            row["Effective Date"]
-                        ).strftime("%Y-%m-%d")
-                    except ValueError:
-                        effective_date = str(row["Effective Date"])
-
-                    try:
-                        applied_rate_numeric = float(row["Applied Rate"])
-                    except ValueError:
-                        applied_rate_numeric = 0.0
-
-                    tariff_lookup[hts_heading] = {
-                        "date": effective_date,
-                        "rate": applied_rate_numeric,
-                    }
-        else:
-            print(
-                "Warning: tariff_rates_df is empty or None. Rates/dates will be 'not specified'."
-            )
-
-        data_for_final_df = []
-        default_tariff_info = {
-            "date": np.nan,
-            "rate": np.nan,
-        }
-
-        for _, row in extracted_codes_df.iterrows():
-            hs_code = row["Product HS Code"]
-            ch99_heading = row["Chapter 99 Heading"]
-
-            tariff_info = tariff_lookup.get(ch99_heading, default_tariff_info)
-
-            data_for_final_df.append(
-                {
-                    "Product HS Code": hs_code,
-                    "Tariff Rate Applied": tariff_info["rate"],
-                    "Effective Date": tariff_info["date"],
-                    "Chapter 99 Heading": ch99_heading,
-                }
-            )
-
-        if (
-            not data_for_final_df
-        ):  # Should not happen if extracted_codes_df is not empty
-            return pd.DataFrame(columns=final_columns)
-
-        final_df = pd.DataFrame(data_for_final_df, columns=final_columns)
-        if not final_df.empty:
-            final_df["Product HS Code"] = final_df["Product HS Code"].astype(str)
-            final_df.drop_duplicates(
-                subset=["Product HS Code", "Chapter 99 Heading"],
-                inplace=True,
-                keep="first",
-            )
-        return final_df
-    return (map_tariff_rates,)
+    # us_tariff_df_mapped
+    return
 
 
 @app.cell
-def _(hs_to_ch99_mapping, map_tariff_rates, us_tariff_df):
-    us_tariff_df_mapped = map_tariff_rates(hs_to_ch99_mapping, us_tariff_df)
-    us_tariff_df_mapped["Tariff Rate Applied"] = us_tariff_df_mapped[
-        "Tariff Rate Applied"
-    ].astype(float)
+def _():
+    # us_tariff_df_mapped["Product HS6"] = us_tariff_df_mapped[
+    #     "Product HS Code"
+    # ].apply(lambda x: x.replace(".", "")[:6])
 
-    us_tariff_df_mapped
-    return (us_tariff_df_mapped,)
+    # official_us_hs6_tariffs = (
+    #     us_tariff_df_mapped.groupby(["Product HS6", "Effective Date"])[
+    #         "Tariff Rate Applied"
+    #     ]
+    #     .mean()
+    #     .reset_index()
+    # )
 
+    # official_us_hs6_tariffs["Effective Date"] = pd.to_datetime(
+    #     official_us_hs6_tariffs["Effective Date"]
+    # )
 
-@app.cell
-def _(pd, us_tariff_df_mapped):
-    us_tariff_df_mapped["Product HS6"] = us_tariff_df_mapped[
-        "Product HS Code"
-    ].apply(lambda x: x.replace(".", "")[:6])
+    # official_us_hs6_tariffs["hs_revision"] = "HS6"
+    # official_us_hs6_tariffs.rename(
+    #     columns={"Product HS6": "product_code"}, inplace=True
+    # )
 
-
-    official_us_hs6_tariffs = (
-        us_tariff_df_mapped.groupby(["Product HS6", "Effective Date"])[
-            "Tariff Rate Applied"
-        ]
-        .mean()
-        .reset_index()
-    )
-
-    official_us_hs6_tariffs["Effective Date"] = pd.to_datetime(
-        official_us_hs6_tariffs["Effective Date"]
-    )
-
-    official_us_hs6_tariffs["hs_revision"] = "HS6"
-    official_us_hs6_tariffs.rename(
-        columns={"Product HS6": "product_code"}, inplace=True
-    )
-
-    official_us_hs6_tariffs.head()
-    return (official_us_hs6_tariffs,)
+    # official_us_hs6_tariffs.head()
+    return
 
 
 @app.cell
 def _(mo):
-    mo.md(r"""# Remap the HS6 codes to HS Nom 0""")
+    mo.md(r"""## Remap the HS6 codes to HS Nom 0""")
+    return
+
+
+@app.cell
+def _():
+    # official_us_hs6_tariffs_remapped = vectorized_hs_translation(
+    #     pl.LazyFrame(official_us_hs6_tariffs)
+    # )
+    return
+
+
+@app.cell
+def _():
+    # official_us_tariffs_df = official_us_hs6_tariffs_remapped.collect().to_pandas()
+    # official_us_tariffs_df
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(r"""# V2 - Use Carter Mix data""")
     return
 
 
 @app.cell
 def _(Path, pd, pl):
-    def vectorized_hs_translation(
-        input_data: pl.LazyFrame
-        | pd.DataFrame,  # Accept Polars LazyFrame or pandas DataFrame
-        mapping_dir: str = "data/raw/hs_reference",
-    ) -> pl.LazyFrame:
-        print("Starting HS code translation to H0 (HS92).")
+    base_dir = Path("data/raw/CarterMix/")
+    list1 = pl.read_csv(base_dir / "Tariffs" / "part1.csv")
+    list2 = pl.read_csv(base_dir / "Tariffs" / "part2.csv")
+    list3 = pl.read_csv(base_dir / "Tariffs" / "part3.csv")
+    list4 = pl.read_csv(base_dir / "Tariffs" / "part4a.csv")
 
-        if isinstance(input_data, pd.DataFrame):
-            df = pl.from_pandas(input_data).lazy()
-        elif isinstance(input_data, pl.DataFrame):  # Handle Polars DataFrame too
-            df = input_data.lazy()
-        elif isinstance(input_data, pl.LazyFrame):
-            df = input_data
-        else:
-            raise TypeError(
-                "input_data must be a Polars LazyFrame, Polars DataFrame, or pandas DataFrame"
-            )
+    cm_us_tariffs = pl.concat([list1, list2, list3, list4]).to_pandas()
+    cm_us_tariffs["time"] = pd.to_datetime(cm_us_tariffs["time"], format="%Ym%m")
+    cm_us_tariffs["hs_code"] = cm_us_tariffs["hs_code"].astype(str)
 
-        hs_versions = ["H1", "H2", "H3", "H4", "H5", "H6"]
-
-        mapping_dfs_pd = []
-        for hs_version in hs_versions:
-            path = Path(mapping_dir) / f"{hs_version}_to_H0.CSV"
-            try:
-                mapping_pd = pd.read_csv(
-                    path,
-                    dtype=str,
-                    usecols=[0, 2],
-                    encoding="iso-8859-1",
-                )
-                mapping_pd.columns = ["source_code", "target_code"]
-                mapping_pd["hs_revision"] = hs_version
-                # Ensure source_code is string, as product_code will also be string
-                mapping_pd["source_code"] = (
-                    mapping_pd["source_code"].astype(str).str.strip()
-                )
-                mapping_pd["target_code"] = (
-                    mapping_pd["target_code"].astype(str).str.strip()
-                )
-                mapping_dfs_pd.append(mapping_pd)
-            except FileNotFoundError as e:
-                raise ValueError(
-                    f"Error loading mapping file for {hs_version}: \n {e}"
-                ) from e
-            except Exception as e:
-                raise ValueError(
-                    f"Error loading mapping file for {hs_version}: \n {e}"
-                ) from e
-
-        if not mapping_dfs_pd:
-            # If no mapping files are found, we should still be able to proceed
-            # The non-H0 codes just won't be translated.
-            print(
-                "Warning: No HS mapping files loaded. Non-H0 codes will not be translated."
-            )
-            mapping_all = pl.DataFrame(
-                {"source_code": [], "target_code": [], "hs_revision": []},
-                schema={
-                    "source_code": pl.Utf8,
-                    "target_code": pl.Utf8,
-                    "hs_revision": pl.Utf8,
-                },
-            ).lazy()
-        else:
-            mapping_all_pd = pd.concat(mapping_dfs_pd, ignore_index=True)
-            schema = {
-                "source_code": pl.Utf8,
-                "target_code": pl.Utf8,
-                "hs_revision": pl.Utf8,
-            }
-            mapping_all = pl.from_pandas(
-                mapping_all_pd, schema_overrides=schema
-            ).lazy()
-
-        # Ensure product_code in df is string and stripped, similar to mapping_all
-        if "product_code" in df.columns:
-            df = df.with_columns(
-                pl.col("product_code").cast(pl.Utf8).str.strip_chars()
-            )
-
-        df_h0 = df.filter(pl.col("hs_revision") == "H0")
-        df_non_h0 = df.filter(pl.col("hs_revision") != "H0")
-
-        # Check if df_non_h0 is empty before proceeding with join
-        if (
-            df_non_h0.collect_schema().names() == []
-        ):  # A way to check if it will produce an empty dataframe
-            print(
-                "No non-H0 codes to translate or df_non_h0 is effectively empty."
-            )
-            df_final = df_h0  # Only H0 codes present or no non-H0 to translate
-        else:
-            df_non_h0 = df_non_h0.join(
-                mapping_all,
-                left_on=["hs_revision", "product_code"],
-                right_on=["hs_revision", "source_code"],
-                how="left",
-            )
-
-            df_non_h0_instrumented = df_non_h0.with_columns(
-                pl.col("product_code").alias("original_product_code"),
-                pl.when(
-                    pl.col("target_code").is_not_null()
-                    & (pl.col("target_code") != pl.col("product_code"))
-                )
-                .then(True)
-                .otherwise(False)
-                .alias("is_remapped"),
-            )
-
-            # It's more efficient to collect once if possible
-            # However, for logging, collecting a small subset is fine.
-            # Check if 'target_code' column exists after the join
-            if "target_code" in df_non_h0_instrumented.columns:
-                remapped_info_lf = df_non_h0_instrumented.filter(
-                    pl.col("is_remapped")
-                ).select("original_product_code", "target_code", "hs_revision")
-                # Eagerly collect for printing
-                remapped_info_df = remapped_info_lf.collect()
-
-                if not remapped_info_df.is_empty():
-                    print("\n--- Remapping Information ---")
-                    for row in remapped_info_df.iter_rows(named=True):
-                        print(
-                            f"HS Revision {row['hs_revision']}: Original code '{row['original_product_code']}' "
-                            f"is being remapped to '{row['target_code']}'."
-                        )
-                    print("--- End of Remapping Information ---\n")
-                else:
-                    print(
-                        "\n--- No actual remappings occurred (target_code was null or same as product_code for non-H0). ---\n"
-                    )
-            else:
-                print(
-                    "\n--- 'target_code' column not found after join, skipping remapping logging. ---\n"
-                )
-
-            df_non_h0 = (
-                df_non_h0.with_columns(
-                    pl.when(pl.col("target_code").is_not_null())
-                    .then(pl.col("target_code"))
-                    .otherwise(pl.col("product_code"))
-                    .alias("product_code_translated")
-                )
-                .drop("product_code")
-                .rename({"product_code_translated": "product_code"})
-            )
-
-            cols_to_drop_from_non_h0 = ["target_code"]
-            if (
-                "source_code" in df_non_h0.columns
-            ):  # source_code comes from mapping_all
-                cols_to_drop_from_non_h0.append("source_code")
-
-            # Only drop columns if they exist
-            existing_cols_in_non_h0 = df_non_h0.collect_schema().names()
-            actual_cols_to_drop = [
-                col
-                for col in cols_to_drop_from_non_h0
-                if col in existing_cols_in_non_h0
-            ]
-            if actual_cols_to_drop:
-                df_non_h0 = df_non_h0.drop(actual_cols_to_drop)
-
-            common_cols = df_h0.collect_schema().names()
-            df_non_h0_selected = df_non_h0.select(common_cols)
-
-            df_final = pl.concat(
-                [df_h0.select(common_cols), df_non_h0_selected],
-                how="vertical_relaxed",
-            )
-
-        print("✅ HS code translation completed.")
-        return df_final
-    return (vectorized_hs_translation,)
-
-
-@app.cell
-def _(official_us_hs6_tariffs, pl, vectorized_hs_translation):
-    official_us_hs6_tariffs_remapped = vectorized_hs_translation(
-        pl.LazyFrame(official_us_hs6_tariffs)
+    # Shorten the codes
+    cm_us_tariffs["hs_code"] = cm_us_tariffs["hs_code"].apply(lambda x: x[:-2])
+    cm_us_tariffs = cm_us_tariffs.rename(
+        columns={
+            "hs_code": "product_code",
+            "time": "Effective Date",
+            "tariff_add": "Tariff Rate Applied",
+        }
     )
-    return (official_us_hs6_tariffs_remapped,)
+    cm_us_tariffs = cm_us_tariffs.groupby(
+        "product_code"
+    ).mean()  # Take the average when grouping across the new shortened codes
+    cm_us_tariffs["hs_revision"] = "HS6"
+    cm_us_tariffs = cm_us_tariffs.reset_index()
+    cm_us_tariffs["Tariff Rate Applied"] = (
+        cm_us_tariffs["Tariff Rate Applied"] * 100
+    )
+
+    cm_us_tariffs.head(1)
+    return (cm_us_tariffs,)
 
 
 @app.cell
-def _(official_us_hs6_tariffs_remapped):
-    official_us_tariffs_df = official_us_hs6_tariffs_remapped.collect().to_pandas()
-    official_us_tariffs_df
+def _(cm_us_tariffs, pl, vectorized_hs_translation):
+    # Remap the cartermix to use HS0
+    cm_us_tariffs_remapped = vectorized_hs_translation(pl.LazyFrame(cm_us_tariffs))
     return
 
 
 @app.cell
 def _(mo):
-    mo.md(r"""# Join with the existing dataset""")
+    mo.md(r"""# Join selected tariff dataset with the existing dataset""")
     return
 
 
@@ -1577,14 +1457,8 @@ def _(pl):
     unified_path = "/Users/lukasalemu/Documents/00. Bank of England/03. MPIL/tariff_trade_analysis/data/final/unified_trade_tariff_partitioned"
 
     unified_lf = pl.scan_parquet(unified_path)
-
     unified_lf.head().collect()
     return unified_lf, unified_path
-
-
-@app.cell
-def _():
-    return
 
 
 @app.cell
@@ -1743,18 +1617,16 @@ def _(Optional, pd, pl):
             .cast(pl.Float32)
             .fill_nan(0.0)
             .fill_null(0.0)
-            .alias("official_effective_tariff")
+            .alias("official_tariff")
         )
 
-        # Multiply by 100 to bring into same space as the effective_tariff previously
-        unified_lf = unified_lf.with_columns(
-            pl.col("official_effective_tariff") * 100
-        )
+        # # Multiply by 100 to bring into same space as the average_tariff_official previously
+        # unified_lf = unified_lf.with_columns(pl.col("official_tariff"))
 
         unified_lf = unified_lf.with_columns(
-            (
-                pl.col("effective_tariff") + pl.col("official_effective_tariff")
-            ).alias("official_effective_tariff")
+            (pl.col("average_tariff") + pl.col("official_tariff")).alias(
+                "average_tariff_official"
+            )
         )
         # Drop the intermediate helper column
         unified_lf = unified_lf.drop("base_official_tariff_join")
@@ -1776,40 +1648,6 @@ def _(mo):
 
 
 @app.cell
-def _(Path, pd, pl):
-    base_dir = Path("data/raw/CarterMix/")
-    list1 = pl.read_csv(base_dir / "Tariffs" / "part1.csv")
-    list2 = pl.read_csv(base_dir / "Tariffs" / "part2.csv")
-    list3 = pl.read_csv(base_dir / "Tariffs" / "part3.csv")
-    list4 = pl.read_csv(base_dir / "Tariffs" / "part4a.csv")
-
-    cm_us_tariffs = pl.concat([list1, list2, list3, list4]).to_pandas()
-    cm_us_tariffs["time"] = pd.to_datetime(cm_us_tariffs["time"], format="%Ym%m")
-    cm_us_tariffs["hs_code"] = cm_us_tariffs["hs_code"].astype(str)
-
-    # Shorten the codes
-    cm_us_tariffs["hs_code"] = cm_us_tariffs["hs_code"].apply(lambda x: x[:-2])
-    cm_us_tariffs = cm_us_tariffs.rename(
-        columns={
-            "hs_code": "product_code",
-            "time": "Effective Date",
-            "tariff_add": "Tariff Rate Applied",
-        }
-    )
-    cm_us_tariffs = cm_us_tariffs.groupby("product_code").mean()
-    cm_us_tariffs["hs_revision"] = "HS6"
-    cm_us_tariffs = cm_us_tariffs.reset_index()
-    cm_us_tariffs["Tariff Rate Applied"] = (
-        cm_us_tariffs["Tariff Rate Applied"] * 100
-    )
-
-    cm_us_tariffs.head(1)
-
-    cm_us_tariffs.to_csv("data/intermediate/carter_mix_hs6_tariffs.csv")
-    return (cm_us_tariffs,)
-
-
-@app.cell
 def _(
     cm_us_tariffs,
     combine_us_official_tariffs_with_unified_optimized,
@@ -1817,9 +1655,8 @@ def _(
     unified_lf,
 ):
     enhanced_unified_lf = combine_us_official_tariffs_with_unified_optimized(
-        # unified_lf, official_us_tariffs_df, max_year_for_ffill=2023
         unified_lf,
-        cm_us_tariffs,
+        cm_us_tariffs,  # official_us_tariffs_df
         max_year_for_ffill=2023,
     )
 
@@ -1853,7 +1690,7 @@ def _(enhanced_unified_lf, pl, unified_path):
 
 @app.cell
 def _(mo):
-    mo.md(r"""# Compare with data in Carter-Mix replication materials""")
+    mo.md(r"""<!-- # Compare with data in Carter-Mix replication materials -->""")
     return
 
 

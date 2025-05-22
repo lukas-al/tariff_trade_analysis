@@ -84,7 +84,7 @@ def _(pl, product_list, time, tqdm, unified_lf):
         ).agg(
             pl.sum('value'),
             pl.sum('quantity'),
-            pl.mean('effective_tariff'),
+            pl.mean('average_tariff_official'),
         ).with_columns(
             (pl.col('value') / pl.col('quantity')).alias('unit_value')
         ).drop(
@@ -100,7 +100,7 @@ def _(pl, product_list, time, tqdm, unified_lf):
         # fig = px.line(
         #     df.to_pandas(),
         #     x='year',
-        #     y=['unit_value', 'effective_tariff'],
+        #     y=['unit_value', 'average_tariff_official'],
         #     title=f"Product {product}; country {country_name}",
         # )
         # fig.show()
@@ -145,7 +145,7 @@ def _(px, saved_data_list):
     # )
 
     # fig.add_trace(
-    #     go.Scatter(x=df_pd['year'], y=df_pd['effective_tariff'], name='effective_tariff', mode='lines'),
+    #     go.Scatter(x=df_pd['year'], y=df_pd['average_tariff_official'], name='average_tariff_official', mode='lines'),
     #     secondary_y=True,
     # )
 
@@ -154,7 +154,7 @@ def _(px, saved_data_list):
     # )
 
     # fig.update_yaxes(title_text="unit_value", secondary_y=False)
-    # fig.update_yaxes(title_text="effective_tariff", secondary_y=True)
+    # fig.update_yaxes(title_text="average_tariff_official", secondary_y=True)
     # fig.update_xaxes(title_text="year")
 
     # fig.show()
@@ -162,7 +162,7 @@ def _(px, saved_data_list):
     fig = px.line(
         df_pd,
         x="year",
-        y=["unit_value", "effective_tariff"],
+        y=["unit_value", "average_tariff_official"],
         # title=f"Product {product}; country {country_name}",
         title="Test",
     )

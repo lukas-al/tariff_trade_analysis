@@ -8,8 +8,8 @@ app = marimo.App(width="medium")
 def _():
     import marimo as mo
     import polars as pl
-
-    return mo, pl
+    import time
+    return mo, pl, time
 
 
 @app.cell
@@ -18,6 +18,8 @@ def _(mo):
         r"""
     # CREATE UNIFIED DATASET
     Join trade values and volumes with tariff amounts. Left join on BACI. Simple operation.
+
+    Where average tariff is null or none, interpolate those values. Where this fails (e.g. nulls backfill) subsequently fill nulls with 0.0
     """
     )
     return
@@ -39,13 +41,14 @@ def _(mo):
 
 
 @app.cell
-def _(ave_pref, pl):
+def _(ave_pref):
     # Inspect them
-    ave_pref_clean = ave_pref.with_columns(
-        pl.col("tariff_rate").str.strip_chars().cast(pl.Float32),
-        pl.col("min_rate").str.strip_chars().cast(pl.Float32),
-        pl.col("max_rate").str.strip_chars().cast(pl.Float32),
-    ).drop(["hs_revision", "tariff_type"])
+    # ave_pref_clean = ave_pref.with_columns(
+    #     pl.col("tariff_rate").str.strip_chars().cast(pl.Float32),
+    #     pl.col("min_rate").str.strip_chars().cast(pl.Float32),
+    #     pl.col("max_rate").str.strip_chars().cast(pl.Float32),
+    # ).drop(["tariff_type"])
+    ave_pref_clean = ave_pref.drop(["tariff_type"])
 
     ave_pref_clean = ave_pref_clean.rename(
         {
@@ -60,13 +63,13 @@ def _(ave_pref, pl):
 
 
 @app.cell
-def _(ave_mfn, pl):
-    ave_mfn_clean = ave_mfn.with_columns(
-        pl.col("tariff_rate").str.strip_chars().cast(pl.Float32),
-        pl.col("min_rate").str.strip_chars().cast(pl.Float32),
-        pl.col("max_rate").str.strip_chars().cast(pl.Float32),
-    ).drop(["hs_revision", "tariff_type"])
-
+def _(ave_mfn):
+    # ave_mfn_clean = ave_mfn.with_columns(
+    #     pl.col("tariff_rate").str.strip_chars().cast(pl.Float32),
+    #     pl.col("min_rate").str.strip_chars().cast(pl.Float32),
+    #     pl.col("max_rate").str.strip_chars().cast(pl.Float32),
+    # ).drop(["hs_revision", "tariff_type"])
+    ave_mfn_clean = ave_mfn.drop(["tariff_type"])
     ave_mfn_clean = ave_mfn_clean.rename(
         {
             "tariff_rate": "tariff_rate_mfn",
@@ -90,7 +93,12 @@ def _(baci, pl):
             "v": "value",
             "q": "quantity",
         }
-    ).with_columns(pl.col("year").cast(pl.Utf8))
+    ).with_columns(
+        pl.col("year").cast(pl.Utf8),
+        pl.col("product_code").cast(pl.Utf8),
+        pl.col("value").cast(pl.Float32),
+        pl.col("quantity").cast(pl.Float32),
+    )
 
     baci_clean.head().collect()
     return (baci_clean,)
@@ -98,50 +106,13 @@ def _(baci, pl):
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
-    # Merge Pref and MFN
-    Need to merge these two datasets, ensuring that for each year, each country and product code there is ONLY ONE value.
-    """
-    )
+    mo.md(r"""# Operate over the dataset in year chunks""")
     return
 
 
 @app.cell
-def _():
-    # # set unique_year for testing
-    # unique_y = '2020'
-
-    # test_filtered_avepref = (ave_pref_clean.filter(pl.col("year") == unique_y))
-    # # Reporter applies Pref to imports from Partner.
-    # # So we need to join this partner to BACI's reporter
-
-    # test_filtered_avemfn = (
-    #     ave_mfn_clean.filter(pl.col("year") == unique_y)
-    #     .rename({"reporter_country": "partner_country"})
-    # )  # Rename to flip the reporter to be our importer (partner) They are reporting an import duty. So we need to join this
-    return
-
-
-@app.cell
-def _():
-    # Decide how to deal with these duplicates. We need to only keep one tariff rate.
-
-    # 1. Could it be that the explosion of unique countries in the EU is creating these duplicates? If so need to decide how to treat it.
-    return
-
-
-@app.cell
-def _(mo):
-    mo.md(r"""# Operate over the BACI dataset in chunks""")
-    return
-
-
-@app.cell
-def _(ave_mfn_clean, ave_pref_clean, baci_clean, pl):
+def _(ave_mfn_clean, ave_pref_clean, baci_clean, pl, time):
     # First get the chunk values
-    import time
-
     start_time = time.time()
 
     # unique_years = baci_clean.select("year").unique().collect().to_series().to_list()
@@ -183,7 +154,9 @@ def _(ave_mfn_clean, ave_pref_clean, baci_clean, pl):
     print(f"Unique years in dataset:\n{unique_years}")
 
     for i, year in enumerate(unique_years):
-        print(f"--- Processing Chunk {i + 1}/{len(unique_years)}: Year = {year} ---")
+        print(
+            f"--- Processing Chunk {i + 1}/{len(unique_years)}: Year = {year} ---"
+        )
 
         ### 1. Filtering the correct year
         print("    Filtering for correct year")
@@ -245,11 +218,16 @@ def _(ave_mfn_clean, ave_pref_clean, baci_clean, pl):
                 pl.col("tariff_rate_mfn").list.min(),
                 pl.col("min_rate_mfn").list.min(),
                 pl.col("max_rate_mfn").list.min(),
+                # pl.min("tariff_rate_mfn").alias("tariff_rate_mfn"),
+                # pl.min("min_rate_mfn").alias("min_rate_mfn"),
+                # pl.min("max_rate_mfn").alias("max_rate_mfn"),
             )
         )
 
         pref_mins = (
-            filtered_avepref.group_by(["partner_country", "product_code", "reporter_country"])
+            filtered_avepref.group_by(
+                ["partner_country", "product_code", "reporter_country"]
+            )
             .agg(
                 [
                     pl.col("tariff_rate_pref"),
@@ -261,6 +239,9 @@ def _(ave_mfn_clean, ave_pref_clean, baci_clean, pl):
                 pl.col("tariff_rate_pref").list.min(),
                 pl.col("min_rate_pref").list.min(),
                 pl.col("max_rate_pref").list.min(),
+                # pl.min("tariff_rate_pref").alias("tariff_rate_pref"), #->
+                # pl.min("min_rate_pref").alias("min_rate_pref"),
+                # pl.min("max_rate_pref").alias("max_rate_pref"),
             )
         )
 
@@ -286,13 +267,11 @@ def _(ave_mfn_clean, ave_pref_clean, baci_clean, pl):
             pl.when(pl.col("tariff_rate_pref").is_not_null())
             .then(pl.col("tariff_rate_pref"))
             .otherwise(pl.col("tariff_rate_mfn"))
-            .alias("effective_tariff")
+            .alias("average_tariff")
         )
 
         print("    Joining WITS to BACI")
         print("    Coalescing AVEPref and MFN tariffs")
-
-        # break
 
         unified_baci_lf.sink_parquet(
             pl.PartitionByKey(
@@ -304,7 +283,7 @@ def _(ave_mfn_clean, ave_pref_clean, baci_clean, pl):
 
     print(f"Time elapsed = {(time.time() - start_time) / 60} mins")
     print("-----COMPLETE-----")
-    return (unified_baci_lf,)  # type: ignore
+    return (unified_baci_lf,)
 
 
 @app.cell

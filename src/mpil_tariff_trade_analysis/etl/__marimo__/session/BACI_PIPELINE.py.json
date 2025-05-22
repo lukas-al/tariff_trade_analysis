@@ -7,13 +7,27 @@
     {
       "id": "Hbol",
       "code_hash": "a13690a9b136b9977e65ca90e6361075",
-      "outputs": [],
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
       "console": []
     },
     {
       "id": "MJUe",
       "code_hash": "c3f6a4e328e5abba4d967749b52e40a3",
-      "outputs": [],
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"implement-the-baci-pipeline\">IMPLEMENT THE BACI PIPELINE</h1>\n<span class=\"paragraph\">Start to finish - implement the BACI cleaning pipeline</span>\n<h2 id=\"structure\">Structure:</h2>\n<ol>\n<li>Load incrememntally and convert from CSV into a Parquet</li>\n<li>Explode any country codes which refer to regions.</li>\n<li>Remap the country codes.</li>\n</ol></span>"
+          }
+        }
+      ],
       "console": []
     },
     {

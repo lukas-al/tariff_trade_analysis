@@ -131,6 +131,8 @@ def _(pycountry):
     ITALY_CC = pycountry.countries.search_fuzzy("Italy")[0].numeric
     SOUTHAFRICA_CC = pycountry.countries.search_fuzzy("South Africa")[0].numeric
     UK_CC = pycountry.countries.search_fuzzy("United Kingdom")[0].numeric
+    GERMANY_CC = pycountry.countries.search_fuzzy("Germany")[0].numeric
+    FRANCE_CC = pycountry.countries.search_fuzzy("France")[0].numeric
 
     cc_list_incl_ROW = [
         USA_CC,
@@ -140,6 +142,8 @@ def _(pycountry):
         ITALY_CC,
         SOUTHAFRICA_CC,
         UK_CC,
+        GERMANY_CC,
+        FRANCE_CC,
     ]
 
     cc_list_ROW = [
@@ -148,13 +152,24 @@ def _(pycountry):
         ITALY_CC,
         SOUTHAFRICA_CC,
         UK_CC,
+        GERMANY_CC,
+        FRANCE_CC,
     ]
 
     cc_list = [USA_CC, CHINA_CC]
 
     TOTAL_YEAR_RANGE = [str(y) for y in range(1999, 2024)]
     EFFECT_YEAR_RANGE = [str(y) for y in range(2018, 2024)]
-    return CHINA_CC, EFFECT_YEAR_RANGE, USA_CC, cc_list_incl_ROW
+    return (
+        CHINA_CC,
+        EFFECT_YEAR_RANGE,
+        FRANCE_CC,
+        GERMANY_CC,
+        ITALY_CC,
+        UK_CC,
+        USA_CC,
+        cc_list_incl_ROW,
+    )
 
 
 @app.cell
@@ -169,7 +184,7 @@ def _(cc_list_incl_ROW, fill_column_grouped_sorted, pl, unified_lf):
 
     filtered_lf = fill_column_grouped_sorted(
         lazy_df=filtered_lf,
-        column_to_fill="official_effective_tariff",
+        column_to_fill="average_tariff_official",
         group_by_cols=["reporter_country", "partner_country", "product_code"],
         sort_by_col="year",
     )
@@ -186,18 +201,18 @@ def _(filtered_lf):
 
 
 @app.cell
-def _(filtered_lf, pl):
-    tariff_delta = (
-        filtered_lf.group_by("year")
-        .agg(
-            (pl.col("effective_tariff") - pl.col("official_effective_tariff"))
-            .mean()
-            .alias("official_delta")
-        )
-        .collect()
-    )
+def _():
+    # tariff_delta = (
+    #     filtered_lf.group_by("year")
+    #     .agg(
+    #         (pl.col("") - pl.col("official_effective_tariff"))
+    #         .mean()
+    #         .alias("official_delta")
+    #     )
+    #     .collect()
+    # )
 
-    tariff_delta
+    # tariff_delta
     return
 
 
@@ -239,7 +254,7 @@ def _(CHINA_CC, USA_CC, filtered_lf, go, make_subplots, pl, unified_lf):
     fig.add_trace(
         go.Scatter(
             x=df_plot_raw["year"],
-            y=df_plot_raw["effective_tariff"],
+            y=df_plot_raw["average_tariff"],
             mode="lines+markers",
             name="Raw Tariff",
         ),
@@ -250,7 +265,7 @@ def _(CHINA_CC, USA_CC, filtered_lf, go, make_subplots, pl, unified_lf):
     fig.add_trace(
         go.Scatter(
             x=df_plot_filtered["year"],
-            y=df_plot_filtered["official_effective_tariff"],
+            y=df_plot_filtered["average_tariff_official"],
             mode="lines+markers",
             name="Filtered Tariff (ffill + bfill)",
             line=dict(color="orange"),
@@ -275,10 +290,29 @@ def _(CHINA_CC, USA_CC, filtered_lf, go, make_subplots, pl, unified_lf):
 
 
 @app.cell
+def _(CHINA_CC, USA_CC, pl, px, unified_lf):
+    # Median tariff
+    vis_lf_median = (
+        unified_lf.filter(
+            pl.col("reporter_country") == CHINA_CC,
+            pl.col("partner_country") == USA_CC,
+        )
+        .group_by(["year"])
+        .agg(
+            pl.median("average_tariff_official").alias("count_median"),
+        )
+        .sort("year")
+    )
+
+    px.line(vis_lf_median.collect(), x="year", y="count_median")
+    return
+
+
+@app.cell
 def _(CHINA_CC, EFFECT_YEAR_RANGE, USA_CC, filtered_lf, pl):
     ### --- 1. Extract the input data as required
     tariff_us_china_expr = (
-        pl.col("official_effective_tariff")
+        pl.col("average_tariff_official")
         .filter(
             (pl.col("partner_country") == USA_CC)
             & (pl.col("reporter_country") == CHINA_CC)
@@ -386,7 +420,7 @@ def _(EFFECT_YEAR_RANGE):
     )
 
     print(f"Regression formula is:\n{regression_formula}")
-    return (regression_formula,)
+    return
 
 
 @app.cell
@@ -396,10 +430,28 @@ def _(clean_input_df):
 
 
 @app.cell
-def _(clean_input_df, pf, regression_formula):
-    # Default config: robust clustered std errors
-    model = pf.feols(regression_formula, clean_input_df)
-    return (model,)
+def _():
+    # # Default config: robust clustered std errors
+    # model = pf.feols(regression_formula, clean_input_df)
+    return
+
+
+@app.cell
+def _(model):
+    model.summary()
+    return
+
+
+@app.cell
+def _(model):
+    model.fixef()
+    return
+
+
+@app.cell
+def _(model):
+    model.etable
+    return
 
 
 @app.cell
@@ -427,12 +479,6 @@ def _():
 
 
 @app.cell
-def _(model):
-    model.summary()
-    return
-
-
-@app.cell
 def _(mo):
     mo.md(
         r"""
@@ -452,7 +498,7 @@ def _(mo):
 
 
 @app.cell
-def _(model):
+def _(EFFECT_YEAR_RANGE, go, model):
     coefficients = model.coef()
     conf_intervals_beta = model.confint()
 
@@ -460,27 +506,19 @@ def _(model):
     print("Fitted confidence intervals:, ", conf_intervals_beta)
 
     # Extract relevant beta values and their CIs
-    tariff_vars = [f"tariff_interaction_{year}" for year in range(2018, 2023)]
+    tariff_vars = [f"tariff_interaction_{year}" for year in range(2018, 2024)]
 
-    beta_s_values = coefficients[tariff_vars].values
-    ci_lower_beta_s = conf_intervals_beta.loc[tariff_vars, "2.5%"].values
-    ci_upper_beta_s = conf_intervals_beta.loc[tariff_vars, "97.5%"].values
+    beta_s_values = abs(coefficients[tariff_vars].values)
+    ci_lower_beta_s = -conf_intervals_beta.loc[tariff_vars, "2.5%"].values
+    ci_upper_beta_s = -conf_intervals_beta.loc[tariff_vars, "97.5%"].values
 
     # Calculate Elasticity (E_s = -beta_s) and its CI
-    elasticities_mean = -beta_s_values
-    elasticities_ci_lower = -ci_lower_beta_s
-    elasticities_ci_upper = -ci_upper_beta_s
-    return elasticities_ci_lower, elasticities_ci_upper, elasticities_mean
+    elasticities_mean = beta_s_values
+    elasticities_ci_lower = ci_lower_beta_s
+    elasticities_ci_upper = ci_upper_beta_s
 
+    ### DRAW CHART
 
-@app.cell
-def _(
-    EFFECT_YEAR_RANGE,
-    elasticities_ci_lower,
-    elasticities_ci_upper,
-    elasticities_mean,
-    go,
-):
     fig_elasticities = go.Figure()
 
     fig_elasticities.add_trace(
@@ -505,7 +543,6 @@ def _(
             name="95% CI (filled area)",
         )
     )
-
 
     fig_elasticities.add_trace(
         go.Scatter(
@@ -569,9 +606,162 @@ def _(mo):
 
 
 @app.cell
-def _(unified_lf):
-    unified_lf.collect_schema()
+def _(mo):
+    mo.md(
+        r"""
+    ## Regression 2 helper functions:
+
+    A) Get oil exporters
+    B) Prepare the dataframe
+    """
+    )
     return
+
+
+@app.cell
+def _(CHINA_CC, USA_CC, pl):
+    def eq2_filtering_flexible(
+        df: pl.LazyFrame,
+        period1_start_year: str,
+        period1_end_year: str,
+        period2_start_year: str,
+        period2_end_year: str,
+        top_30_importers: list,
+    ) -> pl.DataFrame:
+        # Convert year strings to int for duration calculation
+        p1_start_int = int(period1_start_year)
+        p1_end_int = int(period1_end_year)
+        p2_start_int = int(period2_start_year)
+        p2_end_int = int(period2_end_year)
+
+        period1_duration = p1_end_int - p1_start_int
+        period2_duration = p2_end_int - p2_start_int
+
+        if period1_duration <= 0 or period2_duration <= 0:
+            raise ValueError("End year must be after start year for both periods.")
+
+        relevant_years = [
+            period1_start_year,
+            period1_end_year,
+            period2_start_year,
+            period2_end_year,
+        ]
+
+        # 1. Initial Filtering
+        unified_lf_without_oil_filtered = (
+            df.filter(pl.col("year").is_in(relevant_years))
+            .filter(pl.col("partner_country").is_in(top_30_importers))
+            .filter(pl.col("value") > 0)
+        )
+
+        # 2. Reshape data
+        agg_expressions = [
+            pl.col("value")
+            .filter(pl.col("year") == pl.lit(year))
+            .first()
+            .alias(f"val_{year}")
+            for year in relevant_years
+        ]
+        reshaped_lf = unified_lf_without_oil_filtered.group_by(
+            ["reporter_country", "partner_country", "product_code"]
+        ).agg(agg_expressions)
+
+        val_p1_start_col = f"val_{period1_start_year}"
+        val_p1_end_col = f"val_{period1_end_year}"
+        val_p2_start_col = f"val_{period2_start_year}"
+        val_p2_end_col = f"val_{period2_end_year}"
+
+        # 3. Calculate growth rates for Period 1
+        period1_growth_lf = (
+            reshaped_lf.filter(
+                pl.col(val_p1_start_col).is_not_null()
+                & (pl.col(val_p1_start_col) > 0)
+                & pl.col(val_p1_end_col).is_not_null()
+                & (pl.col(val_p1_end_col) > 0)
+            )
+            .with_columns(
+                y=(
+                    100
+                    * (
+                        pl.col(val_p1_end_col).log()
+                        - pl.col(val_p1_start_col).log()
+                    )
+                    / period1_duration
+                ),
+                PostEvent=pl.lit(0).cast(
+                    pl.Int8
+                ),  # Renamed from Post2017 for generality
+            )
+            .select(
+                [
+                    "reporter_country",
+                    "partner_country",
+                    "product_code",
+                    "y",
+                    "PostEvent",
+                ]
+            )
+        )
+
+        # 4. Calculate growth rates for Period 2
+        period2_growth_lf = (
+            reshaped_lf.filter(
+                pl.col(val_p2_start_col).is_not_null()
+                & (pl.col(val_p2_start_col) > 0)
+                & pl.col(val_p2_end_col).is_not_null()
+                & (pl.col(val_p2_end_col) > 0)
+            )
+            .with_columns(
+                y=(
+                    100
+                    * (
+                        pl.col(val_p2_end_col).log()
+                        - pl.col(val_p2_start_col).log()
+                    )
+                    / period2_duration
+                ),
+                PostEvent=pl.lit(1).cast(pl.Int8),  # Renamed from Post2017
+            )
+            .select(
+                [
+                    "reporter_country",
+                    "partner_country",
+                    "product_code",
+                    "y",
+                    "PostEvent",
+                ]
+            )
+        )
+
+        # 5. Combine the two periods
+        regression_input_lf = pl.concat(
+            [period1_growth_lf, period2_growth_lf], how="vertical"
+        )
+
+        # 6. Add exporter dummies
+        regression_input_lf = regression_input_lf.with_columns(
+            [
+                pl.when(pl.col("reporter_country") == pl.lit(CHINA_CC))
+                .then(pl.lit(1))
+                .otherwise(pl.lit(0))
+                .cast(pl.Int8)
+                .alias("is_CHN_exporter"),
+                pl.when(pl.col("reporter_country") == pl.lit(USA_CC))
+                .then(pl.lit(1))
+                .otherwise(pl.lit(0))
+                .cast(pl.Int8)
+                .alias("is_USA_exporter"),
+            ]
+        )
+
+        regression_df = regression_input_lf.collect()
+
+        # Drop rows with NaN/inf in 'y'
+        regression_df = regression_df.drop_nulls(subset=["y"])
+        regression_df = regression_df.filter(pl.col("y").is_finite())
+
+        return regression_df
+    return (eq2_filtering_flexible,)
 
 
 @app.cell
@@ -676,169 +866,643 @@ def _(pl, without_oil_unified_lf):
 
 
 @app.cell
-def _(CHINA_CC, USA_CC, pl, top_30_importers, without_oil_unified_lf):
-    # 1. Initial Filtering
-    # Filter for relevant years
-    # Filter for top 30 importers
-
-    unified_lf_without_oil_filtered = (
-        without_oil_unified_lf.filter(
-            pl.col("year").is_in(["2012", "2016", "2017", "2022"])
-        )
-        .filter(pl.col("partner_country").is_in(top_30_importers))
-        .filter(
-            pl.col("value") > 0  # Filter out non-positive values early
-        )
+def _(eq2_filtering_flexible, pf, top_30_importers, without_oil_unified_lf):
+    regression_df_0 = eq2_filtering_flexible(
+        without_oil_unified_lf,
+        period1_start_year="2012",
+        period1_end_year="2016",
+        period2_start_year="2017",
+        period2_end_year="2022",
+        top_30_importers=top_30_importers,
     )
-
-    # 2. Reshape data to have year-specific values in columns using group_by and agg
-    reshaped_lf = unified_lf_without_oil_filtered.group_by(
-        ["reporter_country", "partner_country", "product_code"]
-    ).agg(
-        [
-            pl.col("value")
-            .filter(pl.col("year") == pl.lit("2012"))
-            .first()
-            .alias("val_2012"),
-            pl.col("value")
-            .filter(pl.col("year") == pl.lit("2016"))
-            .first()
-            .alias("val_2016"),
-            pl.col("value")
-            .filter(pl.col("year") == pl.lit("2017"))
-            .first()
-            .alias("val_2017"),
-            pl.col("value")
-            .filter(pl.col("year") == pl.lit("2022"))
-            .first()
-            .alias("val_2022"),
-        ]
-    )
-
-    # 3. Calculate growth rates for Period 1 (2012-2016)
-    period1_growth_lf = (
-        reshaped_lf.filter(
-            pl.col("val_2012").is_not_null()
-            & (pl.col("val_2012") > 0)  # Ensure positivity again after aggregation
-            & pl.col("val_2016").is_not_null()
-            & (pl.col("val_2016") > 0)
-        )
-        .with_columns(
-            y=100 * (pl.col("val_2016").log() - pl.col("val_2012").log()) / 4,
-            Post2016=pl.lit(0).cast(pl.Int8),
-        )
-        .select(
-            [
-                "reporter_country",
-                "partner_country",
-                "product_code",
-                "y",
-                "Post2016",
-            ]
-        )
-    )
-
-    # 4. Calculate growth rates for Period 2 (2017-2022)
-    period2_growth_lf = (
-        reshaped_lf.filter(
-            pl.col("val_2017").is_not_null()
-            & (pl.col("val_2017") > 0)
-            & pl.col("val_2022").is_not_null()
-            & (pl.col("val_2022") > 0)
-        )
-        .with_columns(
-            y=100 * (pl.col("val_2022").log() - pl.col("val_2017").log()) / 5,
-            Post2016=pl.lit(1).cast(pl.Int8),
-        )
-        .select(
-            [
-                "reporter_country",
-                "partner_country",
-                "product_code",
-                "y",
-                "Post2016",
-            ]
-        )
-    )
-
-    # 5. Combine the two periods
-    regression_input_lf = pl.concat(
-        [period1_growth_lf, period2_growth_lf], how="vertical"
-    )
-
-    # 6. Add exporter dummies
-    regression_input_lf = regression_input_lf.with_columns(
-        [
-            pl.when(pl.col("reporter_country") == pl.lit(CHINA_CC))
-            .then(pl.lit(1))
-            .otherwise(pl.lit(0))
-            .cast(pl.Int8)
-            .alias("is_CHN_exporter"),
-            pl.when(pl.col("reporter_country") == pl.lit(USA_CC))
-            .then(pl.lit(1))
-            .otherwise(pl.lit(0))
-            .cast(pl.Int8)
-            .alias("is_USA_exporter"),
-        ]
-    )
-
-    regression_df = regression_input_lf.collect()
-
-    # Drop rows with NaN/inf in 'y'
-    regression_df = regression_df.drop_nulls(subset=["y"])
-    regression_df = regression_df.filter(pl.col("y").is_finite())
-    return (regression_df,)
-
-
-@app.cell
-def _(regression_df):
-    regression_df
-    return
-
-
-@app.cell
-def _(pf, regression_df):
-    model_eq2 = pf.feols(
-        fml="y ~ is_CHN_exporter:Post2016 + is_USA_exporter:Post2016 | reporter_country + C(Post2016)",
-        data=regression_df,
+    model_eq2_v0 = pf.feols(
+        fml="y ~ is_CHN_exporter:PostEvent + is_USA_exporter:PostEvent | reporter_country + C(PostEvent)",
+        data=regression_df_0,
         vcov="hetero",
     )
-    return (model_eq2,)
-
-
-@app.cell
-def _():
-    # try:
-    #     if model_eq2:
-    #         with open(
-    #             "src/mpil_tariff_trade_analysis/dev3/model_EQ2_CM_TARFIFF.pkl",
-    #             "wb",
-    #         ) as feq2:
-    #             pickle.dump(model_eq2, feq2)
-    # except NameError:
-    #     print("model not yet defined")
+    model_eq2_v0.summary()
     return
 
 
 @app.cell
-def _():
-    # with open(
-    #     "src/mpil_tariff_trade_analysis/dev3/model_EQ2_CM_TARFIFF.pkl",
-    #     "rb",
-    # ) as fr_eq2:
-    #     model_eq2_loaded = pickle.load(fr_eq2)
+def _(eq2_filtering_flexible, pf, top_30_importers, without_oil_unified_lf):
+    regression_df_v1 = eq2_filtering_flexible(
+        without_oil_unified_lf,
+        period1_start_year="2012",
+        period1_end_year="2017",
+        period2_start_year="2018",
+        period2_end_year="2023",
+        top_30_importers=top_30_importers,
+    )
+    model_eq2_v1 = pf.feols(
+        fml="y ~ is_CHN_exporter:PostEvent + is_USA_exporter:PostEvent | reporter_country + C(PostEvent)",
+        data=regression_df_v1,
+        vcov="hetero",
+    )
+    model_eq2_v1.summary()
     return
 
 
 @app.cell
-def _(model_eq2):
-    model_eq2.summary()
+def _(eq2_filtering_flexible, pf, top_30_importers, without_oil_unified_lf):
+    regression_df_v2 = eq2_filtering_flexible(
+        without_oil_unified_lf,
+        period1_start_year="2012",
+        period1_end_year="2017",
+        period2_start_year="2018",
+        period2_end_year="2022",
+        top_30_importers=top_30_importers,
+    )
+    model_eq2_v2 = pf.feols(
+        fml="y ~ is_CHN_exporter:PostEvent + is_USA_exporter:PostEvent | reporter_country + C(PostEvent)",
+        data=regression_df_v2,
+        vcov="hetero",
+    )
+    model_eq2_v2.summary()
     return
 
 
 @app.cell
-def _(model_eq2):
-    model_eq2.coefplot()
+def _(mo):
+    mo.md(r"""# Modify eq2 for UK and other countries""")
+    return
+
+
+@app.cell(hide_code=True)
+def _(CHINA_CC, USA_CC, pl, pycountry):
+    def eq2_filtering_flexible_THIRDCOUNTRY(
+        df: pl.LazyFrame,
+        country_to_isolate: str,  # The country code of the partner_country to isolate
+        period1_start_year: str,
+        period1_end_year: str,
+        period2_start_year: str,
+        period2_end_year: str,
+        top_30_importers: list,
+    ) -> pl.DataFrame:
+        # Check if the country to isolate is in the top_30_importers list
+        if country_to_isolate not in top_30_importers:
+            raise ValueError(
+                f"Country to isolate '{country_to_isolate}' is not in the top_30_importers list."
+            )
+
+        # Convert year strings to int for duration calculation
+        p1_start_int = int(period1_start_year)
+        p1_end_int = int(period1_end_year)
+        p2_start_int = int(period2_start_year)
+        p2_end_int = int(period2_end_year)
+
+        period1_duration = p1_end_int - p1_start_int
+        period2_duration = p2_end_int - p2_start_int
+
+        if period1_duration <= 0 or period2_duration <= 0:
+            raise ValueError("End year must be after start year for both periods.")
+
+        relevant_years = [
+            period1_start_year,
+            period1_end_year,
+            period2_start_year,
+            period2_end_year,
+        ]
+
+        # 1. Initial Filtering
+        unified_lf_without_oil_filtered = (
+            df.filter(pl.col("year").is_in(relevant_years))
+            .filter(pl.col("partner_country").is_in(top_30_importers))
+            .filter(pl.col("value") > 0)
+        )
+
+        # 2. Reshape data
+        agg_expressions = [
+            pl.col("value")
+            .filter(pl.col("year") == pl.lit(year))
+            .first()
+            .alias(f"val_{year}")
+            for year in relevant_years
+        ]
+        reshaped_lf = unified_lf_without_oil_filtered.group_by(
+            ["reporter_country", "partner_country", "product_code"]
+        ).agg(agg_expressions)
+
+        val_p1_start_col = f"val_{period1_start_year}"
+        val_p1_end_col = f"val_{period1_end_year}"
+        val_p2_start_col = f"val_{period2_start_year}"
+        val_p2_end_col = f"val_{period2_end_year}"
+
+        # 3. Calculate growth rates for Period 1
+        period1_growth_lf = (
+            reshaped_lf.filter(
+                pl.col(val_p1_start_col).is_not_null()
+                & (pl.col(val_p1_start_col) > 0)
+                & pl.col(val_p1_end_col).is_not_null()
+                & (pl.col(val_p1_end_col) > 0)
+            )
+            .with_columns(
+                y=(
+                    100
+                    * (
+                        pl.col(val_p1_end_col).log()
+                        - pl.col(val_p1_start_col).log()
+                    )
+                    / period1_duration
+                ),
+                PostEvent=pl.lit(0).cast(pl.Int8),
+            )
+            .select(
+                [
+                    "reporter_country",
+                    "partner_country",
+                    "product_code",
+                    "y",
+                    "PostEvent",
+                ]
+            )
+        )
+
+        # 4. Calculate growth rates for Period 2
+        period2_growth_lf = (
+            reshaped_lf.filter(
+                pl.col(val_p2_start_col).is_not_null()
+                & (pl.col(val_p2_start_col) > 0)
+                & pl.col(val_p2_end_col).is_not_null()
+                & (pl.col(val_p2_end_col) > 0)
+            )
+            .with_columns(
+                y=(
+                    100
+                    * (
+                        pl.col(val_p2_end_col).log()
+                        - pl.col(val_p2_start_col).log()
+                    )
+                    / period2_duration
+                ),
+                PostEvent=pl.lit(1).cast(pl.Int8),
+            )
+            .select(
+                [
+                    "reporter_country",
+                    "partner_country",
+                    "product_code",
+                    "y",
+                    "PostEvent",
+                ]
+            )
+        )
+
+        # 5. Combine the two periods
+        regression_input_lf = pl.concat(
+            [period1_growth_lf, period2_growth_lf], how="vertical"
+        )
+
+        # 6. Add exporter dummies based on the country_to_isolate
+        # CHN and USA are now hardcoded
+        regression_input_lf = regression_input_lf.with_columns(
+            [
+                pl.when(
+                    (pl.col("reporter_country") == pl.lit(CHINA_CC))
+                    & (pl.col("partner_country") == pl.lit(country_to_isolate))
+                )
+                .then(pl.lit(1))
+                .otherwise(pl.lit(0))
+                .cast(pl.Int8)
+                .alias(
+                    f"is_{pycountry.countries.get(numeric=CHINA_CC).alpha_3}_exporter_{country_to_isolate}_importer"
+                ),
+                pl.when(
+                    (pl.col("reporter_country") == pl.lit(USA_CC))
+                    & (pl.col("partner_country") == pl.lit(country_to_isolate))
+                )
+                .then(pl.lit(1))
+                .otherwise(pl.lit(0))
+                .cast(pl.Int8)
+                .alias(
+                    f"is_{pycountry.countries.get(numeric=USA_CC).alpha_3}_exporter_{country_to_isolate}_importer"
+                ),
+                pl.when(
+                    (pl.col("reporter_country") == pl.lit(CHINA_CC))
+                    & (pl.col("partner_country") != pl.lit(country_to_isolate))
+                )
+                .then(pl.lit(1))
+                .otherwise(pl.lit(0))
+                .cast(pl.Int8)
+                .alias(
+                    f"is_{pycountry.countries.get(numeric=CHINA_CC).alpha_3}_exporter_non{country_to_isolate}_importer"
+                ),
+                pl.when(
+                    (pl.col("reporter_country") == pl.lit(USA_CC))
+                    & (pl.col("partner_country") != pl.lit(country_to_isolate))
+                )
+                .then(pl.lit(1))
+                .otherwise(pl.lit(0))
+                .cast(pl.Int8)
+                .alias(
+                    f"is_{pycountry.countries.get(numeric=USA_CC).alpha_3}_exporter_non{country_to_isolate}_importer"
+                ),
+            ]
+        )
+
+        regression_df = regression_input_lf.collect()
+
+        # Drop rows with NaN/inf in 'y'
+        regression_df = regression_df.drop_nulls(subset=["y"])
+        regression_df = regression_df.filter(pl.col("y").is_finite())
+
+        return regression_df
+    return (eq2_filtering_flexible_THIRDCOUNTRY,)
+
+
+@app.cell
+def _(
+    CHINA_CC,
+    UK_CC,
+    USA_CC,
+    eq2_filtering_flexible_THIRDCOUNTRY,
+    pf,
+    pycountry,
+    top_30_importers,
+    without_oil_unified_lf,
+):
+    country_of_interest = UK_CC
+
+    regression_df_MOD_v0 = eq2_filtering_flexible_THIRDCOUNTRY(
+        without_oil_unified_lf,
+        period1_start_year="2012",
+        period1_end_year="2017",
+        period2_start_year="2018",
+        period2_end_year="2022",
+        top_30_importers=top_30_importers,
+        country_to_isolate=country_of_interest,
+    )
+
+    formula = (
+        f"y ~ "
+        f"is_{pycountry.countries.get(numeric=CHINA_CC).alpha_3}_exporter_{country_of_interest}_importer:PostEvent + "
+        f"is_{pycountry.countries.get(numeric=USA_CC).alpha_3}_exporter_{country_of_interest}_importer:PostEvent + "
+        f"is_{pycountry.countries.get(numeric=CHINA_CC).alpha_3}_exporter_non{country_of_interest}_importer:PostEvent + "
+        f"is_{pycountry.countries.get(numeric=USA_CC).alpha_3}_exporter_non{country_of_interest}_importer:PostEvent "
+        f"| reporter_country + C(PostEvent) + partner_country"
+    )
+
+
+    model_eq2MOD_v0 = pf.feols(
+        fml=formula,
+        data=regression_df_MOD_v0,
+        vcov="hetero",
+    )
+
+    print(" --- Running model, isolating the UK --- ")
+    print(model_eq2MOD_v0.summary())
+    model_eq2MOD_v0.coefplot()
+    return
+
+
+@app.cell
+def _(
+    CHINA_CC,
+    GERMANY_CC,
+    USA_CC,
+    eq2_filtering_flexible_THIRDCOUNTRY,
+    pf,
+    pycountry,
+    top_30_importers,
+    without_oil_unified_lf,
+):
+    def _():
+        country_of_interest = GERMANY_CC
+
+        regression_df_MOD_v0 = eq2_filtering_flexible_THIRDCOUNTRY(
+            without_oil_unified_lf,
+            period1_start_year="2012",
+            period1_end_year="2017",
+            period2_start_year="2018",
+            period2_end_year="2022",
+            top_30_importers=top_30_importers,
+            country_to_isolate=country_of_interest,
+        )
+
+        formula = (
+            f"y ~ "
+            f"is_{pycountry.countries.get(numeric=CHINA_CC).alpha_3}_exporter_{country_of_interest}_importer:PostEvent + "
+            f"is_{pycountry.countries.get(numeric=USA_CC).alpha_3}_exporter_{country_of_interest}_importer:PostEvent + "
+            f"is_{pycountry.countries.get(numeric=CHINA_CC).alpha_3}_exporter_non{country_of_interest}_importer:PostEvent + "
+            f"is_{pycountry.countries.get(numeric=USA_CC).alpha_3}_exporter_non{country_of_interest}_importer:PostEvent "
+            f"| reporter_country + C(PostEvent) + partner_country"
+        )
+
+        model_eq2MOD_v0 = pf.feols(
+            fml=formula,
+            data=regression_df_MOD_v0,
+            vcov="hetero",
+        )
+
+        print(" --- Running model, isolating GERMANY --- ")
+        print(model_eq2MOD_v0.summary())
+        return model_eq2MOD_v0.coefplot()
+
+
+    _()
+    return
+
+
+@app.cell
+def _(
+    CHINA_CC,
+    FRANCE_CC,
+    USA_CC,
+    eq2_filtering_flexible_THIRDCOUNTRY,
+    pf,
+    pycountry,
+    top_30_importers,
+    without_oil_unified_lf,
+):
+    def _():
+        country_of_interest = FRANCE_CC
+
+        regression_df_MOD_v0 = eq2_filtering_flexible_THIRDCOUNTRY(
+            without_oil_unified_lf,
+            period1_start_year="2012",
+            period1_end_year="2017",
+            period2_start_year="2018",
+            period2_end_year="2022",
+            top_30_importers=top_30_importers,
+            country_to_isolate=country_of_interest,
+        )
+
+        formula = (
+            f"y ~ "
+            f"is_{pycountry.countries.get(numeric=CHINA_CC).alpha_3}_exporter_{country_of_interest}_importer:PostEvent + "
+            f"is_{pycountry.countries.get(numeric=USA_CC).alpha_3}_exporter_{country_of_interest}_importer:PostEvent + "
+            f"is_{pycountry.countries.get(numeric=CHINA_CC).alpha_3}_exporter_non{country_of_interest}_importer:PostEvent + "
+            f"is_{pycountry.countries.get(numeric=USA_CC).alpha_3}_exporter_non{country_of_interest}_importer:PostEvent "
+            f"| reporter_country + C(PostEvent) + partner_country"
+        )
+
+        model_eq2MOD_v0 = pf.feols(
+            fml=formula,
+            data=regression_df_MOD_v0,
+            vcov="hetero",
+        )
+
+        print(" --- Running model, isolating France --- ")
+        print(model_eq2MOD_v0.summary())
+        return model_eq2MOD_v0.coefplot()
+
+
+    _()
+    return
+
+
+@app.cell
+def _(
+    CHINA_CC,
+    ITALY_CC,
+    USA_CC,
+    eq2_filtering_flexible_THIRDCOUNTRY,
+    pf,
+    pycountry,
+    top_30_importers,
+    without_oil_unified_lf,
+):
+    def _():
+        country_of_interest = ITALY_CC
+
+        regression_df_MOD_v0 = eq2_filtering_flexible_THIRDCOUNTRY(
+            without_oil_unified_lf,
+            period1_start_year="2012",
+            period1_end_year="2017",
+            period2_start_year="2018",
+            period2_end_year="2022",
+            top_30_importers=top_30_importers,
+            country_to_isolate=country_of_interest,
+        )
+
+        formula = (
+            f"y ~ "
+            f"is_{pycountry.countries.get(numeric=CHINA_CC).alpha_3}_exporter_{country_of_interest}_importer:PostEvent + "
+            f"is_{pycountry.countries.get(numeric=USA_CC).alpha_3}_exporter_{country_of_interest}_importer:PostEvent + "
+            f"is_{pycountry.countries.get(numeric=CHINA_CC).alpha_3}_exporter_non{country_of_interest}_importer:PostEvent + "
+            f"is_{pycountry.countries.get(numeric=USA_CC).alpha_3}_exporter_non{country_of_interest}_importer:PostEvent "
+            f"| reporter_country + C(PostEvent) + partner_country"
+        )
+
+        model_eq2MOD_v0 = pf.feols(
+            fml=formula,
+            data=regression_df_MOD_v0,
+            vcov="hetero",
+        )
+
+        print(" --- Running model, isolating Italy --- ")
+        print(model_eq2MOD_v0.summary())
+        return model_eq2MOD_v0.coefplot()
+
+
+    _()
+    return
+
+
+@app.cell
+def _(
+    CHINA_CC,
+    USA_CC,
+    eq2_filtering_flexible_THIRDCOUNTRY,
+    pf,
+    pycountry,
+    top_30_importers,
+    without_oil_unified_lf,
+):
+    JAPAN_CC = pycountry.countries.search_fuzzy("Japan")[0].numeric
+
+
+    def _():
+        country_of_interest = JAPAN_CC
+
+        regression_df_MOD_v0 = eq2_filtering_flexible_THIRDCOUNTRY(
+            without_oil_unified_lf,
+            period1_start_year="2012",
+            period1_end_year="2017",
+            period2_start_year="2018",
+            period2_end_year="2022",
+            top_30_importers=top_30_importers,
+            country_to_isolate=country_of_interest,
+        )
+
+        formula = (
+            f"y ~ "
+            f"is_{pycountry.countries.get(numeric=CHINA_CC).alpha_3}_exporter_{country_of_interest}_importer:PostEvent + "
+            f"is_{pycountry.countries.get(numeric=USA_CC).alpha_3}_exporter_{country_of_interest}_importer:PostEvent + "
+            f"is_{pycountry.countries.get(numeric=CHINA_CC).alpha_3}_exporter_non{country_of_interest}_importer:PostEvent + "
+            f"is_{pycountry.countries.get(numeric=USA_CC).alpha_3}_exporter_non{country_of_interest}_importer:PostEvent "
+            f"| reporter_country + C(PostEvent) + partner_country"
+        )
+
+        model_eq2MOD_v0 = pf.feols(
+            fml=formula,
+            data=regression_df_MOD_v0,
+            vcov="hetero",
+        )
+
+        print(" --- Running model, isolating Japan --- ")
+        print(model_eq2MOD_v0.summary())
+        return model_eq2MOD_v0.coefplot()
+
+
+    _()
+    return
+
+
+@app.cell
+def _(
+    CHINA_CC,
+    USA_CC,
+    eq2_filtering_flexible_THIRDCOUNTRY,
+    pf,
+    pycountry,
+    top_30_importers,
+    without_oil_unified_lf,
+):
+    AUSTRALIA_CC = pycountry.countries.search_fuzzy("Australia")[0].numeric
+
+
+    def _():
+        country_of_interest = AUSTRALIA_CC
+
+        regression_df_MOD_v0 = eq2_filtering_flexible_THIRDCOUNTRY(
+            without_oil_unified_lf,
+            period1_start_year="2012",
+            period1_end_year="2017",
+            period2_start_year="2018",
+            period2_end_year="2022",
+            top_30_importers=top_30_importers,
+            country_to_isolate=country_of_interest,
+        )
+
+        formula = (
+            f"y ~ "
+            f"is_{pycountry.countries.get(numeric=CHINA_CC).alpha_3}_exporter_{country_of_interest}_importer:PostEvent + "
+            f"is_{pycountry.countries.get(numeric=USA_CC).alpha_3}_exporter_{country_of_interest}_importer:PostEvent + "
+            f"is_{pycountry.countries.get(numeric=CHINA_CC).alpha_3}_exporter_non{country_of_interest}_importer:PostEvent + "
+            f"is_{pycountry.countries.get(numeric=USA_CC).alpha_3}_exporter_non{country_of_interest}_importer:PostEvent "
+            f"| reporter_country + C(PostEvent) + partner_country"
+        )
+
+        model_eq2MOD_v0 = pf.feols(
+            fml=formula,
+            data=regression_df_MOD_v0,
+            vcov="hetero",
+        )
+
+        print(" --- Running model, isolating Australia --- ")
+        print(model_eq2MOD_v0.summary())
+        return model_eq2MOD_v0.coefplot()
+
+
+    _()
+    return
+
+
+@app.cell
+def _(
+    CHINA_CC,
+    USA_CC,
+    eq2_filtering_flexible_THIRDCOUNTRY,
+    pf,
+    pycountry,
+    top_30_importers,
+    without_oil_unified_lf,
+):
+    SINGAPORE_CC = pycountry.countries.search_fuzzy("Singapore")[0].numeric
+
+
+    def _():
+        country_of_interest = SINGAPORE_CC
+
+        regression_df_MOD_v0 = eq2_filtering_flexible_THIRDCOUNTRY(
+            without_oil_unified_lf,
+            period1_start_year="2012",
+            period1_end_year="2017",
+            period2_start_year="2018",
+            period2_end_year="2022",
+            top_30_importers=top_30_importers,
+            country_to_isolate=country_of_interest,
+        )
+
+        formula = (
+            f"y ~ "
+            f"is_{pycountry.countries.get(numeric=CHINA_CC).alpha_3}_exporter_{country_of_interest}_importer:PostEvent + "
+            f"is_{pycountry.countries.get(numeric=USA_CC).alpha_3}_exporter_{country_of_interest}_importer:PostEvent + "
+            f"is_{pycountry.countries.get(numeric=CHINA_CC).alpha_3}_exporter_non{country_of_interest}_importer:PostEvent + "
+            f"is_{pycountry.countries.get(numeric=USA_CC).alpha_3}_exporter_non{country_of_interest}_importer:PostEvent "
+            f"| reporter_country + C(PostEvent) + partner_country"
+        )
+
+        model_eq2MOD_v0 = pf.feols(
+            fml=formula,
+            data=regression_df_MOD_v0,
+            vcov="hetero",
+        )
+
+        print(" --- Running model, isolating Singapore --- ")
+        print(model_eq2MOD_v0.summary())
+        return model_eq2MOD_v0.coefplot()
+
+
+    _()
+    return
+
+
+@app.cell
+def _(
+    CHINA_CC,
+    USA_CC,
+    eq2_filtering_flexible_THIRDCOUNTRY,
+    pf,
+    pycountry,
+    top_30_importers,
+    without_oil_unified_lf,
+):
+    CANADA_CC = pycountry.countries.search_fuzzy("CANADA")[0].numeric
+
+
+    def _():
+        country_of_interest = CANADA_CC
+
+        regression_df_MOD_v0 = eq2_filtering_flexible_THIRDCOUNTRY(
+            without_oil_unified_lf,
+            period1_start_year="2012",
+            period1_end_year="2017",
+            period2_start_year="2018",
+            period2_end_year="2022",
+            top_30_importers=top_30_importers,
+            country_to_isolate=country_of_interest,
+        )
+
+        formula = (
+            f"y ~ "
+            f"is_{pycountry.countries.get(numeric=CHINA_CC).alpha_3}_exporter_{country_of_interest}_importer:PostEvent + "
+            f"is_{pycountry.countries.get(numeric=USA_CC).alpha_3}_exporter_{country_of_interest}_importer:PostEvent + "
+            f"is_{pycountry.countries.get(numeric=CHINA_CC).alpha_3}_exporter_non{country_of_interest}_importer:PostEvent + "
+            f"is_{pycountry.countries.get(numeric=USA_CC).alpha_3}_exporter_non{country_of_interest}_importer:PostEvent "
+            f"| reporter_country + C(PostEvent) + partner_country"
+        )
+
+        model_eq2MOD_v0 = pf.feols(
+            fml=formula,
+            data=regression_df_MOD_v0,
+            vcov="hetero",
+        )
+
+        print(" --- Running model, isolating Singapore --- ")
+        print(model_eq2MOD_v0.summary())
+        return model_eq2MOD_v0.coefplot()
+
+
+    _()
+    return
+
+
+@app.cell
+def _(pycountry, top_30_importers):
+    for cc in top_30_importers:
+        print(pycountry.countries.get(numeric=cc))
     return
 
 
@@ -910,7 +1574,7 @@ def _(
             )
             .with_columns(
                 y=100 * (pl.col("val_2016").log() - pl.col("val_2012").log()) / 4,
-                Post2016=pl.lit(0).cast(pl.Int8),
+                Post2017=pl.lit(0).cast(pl.Int8),
             )
             .select(
                 [
@@ -918,7 +1582,7 @@ def _(
                     "partner_country",
                     "product_code",
                     "y",
-                    "Post2016",
+                    "Post2017",
                 ]
             )
         )
@@ -934,7 +1598,7 @@ def _(
             )
             .with_columns(
                 y=100 * (pl.col("val_2022").log() - pl.col("val_2017").log()) / 5,
-                Post2016=pl.lit(1).cast(pl.Int8),
+                Post2017=pl.lit(1).cast(pl.Int8),
             )
             .select(
                 [
@@ -942,7 +1606,7 @@ def _(
                     "partner_country",
                     "product_code",
                     "y",
-                    "Post2016",
+                    "Post2017",
                 ]
             )
         )
@@ -987,7 +1651,7 @@ def _(
     eq2_spec2_regression_df = eq2_filtering(without_oil_unified_lf_only_targeted)
 
     model_eq2_spec2 = pf.feols(
-        fml="y ~ is_CHN_exporter:Post2016 + is_USA_exporter:Post2016 | reporter_country + C(Post2016)",
+        fml="y ~ is_CHN_exporter:Post2017 + is_USA_exporter:Post2017 | reporter_country + C(Post2017)",
         data=regression_df,
         vcov="hetero",
     )
@@ -1039,7 +1703,7 @@ def _(cm_us_tariffs, eq2_filtering, pf, pl, without_oil_unified_lf):
 
 
     model_eq2_spec3 = pf.feols(
-        fml="y ~ is_CHN_exporter:Post2016 + is_USA_exporter:Post2016 | reporter_country + C(Post2016)",
+        fml="y ~ is_CHN_exporter:Post2017 + is_USA_exporter:Post2017 | reporter_country + C(Post2017)",
         data=regression_df_nontariffed,
         vcov="hetero",
     )

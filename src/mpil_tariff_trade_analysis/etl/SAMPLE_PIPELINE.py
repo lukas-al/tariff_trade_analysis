@@ -40,9 +40,7 @@ def _(pl):
 def _(os, pl, shutil, time):
     print("--- CREATING DATASET SUB-SAMPLES ---")
 
-    def create_and_save_filter(
-        lf: pl.LazyFrame, min_trade_value: int, top_n_countries: int
-    ) -> pl.LazyFrame:
+    def create_and_save_filter(lf: pl.LazyFrame, min_trade_value: int, top_n_countries: int) -> pl.LazyFrame:
         """
         Create a filtered version of the unified dataset based on minimum trade value
         and top N trading countries (by total import + export value).
@@ -63,9 +61,7 @@ def _(os, pl, shutil, time):
         value_col = "value"  # Column name for the trade value
         year_col = "year"  # Column name for the year, used for partitioning
         # Construct a dynamic output path based on parameters
-        output_path = (
-            f"data/final/unified_filtered_{min_trade_value}minval_top{top_n_countries}countries"
-        )
+        output_path = f"data/final/unified_filtered_{min_trade_value}minval_top{top_n_countries}countries"
 
         print("--- Starting Filter Process ---")
         print(f"Parameters: min_trade_value={min_trade_value}, top_n_countries={top_n_countries}")
@@ -99,22 +95,14 @@ def _(os, pl, shutil, time):
 
         # Determine the top N countries based on total volume
         # Use collect(streaming=True) for potentially large grouping operations
-        top_countries_df = (
-            ldf_volumes.sort("total_volume", descending=True)
-            .head(top_n_countries)
-            .collect(engine="streaming")
-        )
+        top_countries_df = ldf_volumes.sort("total_volume", descending=True).head(top_n_countries).collect(engine="streaming")
         top_countries_list = top_countries_df["country"].to_list()  # Get list of country names
 
         print(f"Identified Top {len(top_countries_list)} countries.")
         if top_countries_list:
-            print(
-                f"Sample of top countries: {top_countries_list[:min(10, len(top_countries_list))]}"
-            )
+            print(f"Sample of top countries: {top_countries_list[: min(10, len(top_countries_list))]}")
         else:
-            print(
-                "Warning: No top countries identified. Filtering might result in an empty dataset."
-            )
+            print("Warning: No top countries identified. Filtering might result in an empty dataset.")
 
         # --- Step 2: Filter the original data ---
         print("Applying filters to the dataset (lazy execution)...")
@@ -124,8 +112,7 @@ def _(os, pl, shutil, time):
             pl.col(value_col) >= min_trade_value
         ).filter(
             # Filter 2: Keep rows where BOTH importer and exporter are in the top N list
-            pl.col(importer_col).is_in(top_countries_list)
-            & pl.col(exporter_col).is_in(top_countries_list)
+            pl.col(importer_col).is_in(top_countries_list) & pl.col(exporter_col).is_in(top_countries_list)
         )
 
         # --- Step 3: Write filtered data to partitioned Parquet files ---
@@ -168,12 +155,12 @@ def _(filtered_lf, pl):
     num_rows = filtered_lf.select(pl.len()).collect(engine="streaming").item()
     num_cols = len(filtered_lf.collect_schema().names())
 
-    null_count_lazy = filtered_lf.select(pl.col("effective_tariff").is_null().sum())
+    null_count_lazy = filtered_lf.select(pl.col("average_tariff_official").is_null().sum())
     null_count_effective_tariff = null_count_lazy.collect(engine="streaming").item()
 
     print("--- Summary Statistics for filtered data ---")
     print(f"Dimensions (rows, columns): ({num_rows}, {num_cols})")
-    print(f"Number of null values in 'effective_tariff': {null_count_effective_tariff}")
+    print(f"Number of null values in 'average_tariff_official': {null_count_effective_tariff}")
     print(f"Null percentage = {null_count_effective_tariff / num_rows}")
 
     print("\n--- First 5 Rows (Collected) ---")
@@ -203,7 +190,7 @@ def _(
 ):
     sample_size = 1000000
     random.seed(42)
-    sample_output_path = f"data/final/unified_filtered_{min_trade_value}val_{num_top_countries}c_sample_{int(sample_size/1000)}krows_filter"
+    sample_output_path = f"data/final/unified_filtered_{min_trade_value}val_{num_top_countries}c_sample_{int(sample_size / 1000)}krows_filter"
 
     if os.path.isdir(sample_output_path):
         print("Removing existing dir")
@@ -214,11 +201,7 @@ def _(
     sampled_indices = random.sample(range(num_rows), sample_size)
     indices_series = pl.Series("idx_to_keep", sorted(sampled_indices), dtype=pl.UInt32)
 
-    filtered_lf_sample = (
-        filtered_lf.with_row_index(name="index")
-        .filter(pl.col("index").is_in(indices_series))
-        .drop("index")
-    )
+    filtered_lf_sample = filtered_lf.with_row_index(name="index").filter(pl.col("index").is_in(indices_series)).drop("index")
 
     print(f"Random sample head:\n{filtered_lf_sample.head().collect(engine='streaming')}")
 

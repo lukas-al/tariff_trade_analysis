@@ -17,7 +17,7 @@ ETL_SCRIPT_DIR = Path(__file__).parent / "etl"
 PIPELINE_SCRIPTS = [
     # ETL_SCRIPT_DIR / "BACI_PIPELINE.py",
     # ETL_SCRIPT_DIR / "WITS_PIPELINE.py",
-    ETL_SCRIPT_DIR / "MERGING_PIPELINE.py",
+    # ETL_SCRIPT_DIR / "MERGING_PIPELINE.py",
     # ETL_SCRIPT_DIR / "SAMPLE_PIPELINE.py",
     ETL_SCRIPT_DIR / "DETREND_PIPELINE.py",
     ETL_SCRIPT_DIR / "SPECIFIC_US_TARIFFS.py",
@@ -31,6 +31,7 @@ def run_pipeline():
     pipeline_successful = True
 
     os.environ["POLARS_VERBOSE"] = "0"  # 1 for super busy output
+    os.environ["RUST_BACKTRACE"] = "1"
 
     for script_path in PIPELINE_SCRIPTS:
         if not script_path.exists():

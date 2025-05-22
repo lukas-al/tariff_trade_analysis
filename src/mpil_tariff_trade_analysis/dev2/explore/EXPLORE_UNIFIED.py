@@ -8,18 +8,19 @@ app = marimo.App(width="medium")
 
 @app.cell
 def _():
-    import marimo as mo
-    import polars as pl
-    import time
+    import argparse
     import os
     import random
     import shutil
-    import plotly.express as px
-    import pycountry
-    import plotly.graph_objects as go
+    import time
+
+    import marimo as mo
     import plotly
+    import plotly.express as px
+    import plotly.graph_objects as go
+    import polars as pl
+    import pycountry
     from plotly.subplots import make_subplots
-    import argparse
     return argparse, go, make_subplots, mo, pl, plotly, px, pycountry
 
 
@@ -840,13 +841,13 @@ def _(lf, px):
 
         # --- Option 1: Normalized Histogram using Plotly Express ---
         # Collect the data from the LazyFrame column
-        data_df = arg_lf.select('effective_tariff').collect()
+        data_df = arg_lf.select('average_tariff_official').collect()
 
         # Create the normalized histogram
         # Plotly Express often works directly with Polars DataFrames/Series
         fig_hist = px.histogram(
             data_df.drop_nulls(),
-            x='effective_tariff',
+            x='average_tariff_official',
             histnorm='probability density', # Normalize to represent density
             title='Normalised dist. of effective tariff values',
             nbins=3000,

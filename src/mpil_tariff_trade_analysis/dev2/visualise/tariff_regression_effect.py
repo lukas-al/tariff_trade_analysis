@@ -8,21 +8,22 @@ app = marimo.App(width="medium")
 
 @app.cell
 def _():
-    import marimo as mo
-    import polars as pl
-    import itertools
     import functools
-    import operator
-    import time
+    import itertools
     import math
+    import operator
+    import pickle
+    import time
+    from functools import partial
+    from typing import List
+
+    import marimo as mo
     import plotly.express as px
     import plotly.graph_objects as go
-    from plotly.subplots import make_subplots
+    import polars as pl
     import pycountry
-    import pickle
-    from functools import partial
+    from plotly.subplots import make_subplots
     from tqdm import tqdm
-    from typing import List
     return List, functools, mo, operator, pl, px, tqdm
 
 
@@ -142,8 +143,8 @@ def _(pl):
 
 @app.cell
 def _(pl):
-    import statsmodels.api as sm
     import numpy as np
+    import statsmodels.api as sm
 
     def calculate_trend_params_statsmodels(group_df: pl.DataFrame, target_col_name: str) -> pl.DataFrame:
         """
@@ -248,7 +249,7 @@ def _(functools, operator, pl, tqdm):
         reporter_countries: list[str] = None,
         partner_countries: list[str] = None,
         product_codes: list[str] = None,
-        tariff_col_name: str = 'effective_tariff',
+        tariff_col_name: str = 'average_tariff_official',
         price_col_name: str = 'unit_value'
     ) -> pl.DataFrame:
         """
@@ -258,7 +259,7 @@ def _(functools, operator, pl, tqdm):
         Args:
             unified_lf: The input Polars LazyFrame containing trade data.
                         Expected columns: 'reporter_country', 'partner_country',
-                                          'product_code', 'year', 'effective_tariff',
+                                          'product_code', 'year', 'average_tariff_official',
                                           'unit_value', 'value', 'quantity'.
             start_year: Starting year for analysis (e.g., "2000").
             end_year: End year for analysis (e.g., "2023").
@@ -755,13 +756,13 @@ def _(
     ).agg(
         pl.sum('quantity_rebased'),
         pl.sum('value_rebased'),
-        pl.mean('effective_tariff'),
+        pl.mean('average_tariff_official'),
         pl.mean('unit_value_detrend'),
         pl.mean('unit_value')
     ).sort('year')
     # .with_columns(
     #     (pl.col('value_rebased') / pl.col('quantity_rebased')).alias('unit_value_rebased'),
-    #     (pl.col('effective_tariff').pct_change(n=1)*100).alias('effective_tariff_pct_change')
+    #     (pl.col('average_tariff_official').pct_change(n=1)*100).alias('effective_tariff_pct_change')
     # )
 
     # Chart of aggregate quantities an values
@@ -831,7 +832,7 @@ def _(
         years_before_tariff_change_unit_value=0,
         reporter_countries=['156'], # China exporter, 
         partner_countries=['840'],
-        tariff_col_name='effective_tariff',
+        tariff_col_name='average_tariff_official',
         price_col_name='unit_value_detrend',
     )
 

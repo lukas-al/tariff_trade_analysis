@@ -241,7 +241,7 @@ def _(mo, pl):
         Args:
             filtered_lf: The input Polars LazyFrame containing trade data.
                         Expected columns: 'reporter_country', 'partner_country',
-                                          'product_code', 'year', 'effective_tariff',
+                                          'product_code', 'year', 'average_tariff_official',
                                           'unit_value', 'value', 'quantity'.
             start_year: Starting year for analysis (e.g., "2000").
             end_year: End year for analysis (e.g., "2023").
@@ -389,7 +389,7 @@ def _():
 
     # # tariff_col_name = 'effective_tariff_arcsinh'
     # # price_col_name = 'unit_value_arcsinh'
-    # tariff_col_name = 'effective_tariff'
+    # tariff_col_name = 'average_tariff_official'
     # price_col_name = 'unit_value'
     return
 
@@ -521,7 +521,7 @@ def _(config_form_output, mo):
         price_col_name = "unit_value_arcsinh"
         transform_desc = "arcsinh transformed"
     else:
-        tariff_col_name = "effective_tariff"
+        tariff_col_name = "average_tariff_official"
         price_col_name = "unit_value"
         transform_desc = "standard"
 

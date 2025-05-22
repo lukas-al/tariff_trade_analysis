@@ -9,6 +9,7 @@ def _():
     import marimo as mo
     import networkx as nx
     import polars as pl
+
     return mo, nx, pl
 
 
@@ -42,12 +43,6 @@ def _(mo):
         """
     )
     return
-
-
-@app.cell
-def _(lf, pl):
-    null_rows = lf.filter(pl.col("effective_tariff_rate").is_null())
-    return (null_rows,)
 
 
 @app.cell
@@ -124,9 +119,7 @@ def _(mo):
 
 @app.cell
 def _(null_sample_pd):
-    null_sample_pd.sample(10, random_state=42)[
-        ["Source", "Target", "HS_Code", "Quantity", "Value", "Year"]
-    ]
+    null_sample_pd.sample(10, random_state=42)[["Source", "Target", "HS_Code", "Quantity", "Value", "Year"]]
     return
 
 
@@ -163,12 +156,7 @@ def _(mo):
 def _(lf, pl):
     # Validating
 
-    lf.filter(
-        (pl.col("Source") == "276")
-        & (pl.col("Target") == "144")
-        & (pl.col("Year") == 2008)
-        & (pl.col("HS_Code") == "310520")
-    ).collect()
+    lf.filter((pl.col("Source") == "276") & (pl.col("Target") == "144") & (pl.col("Year") == 2008) & (pl.col("HS_Code") == "310520")).collect()
 
     # The data point exists, but
     return
@@ -200,11 +188,7 @@ def _(pl):
 
 @app.cell
 def _(pl, wits_mfn_lf):
-    wits_mfn_lf.filter(
-        (pl.col("reporter_country") == "144")
-        & (pl.col("product_code") == "310520")
-        & (pl.col("year") == 2008)
-    ).collect()
+    wits_mfn_lf.filter((pl.col("reporter_country") == "144") & (pl.col("product_code") == "310520") & (pl.col("year") == 2008)).collect()
     return
 
 
@@ -259,9 +243,7 @@ def _(lf, pl):
 @app.cell
 def _(pl, wits_mfn_lf):
     # Wits data
-    mfn_cc = set(
-        wits_mfn_lf.select(pl.col("reporter_country")).unique().collect().to_series().to_list()
-    )
+    mfn_cc = set(wits_mfn_lf.select(pl.col("reporter_country")).unique().collect().to_series().to_list())
 
     print(f"Number of unique countries in WITS MFN: {len(mfn_cc)}")
     print(mfn_cc)
@@ -274,9 +256,9 @@ def _(pl):
     wits_pref_lf = pl.scan_parquet("data/intermediate/WITS_AVEPref.parquet")
     wits_pref_lf.collect_schema()
 
-    pref_cc = set(
-        wits_pref_lf.select(pl.col("reporter_country")).unique().collect().to_series().to_list()
-    ) | set(wits_pref_lf.select(pl.col("partner_country")).unique().collect().to_series().to_list())
+    pref_cc = set(wits_pref_lf.select(pl.col("reporter_country")).unique().collect().to_series().to_list()) | set(
+        wits_pref_lf.select(pl.col("partner_country")).unique().collect().to_series().to_list()
+    )
 
     print(f"Number of unique countries in WITS Pref: {len(pref_cc)}")
     print(pref_cc)
@@ -308,9 +290,7 @@ def _():
     wits_country_ref["Numeric Code"] = wits_country_ref["Numeric Code"].astype("str")
 
     # Load the pref groups for wits
-    pref_groups_ref = pd.read_csv(
-        "data/raw/WITS_pref_groups/WITS_pref_groups.csv", encoding="ISO-8859-1"
-    )
+    pref_groups_ref = pd.read_csv("data/raw/WITS_pref_groups/WITS_pref_groups.csv", encoding="ISO-8859-1")
     return baci_country_ref, pd, pref_groups_ref, wits_country_ref
 
 
@@ -337,7 +317,6 @@ def _():
     import pycountry
 
     # When cleaning the input datasets. We run a fuzzy match over the country name, and create a standardised ISO code.
-
     # pycountry.countries.search_fuzzy("asdaf")[0].numeric
     # print(pycountry.countries.get(numeric='250'))
 
@@ -366,9 +345,7 @@ def _(baci_country_ref, pref_cc, pycountry, wits_country_ref):
 
         else:
             # Check the BACI codes first -> get the name and fuzzy match in reverse
-            baci_country = baci_country_ref.loc[baci_country_ref["country_code"] == cc][
-                "country_name"
-            ]
+            baci_country = baci_country_ref.loc[baci_country_ref["country_code"] == cc]["country_name"]
             if not baci_country.empty:
                 try:
                     pycountry_list = pycountry.countries.search_fuzzy(baci_country.values[0])
@@ -377,9 +354,7 @@ def _(baci_country_ref, pref_cc, pycountry, wits_country_ref):
                     pass
 
             # Check the WITS codes
-            wits_country = wits_country_ref.loc[wits_country_ref["Numeric Code"] == cc][
-                "Country Name"
-            ]
+            wits_country = wits_country_ref.loc[wits_country_ref["Numeric Code"] == cc]["Country Name"]
             if not wits_country.empty:
                 try:
                     pycountry_list = pycountry.countries.search_fuzzy(wits_country.values[0])
@@ -419,12 +394,8 @@ def _(baci_country_ref, wits_country_ref):
 
     # First, are there any country codes which aren't in both? If so I'll need to fuzzy match.
 
-    print(
-        f"Num of non-intersecting country names: {len(set(baci_country_ref['country_name']) ^ set(wits_country_ref['Country Name']))}"
-    )
-    print(
-        f"Num of non-intersecting iso3 codes: {len(set(baci_country_ref['country_iso3']) ^ set(wits_country_ref['ISO3']))}"
-    )
+    print(f"Num of non-intersecting country names: {len(set(baci_country_ref['country_name']) ^ set(wits_country_ref['Country Name']))}")
+    print(f"Num of non-intersecting iso3 codes: {len(set(baci_country_ref['country_iso3']) ^ set(wits_country_ref['ISO3']))}")
     return
 
 
