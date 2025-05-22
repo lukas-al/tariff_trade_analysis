@@ -41,3 +41,6 @@ logs/*
 
 # Marimo stuff (though it's already in the working tree...)
 __marimo__/*
+
+# Planning
+planning/*
