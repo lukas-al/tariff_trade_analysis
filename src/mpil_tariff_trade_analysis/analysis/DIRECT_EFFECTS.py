@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.13.6"
+__generated_with = "0.13.8"
 app = marimo.App(width="medium")
 
 
@@ -13,7 +13,6 @@ def _():
     import plotly.graph_objects as go
     import polars as pl
     from plotly.subplots import make_subplots
-
     return argparse, go, make_subplots, mo, pl, px
 
 
@@ -97,14 +96,26 @@ def _(pl):
 
         for column_name in column_names:
             try:
-                lower_bound = ldf.select(pl.col(column_name).quantile(lower_p)).collect().item()
-                upper_bound = ldf.select(pl.col(column_name).quantile(upper_p)).collect().item()
-                ldf_cleaned = ldf_cleaned.filter((pl.col(column_name) >= lower_bound) & (pl.col(column_name) <= upper_bound))
+                lower_bound = (
+                    ldf.select(pl.col(column_name).quantile(lower_p))
+                    .collect()
+                    .item()
+                )
+                upper_bound = (
+                    ldf.select(pl.col(column_name).quantile(upper_p))
+                    .collect()
+                    .item()
+                )
+                ldf_cleaned = ldf_cleaned.filter(
+                    (pl.col(column_name) >= lower_bound)
+                    & (pl.col(column_name) <= upper_bound)
+                )
             except Exception:
-                print(f"Warning: Skipping outlier removal for column '{column_name}'. Ensure it is numeric.")
+                print(
+                    f"Warning: Skipping outlier removal for column '{column_name}'. Ensure it is numeric."
+                )
 
         return ldf_cleaned
-
     return (remove_outliers_by_percentile_lazy,)
 
 
@@ -148,16 +159,22 @@ def _(pl):
                 f"Percentiles must be between 0 and 1, and lower_p must be less than upper_p. Received: lower_p={lower_p}, upper_p={upper_p}"
             )
 
-        df_cleaned = df  # Start with the original df; Polars filter creates new DataFrames
+        df_cleaned = (
+            df  # Start with the original df; Polars filter creates new DataFrames
+        )
         initial_shape = df.shape
         print(f"Initial DataFrame shape: {initial_shape}")
 
         if not column_names:
-            print("Warning: No column names provided for outlier removal. Returning original DataFrame.")
+            print(
+                "Warning: No column names provided for outlier removal. Returning original DataFrame."
+            )
             return df
 
         for column_name in column_names:
-            print(f"\n--- Processing outlier removal for column: '{column_name}' ---")
+            print(
+                f"\n--- Processing outlier removal for column: '{column_name}' ---"
+            )
             # Shape of the DataFrame before attempting to filter for the current column
             shape_before_this_column_filter = df_cleaned.shape
 
@@ -165,12 +182,22 @@ def _(pl):
             try:
                 # Crucially, quantiles are calculated from the original 'df' for each column
                 # to ensure bounds are independent of previous filtering steps on other columns.
-                col_data_for_quantile = df.get_column(column_name)  # Ensures column exists before quantile
-                lower_bound = col_data_for_quantile.quantile(lower_p, interpolation="linear")
-                upper_bound = col_data_for_quantile.quantile(upper_p, interpolation="linear")
+                col_data_for_quantile = df.get_column(
+                    column_name
+                )  # Ensures column exists before quantile
+                lower_bound = col_data_for_quantile.quantile(
+                    lower_p, interpolation="linear"
+                )
+                upper_bound = col_data_for_quantile.quantile(
+                    upper_p, interpolation="linear"
+                )
             except Exception as e:  # Catches PolarsErrors like ColumnNotFoundError or non-numeric errors
-                print(f"Error calculating quantiles for column '{column_name}': {e}")
-                print("Ensure the column exists and is numeric. Skipping outlier removal for this column.")
+                print(
+                    f"Error calculating quantiles for column '{column_name}': {e}"
+                )
+                print(
+                    "Ensure the column exists and is numeric. Skipping outlier removal for this column."
+                )
                 continue  # Skip to the next column_name
 
             # Handle cases where bounds might be None (e.g., column is empty or all nulls in original df)
@@ -191,7 +218,9 @@ def _(pl):
                 )
                 continue
 
-            print(f"Shape before filtering based on '{column_name}': {shape_before_this_column_filter}")
+            print(
+                f"Shape before filtering based on '{column_name}': {shape_before_this_column_filter}"
+            )
             print(
                 f"Using percentiles for '{column_name}': lower={lower_p * 100:.1f}th (value: {lower_bound:.4f}), upper={upper_p * 100:.1f}th (value: {upper_bound:.4f})"
             )
@@ -199,15 +228,24 @@ def _(pl):
             height_before_filter_for_this_col = df_cleaned.height
 
             # Apply filter to the currently processed DataFrame
-            df_cleaned = df_cleaned.filter((pl.col(column_name) >= lower_bound) & (pl.col(column_name) <= upper_bound))
+            df_cleaned = df_cleaned.filter(
+                (pl.col(column_name) >= lower_bound)
+                & (pl.col(column_name) <= upper_bound)
+            )
 
-            removed_count_this_column = height_before_filter_for_this_col - df_cleaned.height
+            removed_count_this_column = (
+                height_before_filter_for_this_col - df_cleaned.height
+            )
 
             if removed_count_this_column > 0:
-                print(f"Number of outliers removed based on '{column_name}': {removed_count_this_column}")
+                print(
+                    f"Number of outliers removed based on '{column_name}': {removed_count_this_column}"
+                )
             else:
                 print(f"No outliers removed based on '{column_name}'.")
-            print(f"Shape after filtering based on '{column_name}': {df_cleaned.shape}")
+            print(
+                f"Shape after filtering based on '{column_name}': {df_cleaned.shape}"
+            )
 
         final_shape = df_cleaned.shape
         total_rows_removed = initial_shape[0] - final_shape[0]
@@ -218,11 +256,10 @@ def _(pl):
         print(f"Total rows removed: {total_rows_removed}")
 
         return df_cleaned
-
     return
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(mo, pl):
     def extract_tariff_changes(
         filtered_lf: pl.LazyFrame,
@@ -260,18 +297,27 @@ def _(mo, pl):
         """
 
         # --- 2. PROCESS TARIFF CHANGES BY YEAR PAIR ---
-        year_pairs = [(str(y1_int), str(y1_int + year_gap)) for y1_int in range(int(start_year), int(end_year) + 1 - year_gap)]
+        year_pairs = [
+            (str(y1_int), str(y1_int + year_gap))
+            for y1_int in range(int(start_year), int(end_year) + 1 - year_gap)
+        ]
 
         group_cols = ["reporter_country", "partner_country", "product_code"]
         extracted_dfs_list = []
 
-        for y1, y2 in mo.status.progress_bar(year_pairs, title="Processing year pairs"):
+        for y1, y2 in mo.status.progress_bar(
+            year_pairs, title="Processing year pairs"
+        ):
             # The years between which we want to measure the price change
-            year_before_imposition = str(int(y1) - years_before_tariff_change_unit_value)
+            year_before_imposition = str(
+                int(y1) - years_before_tariff_change_unit_value
+            )
             year_unit_value_end = str(int(y1) + int(year_unit_value_end_gap))
 
             # Ensure relevant_years are distinct and sorted, useful for filtering
-            relevant_years = sorted(list(set([year_before_imposition, y1, y2, year_unit_value_end])))
+            relevant_years = sorted(
+                list(set([year_before_imposition, y1, y2, year_unit_value_end]))
+            )
 
             changed_groups_lf = (
                 filtered_lf.filter(pl.col("year").is_in(relevant_years))
@@ -288,35 +334,64 @@ def _(mo, pl):
                     ).alias(tariff_col_name + "_change"),
                     # Tariff percentage change calculated between y1 and y2
                     (
-                        (pl.col(tariff_col_name).filter(pl.col("year") == y2).mean() - pl.col(tariff_col_name).filter(pl.col("year") == y1).mean())
-                        / pl.col(tariff_col_name).filter(pl.col("year") == y1).mean()
+                        (
+                            pl.col(tariff_col_name)
+                            .filter(pl.col("year") == y2)
+                            .mean()
+                            - pl.col(tariff_col_name)
+                            .filter(pl.col("year") == y1)
+                            .mean()
+                        )
+                        / pl.col(tariff_col_name)
+                        .filter(pl.col("year") == y1)
+                        .mean()
                         # * 100
                     ).alias(tariff_col_name + "_perc_change"),
                     # Unit value g
                     (
-                        pl.col(price_col_name).filter(pl.col("year") == year_unit_value_end).mean()
-                        - pl.col(price_col_name).filter(pl.col("year") == year_before_imposition).mean()
+                        pl.col(price_col_name)
+                        .filter(pl.col("year") == year_unit_value_end)
+                        .mean()
+                        - pl.col(price_col_name)
+                        .filter(pl.col("year") == year_before_imposition)
+                        .mean()
                     ).alias(price_col_name + "_change"),
                     # Unit value percentage change calculated between year_before_imposition and year_unit_value_end
                     (
                         (
                             (
-                                pl.col(price_col_name).filter(pl.col("year") == year_unit_value_end).mean()
-                                - pl.col(price_col_name).filter(pl.col("year") == year_before_imposition).mean()
+                                pl.col(price_col_name)
+                                .filter(pl.col("year") == year_unit_value_end)
+                                .mean()
+                                - pl.col(price_col_name)
+                                .filter(pl.col("year") == year_before_imposition)
+                                .mean()
                             )
-                            / pl.col(price_col_name).filter(pl.col("year") == year_before_imposition).mean()
+                            / pl.col(price_col_name)
+                            .filter(pl.col("year") == year_before_imposition)
+                            .mean()
                         )
                         * 100
-                    ).alias(price_col_name + "_perc_change"),  # price_col_name+"_perc_change"
+                    ).alias(
+                        price_col_name + "_perc_change"
+                    ),  # price_col_name+"_perc_change"
                     # Value difference calculated between year_before_imposition and year_unit_value_end
                     (
-                        pl.col("value").filter(pl.col("year") == year_unit_value_end).sum()
-                        - pl.col("value").filter(pl.col("year") == year_before_imposition).sum()
+                        pl.col("value")
+                        .filter(pl.col("year") == year_unit_value_end)
+                        .sum()
+                        - pl.col("value")
+                        .filter(pl.col("year") == year_before_imposition)
+                        .sum()
                     ).alias("value_change"),
                     # Quantity difference calculated between year_before_imposition and year_unit_value_end
                     (
-                        pl.col("quantity").filter(pl.col("year") == year_unit_value_end).sum()
-                        - pl.col("quantity").filter(pl.col("year") == year_before_imposition).sum()
+                        pl.col("quantity")
+                        .filter(pl.col("year") == year_unit_value_end)
+                        .sum()
+                        - pl.col("quantity")
+                        .filter(pl.col("year") == year_before_imposition)
+                        .sum()
                     ).alias("quantity_change"),
                 )
                 .filter(
@@ -327,19 +402,22 @@ def _(mo, pl):
                 )
                 .with_columns(
                     pl.lit(y1 + "-" + y2).alias(tariff_col_name + "_change_range"),
-                    pl.lit(year_before_imposition + "-" + year_unit_value_end).alias(price_col_name + "_change_range"),
+                    pl.lit(
+                        year_before_imposition + "-" + year_unit_value_end
+                    ).alias(price_col_name + "_change_range"),
                 )
             )
 
             changed_groups_df = changed_groups_lf.collect()
-            print(f"    Identified {changed_groups_df.height} cases of tariff change between {y1}-{y2}")
+            print(
+                f"    Identified {changed_groups_df.height} cases of tariff change between {y1}-{y2}"
+            )
 
             extracted_dfs_list.append(changed_groups_df)
 
         combined_df = pl.concat(extracted_dfs_list)
 
         return combined_df
-
     return (extract_tariff_changes,)
 
 
@@ -367,180 +445,32 @@ def _(argparse):
 
     # HARDCODE
     args.fullfat = True
-    return
+    return (args,)
 
 
 @app.cell
-def _():
-    # price_change_start = 0 # Number of years before the first year of the tariff change that we start measuring prices.
-    # price_change_end = 2 # Number of years after the last year of the tariff change that we stop measuring prices.
-    # tariff_change_gap = 1 # Gap between years that we're measuring the start of tariff changes
-
-    # reporter_countries = ["156"] # Reporter countries to filter to [China]
-    # partner_countries = ["840"] # Partner countries to filter to [USA]
-    # product_codes = None # Products to filter to
-
-    # if args.fullfat:
-    #     data_to_load = "data/final/unified_trade_tariff_partitioned/"
-    #     print("Running across all the data")
-    # else:
-    #     data_to_load = "data/final/unified_filtered_10000minval_top100countries/"
-    #     print("Running across subset of the data")
-
-    # # tariff_col_name = 'effective_tariff_arcsinh'
-    # # price_col_name = 'unit_value_arcsinh'
-    # tariff_col_name = 'average_tariff_official'
-    # price_col_name = 'unit_value'
-    return
-
-
-@app.cell
-def _(mo):
-    # --- Configuration Defaults ---
-    _DEFAULT_PRICE_CHANGE_START = 0
-    _DEFAULT_PRICE_CHANGE_END = 2
-    _DEFAULT_TARIFF_CHANGE_GAP = 1
-    _DEFAULT_REPORTER_COUNTRIES = ["156"]  # China
-    _DEFAULT_PARTNER_COUNTRIES = ["840"]  # USA
-    _DEFAULT_PRODUCT_CODES = None
-    _DEFAULT_FULLFAT = True
-    _DEFAULT_ARCSINH = False
-
-    # --- UI Elements ---
-    # (Defined exactly as before)
-    use_arcsinh = mo.ui.checkbox(value=_DEFAULT_ARCSINH, label=" ")
-    full_fat_data = mo.ui.checkbox(value=_DEFAULT_FULLFAT, label=" ")
-
-    price_change_start_input = mo.ui.number(
-        start=-5,
-        stop=5,
-        step=1,
-        value=_DEFAULT_PRICE_CHANGE_START,
-        # label="Years before first tariff change:"
-    )
-    price_change_end_input = mo.ui.number(
-        start=0,
-        stop=10,
-        step=1,
-        value=_DEFAULT_PRICE_CHANGE_END,
-        # label="Years after last tariff change:"
-    )
-    tariff_change_gap_input = mo.ui.number(
-        start=0,
-        stop=5,
-        step=1,
-        value=_DEFAULT_TARIFF_CHANGE_GAP,
-        # label="Gap between tariff change years:"
+def _(args):
+    price_change_start = 0  # Number of years before the first year of the tariff change that we start measuring prices.
+    price_change_end = 2  # Number of years after the last year of the tariff change that we stop measuring prices.
+    tariff_change_gap = (
+        1  # Gap between years that we're measuring the start of tariff changes
     )
 
-    reporter_countries_input = mo.ui.text(
-        value=", ".join(_DEFAULT_REPORTER_COUNTRIES),
-        # label="Reporter Countries (comma-separated):"
-    )
-    partner_countries_input = mo.ui.text(
-        value=", ".join(_DEFAULT_PARTNER_COUNTRIES),
-        # label="Partner Countries (comma-separated):"
-    )
-    product_codes_input = mo.ui.text(
-        value="",  # Start empty for None default
-        # label="Product Codes (comma-separated, blank for all):"
-    )
+    reporter_countries = ["156"]  # Reporter countries to filter to [China]
+    partner_countries = ["840"]  # Partner countries to filter to [USA]
+    product_codes = None  # Products to filter to
 
-    # --- Create and Display Form using .batch and .form ---
-    mo.md("""
-    ## Data Analysis Configuration
-
-    Configure the parameters for the trade and tariff analysis.
-    """)
-
-    config_form_output = (
-        mo.md("""
-            # CONFIG - Will not run dynamically in .html mode.
-            **Data Selection:**
-
-            - Use full dataset (uncheck for testing purposes): <br> {full_fat_data}
-            - Reporter Countries (comma-separated, blank for all): <br> {reporter_countries_input}
-            - Partner Countries (comma-separated, blank for all): <br> {partner_countries_input}
-            - Product Codes (comma-separated, blank for all): <br> {product_codes_input}
-
-            **Time Window:**
-
-            - Years before first tariff change: <br> {price_change_start_input}
-            - Years after last tariff change: <br> {price_change_end_input}
-            - Gap between tariff change: <br> {tariff_change_gap_input}
-
-            **Data Transformation:**
-
-            - Use inverse hyperbolic sine transformation: <br> {use_arcsinh}
-    """)
-        .batch(
-            full_fat_data=full_fat_data,
-            reporter_countries_input=reporter_countries_input,
-            partner_countries_input=partner_countries_input,
-            product_codes_input=product_codes_input,
-            price_change_start_input=price_change_start_input,
-            price_change_end_input=price_change_end_input,
-            tariff_change_gap_input=tariff_change_gap_input,
-            use_arcsinh=use_arcsinh,
-        )
-        .form(
-            bordered=True,
-        )
-    )
-
-    config_form_output
-    return (config_form_output,)
-
-
-@app.cell
-def _(config_form_output, mo):
-    price_change_start = config_form_output.value["price_change_start_input"]
-    price_change_end = config_form_output.value["price_change_end_input"]
-    tariff_change_gap = config_form_output.value["tariff_change_gap_input"]
-
-    # Helper to parse comma-separated strings into lists
-    def _parse_codes(text_value):
-        codes = [code.strip() for code in text_value.split(",") if code.strip()]
-        return codes if codes else None
-
-    reporter_countries = _parse_codes(config_form_output.value["reporter_countries_input"])
-    partner_countries = _parse_codes(config_form_output.value["partner_countries_input"])
-    product_codes = _parse_codes(config_form_output.value["product_codes_input"])
-
-    # Determine data path based on checkbox
-    if config_form_output.value["full_fat_data"]:
+    if args.fullfat:
         data_to_load = "data/final/unified_trade_tariff_partitioned/"
-        data_desc = "Full dataset"
+        print("Running across all the data")
     else:
         data_to_load = "data/final/unified_filtered_10000minval_top100countries/"
-        data_desc = "Subset of data"
+        print("Running across subset of the data")
 
-    # Determine column names based on checkbox
-    if config_form_output.value["use_arcsinh"]:
-        tariff_col_name = "effective_tariff_arcsinh"
-        price_col_name = "unit_value_arcsinh"
-        transform_desc = "arcsinh transformed"
-    else:
-        tariff_col_name = "average_tariff_official"
-        price_col_name = "unit_value"
-        transform_desc = "standard"
-
-    # --- Output Display ---
-
-    # Display the current configuration values derived from the UI
-    mo.md(f"""
-    ### Current Configuration:
-
-    * **Data Source:** `{data_desc}` (`{data_to_load}`)
-    * **Reporter Countries:** `{reporter_countries}`
-    * **Partner Countries:** `{partner_countries}`
-    * **Product Codes:** `{product_codes}`
-    * **Price Change Start Offset:** `{price_change_start}` years
-    * **Price Change End Offset:** `{price_change_end}` years
-    * **Tariff Change Gap:** `{tariff_change_gap}` years
-    * **Tariff Column:** `{tariff_col_name}` ({transform_desc})
-    * **Price Column:** `{price_col_name}` ({transform_desc})
-    """)
+    # tariff_col_name = 'effective_tariff_arcsinh'
+    # price_col_name = 'unit_value_arcsinh'
+    tariff_col_name = "average_tariff_official"
+    price_col_name = "unit_value"
     return (
         data_to_load,
         partner_countries,
@@ -552,6 +482,162 @@ def _(config_form_output, mo):
         tariff_change_gap,
         tariff_col_name,
     )
+
+
+@app.cell
+def _():
+    # # --- Configuration Defaults ---
+    # _DEFAULT_PRICE_CHANGE_START = 0
+    # _DEFAULT_PRICE_CHANGE_END = 2
+    # _DEFAULT_TARIFF_CHANGE_GAP = 1
+    # _DEFAULT_REPORTER_COUNTRIES = ["156"]  # China
+    # _DEFAULT_PARTNER_COUNTRIES = ["840"]  # USA
+    # _DEFAULT_PRODUCT_CODES = None
+    # _DEFAULT_FULLFAT = True
+    # _DEFAULT_ARCSINH = False
+
+    # # --- UI Elements ---
+    # # (Defined exactly as before)
+    # use_arcsinh = mo.ui.checkbox(value=_DEFAULT_ARCSINH, label=" ")
+    # full_fat_data = mo.ui.checkbox(value=_DEFAULT_FULLFAT, label=" ")
+
+    # price_change_start_input = mo.ui.number(
+    #     start=-5,
+    #     stop=5,
+    #     step=1,
+    #     value=_DEFAULT_PRICE_CHANGE_START,
+    #     # label="Years before first tariff change:"
+    # )
+    # price_change_end_input = mo.ui.number(
+    #     start=0,
+    #     stop=10,
+    #     step=1,
+    #     value=_DEFAULT_PRICE_CHANGE_END,
+    #     # label="Years after last tariff change:"
+    # )
+    # tariff_change_gap_input = mo.ui.number(
+    #     start=0,
+    #     stop=5,
+    #     step=1,
+    #     value=_DEFAULT_TARIFF_CHANGE_GAP,
+    #     # label="Gap between tariff change years:"
+    # )
+
+    # reporter_countries_input = mo.ui.text(
+    #     value=", ".join(_DEFAULT_REPORTER_COUNTRIES),
+    #     # label="Reporter Countries (comma-separated):"
+    # )
+    # partner_countries_input = mo.ui.text(
+    #     value=", ".join(_DEFAULT_PARTNER_COUNTRIES),
+    #     # label="Partner Countries (comma-separated):"
+    # )
+    # product_codes_input = mo.ui.text(
+    #     value="",  # Start empty for None default
+    #     # label="Product Codes (comma-separated, blank for all):"
+    # )
+
+    # # --- Create and Display Form using .batch and .form ---
+    # mo.md("""
+    # ## Data Analysis Configuration
+
+    # Configure the parameters for the trade and tariff analysis.
+    # """)
+
+    # config_form_output = (
+    #     mo.md("""
+    #         # CONFIG - Will not run dynamically in .html mode.
+    #         **Data Selection:**
+
+    #         - Use full dataset (uncheck for testing purposes): <br> {full_fat_data}
+    #         - Reporter Countries (comma-separated, blank for all): <br> {reporter_countries_input}
+    #         - Partner Countries (comma-separated, blank for all): <br> {partner_countries_input}
+    #         - Product Codes (comma-separated, blank for all): <br> {product_codes_input}
+
+    #         **Time Window:**
+
+    #         - Years before first tariff change: <br> {price_change_start_input}
+    #         - Years after last tariff change: <br> {price_change_end_input}
+    #         - Gap between tariff change: <br> {tariff_change_gap_input}
+
+    #         **Data Transformation:**
+
+    #         - Use inverse hyperbolic sine transformation: <br> {use_arcsinh}
+    # """)
+    #     .batch(
+    #         full_fat_data=full_fat_data,
+    #         reporter_countries_input=reporter_countries_input,
+    #         partner_countries_input=partner_countries_input,
+    #         product_codes_input=product_codes_input,
+    #         price_change_start_input=price_change_start_input,
+    #         price_change_end_input=price_change_end_input,
+    #         tariff_change_gap_input=tariff_change_gap_input,
+    #         use_arcsinh=use_arcsinh,
+    #     )
+    #     .form(
+    #         bordered=True,
+    #     )
+    # )
+
+    # config_form_output
+    return
+
+
+@app.cell
+def _():
+    # price_change_start = config_form_output.value["price_change_start_input"]
+    # price_change_end = config_form_output.value["price_change_end_input"]
+    # tariff_change_gap = config_form_output.value["tariff_change_gap_input"]
+
+
+    # # Helper to parse comma-separated strings into lists
+    # def _parse_codes(text_value):
+    #     codes = [code.strip() for code in text_value.split(",") if code.strip()]
+    #     return codes if codes else None
+
+
+    # reporter_countries = _parse_codes(
+    #     config_form_output.value["reporter_countries_input"]
+    # )
+    # partner_countries = _parse_codes(
+    #     config_form_output.value["partner_countries_input"]
+    # )
+    # product_codes = _parse_codes(config_form_output.value["product_codes_input"])
+
+    # # Determine data path based on checkbox
+    # if config_form_output.value["full_fat_data"]:
+    #     data_to_load = "data/final/unified_trade_tariff_partitioned/"
+    #     data_desc = "Full dataset"
+    # else:
+    #     data_to_load = "data/final/unified_filtered_10000minval_top100countries/"
+    #     data_desc = "Subset of data"
+
+    # # Determine column names based on checkbox
+    # if config_form_output.value["use_arcsinh"]:
+    #     tariff_col_name = "effective_tariff_arcsinh"
+    #     price_col_name = "unit_value_arcsinh"
+    #     transform_desc = "arcsinh transformed"
+    # else:
+    #     tariff_col_name = "average_tariff_official"
+    #     price_col_name = "unit_value"
+    #     transform_desc = "standard"
+
+    # # --- Output Display ---
+
+    # # Display the current configuration values derived from the UI
+    # mo.md(f"""
+    # ### Current Configuration:
+
+    # * **Data Source:** `{data_desc}` (`{data_to_load}`)
+    # * **Reporter Countries:** `{reporter_countries}`
+    # * **Partner Countries:** `{partner_countries}`
+    # * **Product Codes:** `{product_codes}`
+    # * **Price Change Start Offset:** `{price_change_start}` years
+    # * **Price Change End Offset:** `{price_change_end}` years
+    # * **Tariff Change Gap:** `{tariff_change_gap}` years
+    # * **Tariff Column:** `{tariff_col_name}` ({transform_desc})
+    # * **Price Column:** `{price_col_name}` ({transform_desc})
+    # """)
+    return
 
 
 @app.cell
@@ -610,13 +696,19 @@ def _(
 ):
     filtered_lf = unified_lf
     if reporter_countries:
-        filtered_lf = filtered_lf.filter(pl.col("reporter_country").is_in(reporter_countries))
+        filtered_lf = filtered_lf.filter(
+            pl.col("reporter_country").is_in(reporter_countries)
+        )
 
     if partner_countries:
-        filtered_lf = filtered_lf.filter(pl.col("partner_country").is_in(partner_countries))
+        filtered_lf = filtered_lf.filter(
+            pl.col("partner_country").is_in(partner_countries)
+        )
 
     if product_codes:
-        conditions = [pl.col("product_code").str.slice(0, len(p)) == p for p in product_codes]
+        conditions = [
+            pl.col("product_code").str.slice(0, len(p)) == p for p in product_codes
+        ]
         # Combine conditions with an OR
         combined_condition = functools.reduce(operator.or_, conditions)
         filtered_lf = filtered_lf.filter(combined_condition)
@@ -637,7 +729,9 @@ def _(
 @app.cell
 def _(filtered_lf, pl):
     print("--- LDF post filtering: ---")
-    print(f"   Post filtering: {filtered_lf.select(pl.len()).collect().item()} Rows left")
+    print(
+        f"   Post filtering: {filtered_lf.select(pl.len()).collect().item()} Rows left"
+    )
 
     filtered_lf_head = filtered_lf.head().collect()
 
@@ -686,7 +780,9 @@ def _(
         price_col_name=price_col_name,
     )
 
-    print(f"--- Identified {tariff_changes_df.height} cases of tariff change in sample ---")
+    print(
+        f"--- Identified {tariff_changes_df.height} cases of tariff change in sample ---"
+    )
     return (tariff_changes_df,)
 
 
@@ -705,7 +801,9 @@ def _(mo, tariff_changes_df):
         See below a sample of the resulting dataframe.
         """
     )
-    num_idents = mo.stat(value=tariff_changes_df.height, label="Number of tariff changes identified")
+    num_idents = mo.stat(
+        value=tariff_changes_df.height, label="Number of tariff changes identified"
+    )
 
     mo.hstack([txt, num_idents], justify="start", gap="2rem")
     return
@@ -804,7 +902,9 @@ def _(
         price_col_name=price_col_name + "_detrended",
     )
 
-    print(f"--- Identified {tariff_changes_df_detrend.height} cases of tariff change in sample ---")
+    print(
+        f"--- Identified {tariff_changes_df_detrend.height} cases of tariff change in sample ---"
+    )
     return (tariff_changes_df_detrend,)
 
 
@@ -850,7 +950,9 @@ def _(
         # trendline='ols'
     )
 
-    scatter_filtered_detrend.write_html("charts/direct_effects/scatter_detrend_US-CHINA.html")
+    scatter_filtered_detrend.write_html(
+        "charts/direct_effects/scatter_detrend_US-CHINA.html"
+    )
     scatter_filtered_detrend
     return
 
@@ -870,7 +972,12 @@ def _(mo):
 @app.cell
 def _(filtered_lf, pl):
     # Select a product. Plot the global trend against that series.
-    unique_products = filtered_lf.select(pl.col("product_code")).unique().collect().sort("product_code")["product_code"]
+    unique_products = (
+        filtered_lf.select(pl.col("product_code"))
+        .unique()
+        .collect()
+        .sort("product_code")["product_code"]
+    )
     product_of_interest = [unique_products[100]]
 
     product_of_interest = ["845011"]  # AUTOMATIC WASHING MACHINES
@@ -887,7 +994,9 @@ def _(mo):
 
 @app.cell
 def _(filtered_lf, pl, price_col_name, product_of_interest, tariff_col_name):
-    product_df = filtered_lf.filter(pl.col("product_code").is_in(product_of_interest)).collect()
+    product_df = filtered_lf.filter(
+        pl.col("product_code").is_in(product_of_interest)
+    ).collect()
 
     # In case we've selected more than one reporter/partner_country/product_code
     product_df = (
@@ -898,12 +1007,25 @@ def _(filtered_lf, pl, price_col_name, product_of_interest, tariff_col_name):
             pl.mean(tariff_col_name),
             pl.mean(price_col_name + "_detrended"),
             pl.mean(price_col_name),
-            pl.mean("product_global_trend"),
-            weighted_effective_tariff=(pl.col(tariff_col_name) * pl.col("value")).sum() / pl.col("value").sum(),
-            weighted_unit_value_arcsinh=(pl.col(price_col_name) * pl.col("value")).sum() / pl.col("value").sum(),
-            weighted_unit_value_arcsinh_detrended=(pl.col(price_col_name + "_detrended") * pl.col("value")).sum() / pl.col("value").sum(),
-            weighted_unit_value=(pl.col("unit_value") * pl.col("value")).sum() / pl.col("value").sum(),
-            weighted_unit_value_detrended=(pl.col("unit_value_detrended") * pl.col("value")).sum() / pl.col("value").sum(),
+            pl.mean("price_global_trend"),
+            weighted_effective_tariff=(
+                pl.col(tariff_col_name) * pl.col("value")
+            ).sum()
+            / pl.col("value").sum(),
+            weighted_unit_value_arcsinh=(
+                pl.col(price_col_name) * pl.col("value")
+            ).sum()
+            / pl.col("value").sum(),
+            weighted_unit_value_arcsinh_detrended=(
+                pl.col(price_col_name + "_detrended") * pl.col("value")
+            ).sum()
+            / pl.col("value").sum(),
+            weighted_unit_value=(pl.col("unit_value") * pl.col("value")).sum()
+            / pl.col("value").sum(),
+            weighted_unit_value_detrended=(
+                pl.col("unit_value_detrended") * pl.col("value")
+            ).sum()
+            / pl.col("value").sum(),
         )
         .sort("year")
     )
@@ -918,7 +1040,9 @@ def _(filtered_lf, pl, price_col_name, product_of_interest, tariff_col_name):
 
 @app.cell
 def _(mo):
-    mo.md(text="First we visualise the global trend for the product, against the China-US prices")
+    mo.md(
+        text="First we visualise the global trend for the product, against the China-US prices"
+    )
     return
 
 
@@ -928,15 +1052,19 @@ def _(product_df, product_of_interest, px):
     global_trend_vs_series = px.line(
         product_df,
         x="year",
-        y=["weighted_unit_value", "product_global_trend"],
+        y=["weighted_unit_value", "price_global_trend"],
         color="product_code",
         title="Global trend (dotted) vs bilateral price (China-US) (solid)",
     )
 
     # Hack to make the global trend appear as dotted
-    global_trend_vs_series.for_each_trace(lambda trace: trace.update(line_dash="dot") if not trace.showlegend else ())
+    global_trend_vs_series.for_each_trace(
+        lambda trace: trace.update(line_dash="dot") if not trace.showlegend else ()
+    )
 
-    global_trend_vs_series.write_html(f"charts/direct_effects/global_trend_vs_product_{product_of_interest}.html")
+    global_trend_vs_series.write_html(
+        f"charts/direct_effects/global_trend_vs_product_{product_of_interest}.html"
+    )
 
     global_trend_vs_series
     return
@@ -969,7 +1097,9 @@ def _(go, make_subplots, pl, product_df, product_of_interest, px):
 
         # --- Chart 1: Product vs global trend (lines) and detrended (bars) ---
         for i, product in enumerate(unique_product_codes):
-            product_specific_df = product_df.filter(pl.col("product_code") == product)
+            product_specific_df = product_df.filter(
+                pl.col("product_code") == product
+            )
             color = colors[i % len(colors)]
 
             # Line for weighted_unit_value
@@ -990,7 +1120,7 @@ def _(go, make_subplots, pl, product_df, product_of_interest, px):
             fig.add_trace(
                 go.Scatter(
                     x=product_specific_df["year"].cast(pl.Int32),
-                    y=product_specific_df["product_global_trend"],
+                    y=product_specific_df["price_global_trend"],
                     name=f"{product} - Global Trend",
                     legendgroup=f"group-{product}",
                     line=dict(dash="dot", color=color),
@@ -1017,7 +1147,9 @@ def _(go, make_subplots, pl, product_df, product_of_interest, px):
 
         # --- Chart 2: Line of weighted_unit_value_detrended ---
         for i, product in enumerate(unique_product_codes):
-            product_specific_df = product_df.filter(pl.col("product_code") == product)
+            product_specific_df = product_df.filter(
+                pl.col("product_code") == product
+            )
             color = colors[i % len(colors)]
 
             fig.add_trace(
@@ -1042,8 +1174,11 @@ def _(go, make_subplots, pl, product_df, product_of_interest, px):
         fig.update_xaxes(title_text="Year", row=2, col=1)
         fig.update_yaxes(title_text="Value", row=1, col=1)
         fig.update_yaxes(title_text="Detrended Value", row=2, col=1)
-        fig.write_html(f"charts/direct_effects/detrending_effect_{product_of_interest}.html")
+        fig.write_html(
+            f"charts/direct_effects/detrending_effect_{product_of_interest}.html"
+        )
         return fig
+
 
     _()
     return
@@ -1051,7 +1186,9 @@ def _(go, make_subplots, pl, product_df, product_of_interest, px):
 
 @app.cell
 def _(mo):
-    mo.md(text="The below chart places this in the context of the global bilateral trade prices. The red line is the weighted average")
+    mo.md(
+        text="The below chart places this in the context of the global bilateral trade prices. The red line is the weighted average"
+    )
     return
 
 
@@ -1062,7 +1199,9 @@ def _(go, pl, product_of_interest, unified_lf):
     num_top_ij = 75
 
     # First filter for the right year
-    product_specific_lf = unified_lf.filter(pl.col("product_code").is_in(product_of_interest))
+    product_specific_lf = unified_lf.filter(
+        pl.col("product_code").is_in(product_of_interest)
+    )
 
     # Calculate total value for each reporter-partner pair
     top_pairs_ranked_lf = (
@@ -1072,7 +1211,9 @@ def _(go, pl, product_of_interest, unified_lf):
         .head(num_top_ij)
     )
 
-    top_pairs_keys_lf = top_pairs_ranked_lf.select(["reporter_country", "partner_country"])
+    top_pairs_keys_lf = top_pairs_ranked_lf.select(
+        ["reporter_country", "partner_country"]
+    )
 
     # Use an inner join to filter the data
     top_pairs_data_lf = (
@@ -1091,10 +1232,10 @@ def _(go, pl, product_of_interest, unified_lf):
 
     top_pairs_data_df = top_pairs_data_lf.collect()
     product_specific_df = (
-        product_specific_lf.select(["product_global_trend", "year"])
+        product_specific_lf.select(["price_global_trend", "year"])
         .group_by("year")
         .agg(
-            pl.mean("product_global_trend")  # Should only be one value anyway
+            pl.mean("price_global_trend")  # Should only be one value anyway
         )
         .sort("year")
         .collect()
@@ -1102,13 +1243,18 @@ def _(go, pl, product_of_interest, unified_lf):
 
     global_trend_vs_individual_ijk = go.Figure()
 
-    unique_pairs_to_plot = top_pairs_data_df.select(["reporter_country", "partner_country"]).unique()
+    unique_pairs_to_plot = top_pairs_data_df.select(
+        ["reporter_country", "partner_country"]
+    ).unique()
 
     for pair_row in unique_pairs_to_plot.iter_rows(named=True):
         reporter = pair_row["reporter_country"]
         partner = pair_row["partner_country"]
 
-        pair_specific_data = top_pairs_data_df.filter((pl.col("reporter_country") == reporter) & (pl.col("partner_country") == partner)).sort("year")
+        pair_specific_data = top_pairs_data_df.filter(
+            (pl.col("reporter_country") == reporter)
+            & (pl.col("partner_country") == partner)
+        ).sort("year")
 
         global_trend_vs_individual_ijk.add_trace(
             go.Scatter(
@@ -1126,14 +1272,18 @@ def _(go, pl, product_of_interest, unified_lf):
     global_trend_vs_individual_ijk.add_trace(
         go.Scatter(
             x=product_specific_df["year"].cast(pl.Int32),
-            y=product_specific_df["product_global_trend"],
+            y=product_specific_df["price_global_trend"],
             mode="lines",
             line=dict(color="red", width=2.5),
             name="Global Trend",
         )
     )
 
-    title_product_str = product_of_interest[0] if product_of_interest and len(product_of_interest) == 1 else "Selected Product"
+    title_product_str = (
+        product_of_interest[0]
+        if product_of_interest and len(product_of_interest) == 1
+        else "Selected Product"
+    )
     global_trend_vs_individual_ijk.update_layout(
         title=f"Top {num_top_ij} Importer-Exporter Pair Trends vs. Global Trend for Product: {title_product_str}",
         xaxis_title="Year",
@@ -1141,7 +1291,9 @@ def _(go, pl, product_of_interest, unified_lf):
         showlegend=False,  # To show the legend for the 'Global Trend' line
     )
 
-    global_trend_vs_individual_ijk.write_html(f"charts/direct_effects/global_trend_overlayed_{product_of_interest}.html")
+    global_trend_vs_individual_ijk.write_html(
+        f"charts/direct_effects/global_trend_overlayed_{product_of_interest}.html"
+    )
     global_trend_vs_individual_ijk
     return
 
@@ -1171,7 +1323,10 @@ def _(tariff_changes_df_detrend):
 @app.cell
 def _(pl, price_col_name, tariff_changes_df_detrend, tariff_col_name):
     effective_passthroughs_df = tariff_changes_df_detrend.with_columns(
-        (pl.col(price_col_name + "_detrended_change") / pl.col(tariff_col_name + "_change")).alias("effective_passthrough")
+        (
+            pl.col(price_col_name + "_detrended_change")
+            / pl.col(tariff_col_name + "_change")
+        ).alias("effective_passthrough")
     ).select("effective_passthrough")
 
     # Calculate the mean of the finite values
@@ -1257,7 +1412,9 @@ def _(effective_passthroughs_df, mean_val, median_val, px):
     )
 
     print("Showing histogram with mean/median lines and log y-axis:")
-    fig_hist_lines_log_y.write_html("charts/direct_effects/effective_passthrough_hist_logY.html")
+    fig_hist_lines_log_y.write_html(
+        "charts/direct_effects/effective_passthrough_hist_logY.html"
+    )
     fig_hist_lines_log_y
     return
 
@@ -1321,7 +1478,9 @@ def _(mo, pl):
         group_cols_dtypes = {}
         for gc in group_cols:
             dtype = filtered_lf.schema.get(gc)
-            if dtype is None:  # Fallback if column somehow not in schema (though operations would fail earlier)
+            if (
+                dtype is None
+            ):  # Fallback if column somehow not in schema (though operations would fail earlier)
                 dtype = pl.Utf8
             group_cols_dtypes[gc] = dtype
 
@@ -1337,25 +1496,44 @@ def _(mo, pl):
         # --- Part 1: Identify all impulse events (tariff changes) ---
         # y1 is the first year in the pair (y1, y1+year_gap) being compared for tariff change.
         # y1 becomes the 'impulse_year'.
-        change_detection_year_pairs = [(str(y1_int), str(y1_int + year_gap)) for y1_int in range(int(start_year), int(end_year) + 1 - year_gap)]
+        change_detection_year_pairs = [
+            (str(y1_int), str(y1_int + year_gap))
+            for y1_int in range(int(start_year), int(end_year) + 1 - year_gap)
+        ]
 
         if not change_detection_year_pairs:
             return pl.DataFrame(schema=final_output_schema)
 
         list_of_impulse_event_lfs = []
-        for y1_str, y2_str in mo.status.progress_bar(change_detection_year_pairs, title="Identifying tariff change events"):
+        for y1_str, y2_str in mo.status.progress_bar(
+            change_detection_year_pairs, title="Identifying tariff change events"
+        ):
             y1_val = int(y1_str)  # This is the impulse_year
 
             current_event_lf = (
-                filtered_lf.filter(pl.col("year").is_in([y1_str, y2_str]))  # Assumes 'year' in filtered_lf is string
+                filtered_lf.filter(
+                    pl.col("year").is_in([y1_str, y2_str])
+                )  # Assumes 'year' in filtered_lf is string
                 .group_by(group_cols, maintain_order=True)
                 .agg(
-                    pl.col(tariff_col_name).filter(pl.col("year") == y1_str).mean().alias("tariff_y1"),
-                    pl.col(tariff_col_name).filter(pl.col("year") == y2_str).mean().alias("tariff_y2"),
+                    pl.col(tariff_col_name)
+                    .filter(pl.col("year") == y1_str)
+                    .mean()
+                    .alias("tariff_y1"),
+                    pl.col(tariff_col_name)
+                    .filter(pl.col("year") == y2_str)
+                    .mean()
+                    .alias("tariff_y2"),
                 )
-                .with_columns((pl.col("tariff_y2") - pl.col("tariff_y1")).alias("tariff_change_value"))
+                .with_columns(
+                    (pl.col("tariff_y2") - pl.col("tariff_y1")).alias(
+                        "tariff_change_value"
+                    )
+                )
                 .filter(
-                    pl.col("tariff_change_value").is_not_null() & (pl.col("tariff_change_value") != 0.0) & pl.col("tariff_change_value").is_not_nan()
+                    pl.col("tariff_change_value").is_not_null()
+                    & (pl.col("tariff_change_value") != 0.0)
+                    & pl.col("tariff_change_value").is_not_nan()
                 )
                 .select(group_cols + ["tariff_change_value"])
                 .with_columns(pl.lit(y1_val).cast(pl.Int32).alias("impulse_year"))
@@ -1364,18 +1542,26 @@ def _(mo, pl):
 
         # If list_of_impulse_event_lfs is empty (e.g. if change_detection_year_pairs was empty initially, though checked)
         # or if all LFs within are empty (no tariff changes found at all).
-        if not list_of_impulse_event_lfs:  # This specific check might be redundant given earlier check.
+        if (
+            not list_of_impulse_event_lfs
+        ):  # This specific check might be redundant given earlier check.
             return pl.DataFrame(schema=final_output_schema)
 
-        all_impulse_events_lf = pl.concat(list_of_impulse_event_lfs, how="diagonal_relaxed")
+        all_impulse_events_lf = pl.concat(
+            list_of_impulse_event_lfs, how="diagonal_relaxed"
+        )
 
         # --- Part 2: Join with original data to extract price series ---
         # Create a version of filtered_lf with 'year' cast to Int32 for numeric operations.
-        data_with_int_year_lf = filtered_lf.with_columns(pl.col("year").cast(pl.Int32).alias("year_as_int"))
+        data_with_int_year_lf = filtered_lf.with_columns(
+            pl.col("year").cast(pl.Int32).alias("year_as_int")
+        )
 
         # Join identified impulse events with the main data.
         # An empty all_impulse_events_lf will result in an empty series_lf.
-        series_lf = data_with_int_year_lf.join(all_impulse_events_lf, on=group_cols, how="inner")
+        series_lf = data_with_int_year_lf.join(
+            all_impulse_events_lf, on=group_cols, how="inner"
+        )
 
         # Define the window for the time series relative to each impulse_year.
         # time_relative_to_impulse = 0 is the impulse_year itself.
@@ -1388,21 +1574,31 @@ def _(mo, pl):
         if min_relative_offset > max_relative_offset:
             return pl.DataFrame(schema=final_output_schema)
 
-        series_lf = series_lf.with_columns((pl.col("year_as_int") - pl.col("impulse_year")).alias("time_relative_to_impulse")).filter(
-            pl.col("time_relative_to_impulse").is_between(min_relative_offset, max_relative_offset, closed="both")
+        series_lf = series_lf.with_columns(
+            (pl.col("year_as_int") - pl.col("impulse_year")).alias(
+                "time_relative_to_impulse"
+            )
+        ).filter(
+            pl.col("time_relative_to_impulse").is_between(
+                min_relative_offset, max_relative_offset, closed="both"
+            )
         )
 
         # Select and arrange final columns for the output.
         final_selection_cols = group_cols + [
             "impulse_year",
             pl.col("tariff_change_value").alias("tariff_change_at_impulse"),
-            pl.col("year_as_int").alias("year"),  # The actual year of the price data point.
+            pl.col("year_as_int").alias(
+                "year"
+            ),  # The actual year of the price data point.
             price_col_name,
             "time_relative_to_impulse",
             "value",
         ]
 
-        result_lf = series_lf.select(final_selection_cols).sort(group_cols + ["impulse_year", "time_relative_to_impulse"])
+        result_lf = series_lf.select(final_selection_cols).sort(
+            group_cols + ["impulse_year", "time_relative_to_impulse"]
+        )
 
         result_df = result_lf.collect()
 
@@ -1411,7 +1607,6 @@ def _(mo, pl):
             return pl.DataFrame(schema=final_output_schema)
 
         return result_df
-
     return
 
 
@@ -1463,7 +1658,9 @@ def _(mo, pl):
 
         # --- Define Schema for Empty Result ---
         price_dtype = filtered_lf.schema.get(price_col_name, pl.Float64)
-        value_dtype = filtered_lf.schema.get("value", pl.Float64)  # Assuming 'value' column exists
+        value_dtype = filtered_lf.schema.get(
+            "value", pl.Float64
+        )  # Assuming 'value' column exists
         group_cols_dtypes = {}
         for gc in group_cols:
             dtype = filtered_lf.schema.get(gc)
@@ -1483,25 +1680,42 @@ def _(mo, pl):
         }
 
         # --- Part 1: Identify all impulse events (tariff changes) ---
-        change_detection_year_pairs = [(str(y1_int), str(y1_int + year_gap)) for y1_int in range(int(start_year), int(end_year) + 1 - year_gap)]
+        change_detection_year_pairs = [
+            (str(y1_int), str(y1_int + year_gap))
+            for y1_int in range(int(start_year), int(end_year) + 1 - year_gap)
+        ]
 
         if not change_detection_year_pairs:
             return pl.DataFrame(schema=final_output_schema)
 
         list_of_impulse_event_lfs = []
-        for y1_str, y2_str in mo.status.progress_bar(change_detection_year_pairs, title="Identifying tariff change events"):
+        for y1_str, y2_str in mo.status.progress_bar(
+            change_detection_year_pairs, title="Identifying tariff change events"
+        ):
             y1_val = int(y1_str)
 
             current_event_lf = (
                 filtered_lf.filter(pl.col("year").is_in([y1_str, y2_str]))
                 .group_by(group_cols, maintain_order=True)
                 .agg(
-                    pl.col(tariff_col_name).filter(pl.col("year") == y1_str).mean().alias("tariff_y1"),
-                    pl.col(tariff_col_name).filter(pl.col("year") == y2_str).mean().alias("tariff_y2"),
+                    pl.col(tariff_col_name)
+                    .filter(pl.col("year") == y1_str)
+                    .mean()
+                    .alias("tariff_y1"),
+                    pl.col(tariff_col_name)
+                    .filter(pl.col("year") == y2_str)
+                    .mean()
+                    .alias("tariff_y2"),
                 )
-                .with_columns((pl.col("tariff_y2") - pl.col("tariff_y1")).alias("tariff_change_value"))
+                .with_columns(
+                    (pl.col("tariff_y2") - pl.col("tariff_y1")).alias(
+                        "tariff_change_value"
+                    )
+                )
                 .filter(
-                    pl.col("tariff_change_value").is_not_null() & (pl.col("tariff_change_value") != 0.0) & pl.col("tariff_change_value").is_not_nan()
+                    pl.col("tariff_change_value").is_not_null()
+                    & (pl.col("tariff_change_value") != 0.0)
+                    & pl.col("tariff_change_value").is_not_nan()
                 )
                 .select(group_cols + ["tariff_change_value"])
                 .with_columns(pl.lit(y1_val).cast(pl.Int32).alias("impulse_year"))
@@ -1511,12 +1725,18 @@ def _(mo, pl):
         if not list_of_impulse_event_lfs:
             return pl.DataFrame(schema=final_output_schema)
 
-        all_impulse_events_lf = pl.concat(list_of_impulse_event_lfs, how="diagonal_relaxed")
+        all_impulse_events_lf = pl.concat(
+            list_of_impulse_event_lfs, how="diagonal_relaxed"
+        )
 
         # --- Part 2: Join, extract series, and calculate price difference ---
-        data_with_int_year_lf = filtered_lf.with_columns(pl.col("year").cast(pl.Int32).alias("year_as_int"))
+        data_with_int_year_lf = filtered_lf.with_columns(
+            pl.col("year").cast(pl.Int32).alias("year_as_int")
+        )
 
-        series_lf = data_with_int_year_lf.join(all_impulse_events_lf, on=group_cols, how="inner")
+        series_lf = data_with_int_year_lf.join(
+            all_impulse_events_lf, on=group_cols, how="inner"
+        )
 
         min_relative_offset = -years_before_tariff_change
         max_relative_offset = series_length - 1
@@ -1525,8 +1745,14 @@ def _(mo, pl):
             return pl.DataFrame(schema=final_output_schema)
 
         # Calculate relative time and filter time window
-        series_lf = series_lf.with_columns((pl.col("year_as_int") - pl.col("impulse_year")).alias("time_relative_to_impulse")).filter(
-            pl.col("time_relative_to_impulse").is_between(min_relative_offset, max_relative_offset, closed="both")
+        series_lf = series_lf.with_columns(
+            (pl.col("year_as_int") - pl.col("impulse_year")).alias(
+                "time_relative_to_impulse"
+            )
+        ).filter(
+            pl.col("time_relative_to_impulse").is_between(
+                min_relative_offset, max_relative_offset, closed="both"
+            )
         )
 
         # --- Calculate Difference from t=0 ---
@@ -1546,7 +1772,9 @@ def _(mo, pl):
         series_lf = series_lf.filter(pl.col("price_t0").is_not_null())
 
         # Calculate the difference: price[t] - price[t=0]
-        series_lf = series_lf.with_columns((pl.col(price_col_name) - pl.col("price_t0")).alias(price_diff_col_name))
+        series_lf = series_lf.with_columns(
+            (pl.col(price_col_name) - pl.col("price_t0")).alias(price_diff_col_name)
+        )
 
         # --- Select Final Columns ---
         # Include the new difference column, exclude the original price and temporary price_t0
@@ -1559,7 +1787,9 @@ def _(mo, pl):
             "value",  # Include 'value' column as per original select list
         ]
 
-        result_lf = series_lf.select(final_selection_cols).sort(group_cols + ["impulse_year", "time_relative_to_impulse"])
+        result_lf = series_lf.select(final_selection_cols).sort(
+            group_cols + ["impulse_year", "time_relative_to_impulse"]
+        )
 
         result_df = result_lf.collect()
 
@@ -1568,7 +1798,6 @@ def _(mo, pl):
             return pl.DataFrame(schema=final_output_schema)
 
         return result_df
-
     return (extract_tariff_changes_impulse_diff,)
 
 
@@ -1593,8 +1822,8 @@ def _(
 
 
 @app.cell
-def _():
-    # tariff_price_impulse_df.head()
+def _(tariff_price_impulse_df):
+    tariff_price_impulse_df.head()
     return
 
 
@@ -1847,9 +2076,13 @@ def _(go, pl, px):
             price_diff_col_name,
             tariff_change_col_name,
         ]
-        missing_essential = [col for col in essential_cols if col not in results_diff_df.columns]
+        missing_essential = [
+            col for col in essential_cols if col not in results_diff_df.columns
+        ]
         if missing_essential:
-            print(f"[{func_name}] Error: Input DataFrame is missing essential columns: {missing_essential}")
+            print(
+                f"[{func_name}] Error: Input DataFrame is missing essential columns: {missing_essential}"
+            )
             return go.Figure().update_layout(
                 title_text=f"Missing Columns: {missing_essential}",
                 xaxis={"visible": False},
@@ -1859,7 +2092,9 @@ def _(go, pl, px):
 
         # --- Bin Tariff Changes & Calculate Stats ---
         event_id_cols = group_cols + ["impulse_year"]
-        tariff_changes_per_event = results_diff_df.select(event_id_cols + [tariff_change_col_name]).unique(subset=event_id_cols, keep="first")
+        tariff_changes_per_event = results_diff_df.select(
+            event_id_cols + [tariff_change_col_name]
+        ).unique(subset=event_id_cols, keep="first")
 
         # Adjust num_bins if fewer unique events exist
         if tariff_changes_per_event.height < num_bins:
@@ -1873,10 +2108,14 @@ def _(go, pl, px):
 
         try:
             binned_events = tariff_changes_per_event.with_columns(
-                pl.col(tariff_change_col_name).qcut(num_bins, labels=bin_labels).alias(bin_col_name)
+                pl.col(tariff_change_col_name)
+                .qcut(num_bins, labels=bin_labels)
+                .alias(bin_col_name)
             )
         except Exception as e:
-            print(f"[{func_name}] Error binning tariff changes with qcut: {e}. Using pos/neg/zero bins.")
+            print(
+                f"[{func_name}] Error binning tariff changes with qcut: {e}. Using pos/neg/zero bins."
+            )
             binned_events = tariff_changes_per_event.with_columns(
                 pl.when(pl.col(tariff_change_col_name) < 0)
                 .then(pl.lit("Decrease"))
@@ -1885,14 +2124,18 @@ def _(go, pl, px):
                 .otherwise(pl.lit("No Change"))
                 .alias(bin_col_name)
             )
-            bin_labels = sorted(binned_events[bin_col_name].unique().to_list())  # Update labels based on fallback
+            bin_labels = sorted(
+                binned_events[bin_col_name].unique().to_list()
+            )  # Update labels based on fallback
 
         # Calculate Tariff Stats per Bin using the binned data
         print(f"[{func_name}] Calculating tariff change statistics per bin...")
         bin_tariff_stats_df = binned_events.group_by(bin_col_name).agg(
             pl.mean(tariff_change_col_name).alias("mean_tariff_change_in_bin"),
             pl.median(tariff_change_col_name).alias("median_tariff_change_in_bin"),
-            pl.std(tariff_change_col_name).alias("std_tariff_change_in_bin").fill_null(0),
+            pl.std(tariff_change_col_name)
+            .alias("std_tariff_change_in_bin")
+            .fill_null(0),
         )
 
         # --- Join bin info back and Aggregate Price Diff Data ---
@@ -1904,14 +2147,18 @@ def _(go, pl, px):
         )
 
         if plot_df.is_empty():
-            print(f"[{func_name}] No data remaining after joining tariff change bins. Cannot plot.")
+            print(
+                f"[{func_name}] No data remaining after joining tariff change bins. Cannot plot."
+            )
             return go.Figure().update_layout(
                 title_text="No Data After Binning",
                 xaxis={"visible": False},
                 yaxis={"visible": False},
             )
 
-        print(f"[{func_name}] Aggregating price differences by time and tariff change bin...")
+        print(
+            f"[{func_name}] Aggregating price differences by time and tariff change bin..."
+        )
         agg_df = (
             plot_df.group_by(["time_relative_to_impulse", bin_col_name])
             .agg(
@@ -1922,7 +2169,9 @@ def _(go, pl, px):
             )
             # Join the pre-calculated tariff stats for this bin for hover info
             .join(bin_tariff_stats_df, on=bin_col_name, how="left")
-            .sort([bin_col_name, "time_relative_to_impulse"])  # Sort for consistent plotting
+            .sort(
+                [bin_col_name, "time_relative_to_impulse"]
+            )  # Sort for consistent plotting
         )
 
         if agg_df.is_empty():
@@ -1934,15 +2183,19 @@ def _(go, pl, px):
             )
 
         # --- Plot Aggregated Price Diff Data ---
-        print(f"[{func_name}] Plotting average trends using Plotly...")
+        print(f"[{func_name}] Plotting average trends...")
 
         fig = px.line(
-            agg_df.sort("time_relative_to_impulse"),  # Ensure time sorting for lines
+            agg_df.sort(
+                "time_relative_to_impulse"
+            ),  # Ensure time sorting for lines
             x="time_relative_to_impulse",
             y="mean_price_diff",
             color=bin_col_name,  # Use the defined bin column name
             markers=True,
-            category_orders={bin_col_name: bin_labels},  # Use labels for ordering legend/colors
+            category_orders={
+                bin_col_name: bin_labels
+            },  # Use labels for ordering legend/colors
             custom_data=[  # Add the tariff stats columns to custom data
                 "median_price_diff",
                 "std_price_diff",
@@ -1989,7 +2242,6 @@ def _(go, pl, px):
         # fig.show() # Show the main plot
 
         return fig
-
     return (plot_avg_price_difference_by_tariff_bin_plotly,)
 
 
@@ -2003,9 +2255,11 @@ def _(
         results_diff_df=tariff_price_impulse_df,
         price_diff_col_name=price_col_name + "_detrended_diff_from_t0",
         tariff_change_col_name="tariff_change_at_impulse",
-        num_bins=10,
+        num_bins=4,
     )
-    fig_impulse_binned.write_html("charts/direct_effects/binned_price_impulse_response.html")
+    # fig_impulse_binned.write_html(
+    #     "charts/direct_effects/binned_price_impulse_response.html"
+    # )
     fig_impulse_binned
     return
 
@@ -2020,7 +2274,6 @@ def _(mo):
 def _():
     import matplotlib.pyplot as plt
     from scipy import stats
-
     return plt, stats
 
 
@@ -2041,9 +2294,7 @@ def _(mo, price_col_name, tariff_changes_df_detrend):
 
 @app.cell
 def _(change_column_to_test, mo):
-    mo.md(
-        f"""**Figure 1:** Distribution of changes in `{change_column_to_test}`. The plot shows the empirical distribution of the calculated changes, with mean and median values indicated."""
-    )
+    mo.md(f"""**Figure 1:** Distribution of changes in `{change_column_to_test}`. The plot shows the empirical distribution of the calculated changes, with mean and median values indicated.""")
     return
 
 
@@ -2094,15 +2345,15 @@ def _(change_column_to_test, df, px):
 
 @app.cell
 def _(change_column_to_test, mo):
-    mo.md(
-        f"""**Figure 2:** Q-Q (Quantile-Quantile) plot against a normal distribution for `{change_column_to_test}`. Deviations from the red dashed line suggest departures from normality."""
-    )
+    mo.md(f"""**Figure 2:** Q-Q (Quantile-Quantile) plot against a normal distribution for `{change_column_to_test}`. Deviations from the red dashed line suggest departures from normality.""")
     return
 
 
 @app.cell
 def _(change_column_to_test, df, plt, stats):
-    data_for_qq_plot = df[change_column_to_test].to_numpy()  # stats.probplot needs numpy array
+    data_for_qq_plot = df[
+        change_column_to_test
+    ].to_numpy()  # stats.probplot needs numpy array
 
     stats.probplot(data_for_qq_plot, dist="norm", plot=plt)
     plt.title(f"Q-Q Plot for {change_column_to_test}")
@@ -2127,8 +2378,12 @@ def _(change_column_to_test, df, mo, pl, stats):
         sample_mean = df[change_column_to_test].mean()
         if sample_mean is not None:
             ttest_output_md += f"- **Sample Mean:** `{sample_mean:.6f}`\n"
-        ttest_output_md += f"- **T-statistic:** `{onesample_ttest_result.statistic:.4f}`\n"
-        ttest_output_md += f"- **P-value:** `{onesample_ttest_result.pvalue:.6f}`\n\n"
+        ttest_output_md += (
+            f"- **T-statistic:** `{onesample_ttest_result.statistic:.4f}`\n"
+        )
+        ttest_output_md += (
+            f"- **P-value:** `{onesample_ttest_result.pvalue:.6f}`\n\n"
+        )
         alpha = 0.05
         ttest_output_md += "**Interpretation (α = 0.05):**\n"
         if onesample_ttest_result.pvalue < alpha:
@@ -2144,15 +2399,23 @@ def _(change_column_to_test, df, mo, pl, stats):
     # --- Cell 5: One-Sample Wilcoxon Signed-Rank Test Results ---
     wilcoxon_output_md = "### One-Sample Wilcoxon Signed-Rank Test Results\n\n"
     wilcoxon_output_md += f"This non-parametric test assesses if the *median* of the observed changes in `{change_column_to_test}` is significantly different from {popmean_to_test}. Applied as the data is not normally distributed.\n\n"
-    changes_for_wilcoxon_pl = df.filter(pl.col(change_column_to_test) != 0)[change_column_to_test]
+    changes_for_wilcoxon_pl = df.filter(pl.col(change_column_to_test) != 0)[
+        change_column_to_test
+    ]
     changes_for_wilcoxon_np = changes_for_wilcoxon_pl.to_numpy()
 
     if changes_for_wilcoxon_np.size > 0:
-        wilcoxon_result = stats.wilcoxon(changes_for_wilcoxon_np, zero_method="pratt", alternative="two-sided")
+        wilcoxon_result = stats.wilcoxon(
+            changes_for_wilcoxon_np, zero_method="pratt", alternative="two-sided"
+        )
         sample_median = df[change_column_to_test].median()
         if sample_median is not None:
-            wilcoxon_output_md += f"- **Sample Median (original data):** `{sample_median:.6f}`\n"
-        wilcoxon_output_md += f"- **Statistic (W):** `{wilcoxon_result.statistic:.4f}`\n"
+            wilcoxon_output_md += (
+                f"- **Sample Median (original data):** `{sample_median:.6f}`\n"
+            )
+        wilcoxon_output_md += (
+            f"- **Statistic (W):** `{wilcoxon_result.statistic:.4f}`\n"
+        )
         wilcoxon_output_md += f"- **P-value:** `{wilcoxon_result.pvalue:.6f}`\n\n"
         alpha = 0.05
         wilcoxon_output_md += "**Interpretation (α = 0.05):**\n"

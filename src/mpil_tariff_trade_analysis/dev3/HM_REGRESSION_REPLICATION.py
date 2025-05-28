@@ -16,7 +16,7 @@ def _():
     import pandas as pd
     import plotly.graph_objects as go
     from plotly.subplots import make_subplots
-    return go, make_subplots, mo, pd, pf, pl, px, pycountry
+    return go, mo, pd, pf, pl, px, pycountry
 
 
 @app.cell
@@ -59,7 +59,7 @@ def _(pl):
         )
 
         return lf_bfilled_final.drop(temp_ffill_col_name)
-    return (fill_column_grouped_sorted,)
+    return
 
 
 @app.cell(hide_code=True)
@@ -108,6 +108,12 @@ def _(mo):
     Replicating the regression as on page 7 of the paper.
     """
     )
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(r"""## Data prep""")
     return
 
 
@@ -173,7 +179,7 @@ def _(pycountry):
 
 
 @app.cell
-def _(cc_list_incl_ROW, fill_column_grouped_sorted, pl, unified_lf):
+def _(cc_list_incl_ROW, pl, unified_lf):
     ### --- 0. Initial filtering to reduce size and ffill / bfill and report only relevant countries
     filtered_lf = unified_lf.filter(
         (
@@ -182,129 +188,118 @@ def _(cc_list_incl_ROW, fill_column_grouped_sorted, pl, unified_lf):
         )
     )
 
-    filtered_lf = fill_column_grouped_sorted(
-        lazy_df=filtered_lf,
-        column_to_fill="average_tariff_official",
-        group_by_cols=["reporter_country", "partner_country", "product_code"],
-        sort_by_col="year",
-    )
+    # filtered_lf = fill_column_grouped_sorted(
+    #     lazy_df=filtered_lf,
+    #     column_to_fill="average_tariff_official",
+    #     group_by_cols=["reporter_country", "partner_country", "product_code"],
+    #     sort_by_col="year",
+    # )
 
     print("Input lf post forward/backward fill & filter")
     print(filtered_lf.head().collect())
     return (filtered_lf,)
 
 
-@app.cell
-def _(filtered_lf):
-    filtered_lf.collect_schema()
-    return
-
-
-@app.cell
+@app.cell(hide_code=True)
 def _():
-    # tariff_delta = (
-    #     filtered_lf.group_by("year")
-    #     .agg(
-    #         (pl.col("") - pl.col("official_effective_tariff"))
-    #         .mean()
-    #         .alias("official_delta")
+    # # OPTIONAL: Vis the effect of ffill
+    # test_product_code = "511219"
+
+    # vis_lf_raw = unified_lf.filter(
+    #     (
+    #         (pl.col("partner_country") == USA_CC)
+    #         & (pl.col("reporter_country") == CHINA_CC)
+    #         & (pl.col("product_code") == test_product_code)
     #     )
-    #     .collect()
     # )
 
-    # tariff_delta
+    # vis_lf_filtered = filtered_lf.filter(
+    #     (
+    #         (pl.col("partner_country") == USA_CC)
+    #         & (pl.col("reporter_country") == CHINA_CC)
+    #         & (pl.col("product_code") == test_product_code)
+    #     )
+    # )
+
+    # df_plot_raw = vis_lf_raw.collect()
+    # df_plot_filtered = vis_lf_filtered.collect()
+
+    # fig = make_subplots(
+    #     rows=2,
+    #     cols=1,
+    #     subplot_titles=(
+    #         "Raw Effective Tariff",
+    #         "Filtered (ffill) Effective Tariff",
+    #     ),
+    #     shared_xaxes=True,
+    #     vertical_spacing=0.1,
+    # )
+
+    # fig.add_trace(
+    #     go.Scatter(
+    #         x=df_plot_raw["year"],
+    #         y=df_plot_raw["average_tariff"],
+    #         mode="lines+markers",
+    #         name="Raw Tariff",
+    #     ),
+    #     row=1,
+    #     col=1,
+    # )
+
+    # fig.add_trace(
+    #     go.Scatter(
+    #         x=df_plot_filtered["year"],
+    #         y=df_plot_filtered["average_tariff_official"],
+    #         mode="lines+markers",
+    #         name="Filtered Tariff (ffill + bfill)",
+    #         line=dict(color="orange"),
+    #     ),
+    #     row=2,
+    #     col=1,
+    # )
+
+    # # Update layout properties
+    # fig.update_layout(
+    #     height=700,
+    #     title_text=f"Comparison of Raw and Filtered (including Trump Tariffs) Tariffs<br>Product: {test_product_code}, Reporter: {CHINA_CC}, Partner: {USA_CC}",
+    #     showlegend=False,
+    # )
+
+    # fig.update_yaxes(title_text="Effective Tariff", row=1, col=1)
+    # fig.update_yaxes(title_text="Effective Tariff", row=2, col=1)
+    # fig.update_xaxes(title_text="Year", row=2, col=1)
+
+    # fig.show()
+    return
+
+
+@app.cell(hide_code=True)
+def _():
+    # # Median tariff
+    # vis_lf_median = (
+    #     unified_lf.filter(
+    #         pl.col("reporter_country") == CHINA_CC,
+    #         pl.col("partner_country") == USA_CC,
+    #     )
+    #     .group_by(["year"])
+    #     .agg(
+    #         pl.median("average_tariff_official").alias("count_median"),
+    #     )
+    #     .sort("year")
+    # )
+
+    # px.line(
+    #     vis_lf_median.collect(),
+    #     x="year",
+    #     y="count_median",
+    #     title="simple average US->China tariff including trump shock",
+    # )
     return
 
 
 @app.cell
-def _(CHINA_CC, USA_CC, filtered_lf, go, make_subplots, pl, unified_lf):
-    # OPTIONAL: Vis the effect of ffill
-    test_product_code = "511219"
-
-    vis_lf_raw = unified_lf.filter(
-        (
-            (pl.col("partner_country") == USA_CC)
-            & (pl.col("reporter_country") == CHINA_CC)
-            & (pl.col("product_code") == test_product_code)
-        )
-    )
-
-    vis_lf_filtered = filtered_lf.filter(
-        (
-            (pl.col("partner_country") == USA_CC)
-            & (pl.col("reporter_country") == CHINA_CC)
-            & (pl.col("product_code") == test_product_code)
-        )
-    )
-
-    df_plot_raw = vis_lf_raw.collect()
-    df_plot_filtered = vis_lf_filtered.collect()
-
-    fig = make_subplots(
-        rows=2,
-        cols=1,
-        subplot_titles=(
-            "Raw Effective Tariff",
-            "Filtered (ffill) Effective Tariff",
-        ),
-        shared_xaxes=True,
-        vertical_spacing=0.1,
-    )
-
-    fig.add_trace(
-        go.Scatter(
-            x=df_plot_raw["year"],
-            y=df_plot_raw["average_tariff"],
-            mode="lines+markers",
-            name="Raw Tariff",
-        ),
-        row=1,
-        col=1,
-    )
-
-    fig.add_trace(
-        go.Scatter(
-            x=df_plot_filtered["year"],
-            y=df_plot_filtered["average_tariff_official"],
-            mode="lines+markers",
-            name="Filtered Tariff (ffill + bfill)",
-            line=dict(color="orange"),
-        ),
-        row=2,
-        col=1,
-    )
-
-    # Update layout properties
-    fig.update_layout(
-        height=700,
-        title_text=f"Comparison of Raw and Filtered Tariffs<br>Product: {test_product_code}, Reporter: {CHINA_CC}, Partner: {USA_CC}",
-        showlegend=False,
-    )
-
-    fig.update_yaxes(title_text="Effective Tariff", row=1, col=1)
-    fig.update_yaxes(title_text="Effective Tariff", row=2, col=1)
-    fig.update_xaxes(title_text="Year", row=2, col=1)
-
-    fig.show()
-    return
-
-
-@app.cell
-def _(CHINA_CC, USA_CC, pl, px, unified_lf):
-    # Median tariff
-    vis_lf_median = (
-        unified_lf.filter(
-            pl.col("reporter_country") == CHINA_CC,
-            pl.col("partner_country") == USA_CC,
-        )
-        .group_by(["year"])
-        .agg(
-            pl.median("average_tariff_official").alias("count_median"),
-        )
-        .sort("year")
-    )
-
-    px.line(vis_lf_median.collect(), x="year", y="count_median")
+def _(mo):
+    mo.md(r"""## Create regression 1 input""")
     return
 
 
@@ -334,8 +329,8 @@ def _(CHINA_CC, EFFECT_YEAR_RANGE, USA_CC, filtered_lf, pl):
         tariff_us_china_expr,
     ).filter(pl.col("year").is_in(EFFECT_YEAR_RANGE))
 
-    print("Filtered to select only required data:")
-    print(input_lf.head().collect(engine="streaming"))
+    # print("Filtered to select only required data:")
+    # print(input_lf.head().collect(engine="streaming"))
 
     ### --- 2. Create the interaction terms
     for year in EFFECT_YEAR_RANGE:
@@ -350,8 +345,8 @@ def _(CHINA_CC, EFFECT_YEAR_RANGE, USA_CC, filtered_lf, pl):
             .alias(f"tariff_interaction_{year}")
         )
 
-    print("Created interaction term")
-    print(input_lf.head().collect(engine="streaming"))
+    # print("Created interaction term")
+    # print(input_lf.head().collect(engine="streaming"))
 
     ### --- 3. Create variables for fixed effects
     input_lf = input_lf.with_columns(
@@ -386,8 +381,8 @@ def _(CHINA_CC, EFFECT_YEAR_RANGE, USA_CC, filtered_lf, pl):
         .cast(pl.Categorical),
     )
 
-    print("Created fixed effect terms - these are categorical")
-    print(input_lf.head().collect(engine="streaming"))
+    # print("Created fixed effect terms. Final output:")
+    # print(input_lf.head().collect(engine="streaming"))
 
     # Collecting our final input
     input_df = input_lf.collect()
@@ -408,9 +403,14 @@ def _(input_df):
 
 
 @app.cell
+def _(clean_input_df):
+    clean_input_df.head()
+    return
+
+
+@app.cell
 def _(EFFECT_YEAR_RANGE):
     ### --- 3. Define our regression formula
-
     # Remember the summation term!
     regressors = " + ".join(
         [f"tariff_interaction_{year}" for year in EFFECT_YEAR_RANGE]
@@ -418,39 +418,31 @@ def _(EFFECT_YEAR_RANGE):
     regression_formula = (
         f"log_value ~ {regressors} | alpha_ipt + alpha_jpt + alpha_ij"
     )
-
     print(f"Regression formula is:\n{regression_formula}")
-    return
+    return (regression_formula,)
 
 
 @app.cell
-def _(clean_input_df):
-    clean_input_df.head()
-    return
-
-
-@app.cell
-def _():
+def _(clean_input_df, pf, regression_formula):
     # # Default config: robust clustered std errors
-    # model = pf.feols(regression_formula, clean_input_df)
+    model = pf.feols(regression_formula, clean_input_df)
+    return (model,)
+
+
+@app.cell
+def _(mo, model):
+    mo.md(
+        rf"""
+    ### Model summary
+    {model.summary()}
+    """
+    )
     return
 
 
 @app.cell
 def _(model):
     model.summary()
-    return
-
-
-@app.cell
-def _(model):
-    model.fixef()
-    return
-
-
-@app.cell
-def _(model):
-    model.etable
     return
 
 
@@ -486,9 +478,9 @@ def _(mo):
 
     RMSE: standard deviation of the regression residuals (the differences between observed and predicted values).
 
-    R2: X% of the variation in log_quantity is explained by the model including all the fixed effects. Commonly high in FE models given the FE explain a lot of the variation
+    R2: X% of the variation in log_quantity is explained by the model including all the fixed effects.
 
-    R2 Within: measures the proportion of the variation within the fixed effect groups (e.g., within each importer-exporter-product unit over time, after accounting for the broader FEs) that is explained by tariff interaction terms. Low value implies very little variance is in log import_quantities is explained by tariff interaction variables.
+    R2 Within: Measures the proportion of the variation within the fixed effect groups (e.g., within each importer-exporter-product unit over time, after accounting for the broader FEs) that is explained by tariff interaction terms. Low value implies very little variance in log import_quantities is explained by tariff interaction variables.
 
     ## Replicating Figure 2
     What does my equivalent 'figure 2' look like?
@@ -502,8 +494,8 @@ def _(EFFECT_YEAR_RANGE, go, model):
     coefficients = model.coef()
     conf_intervals_beta = model.confint()
 
-    print("Fitted coefficients:, ", coefficients)
-    print("Fitted confidence intervals:, ", conf_intervals_beta)
+    # print("Fitted coefficients:, ", coefficients)
+    # print("Fitted confidence intervals:, ", conf_intervals_beta)
 
     # Extract relevant beta values and their CIs
     tariff_vars = [f"tariff_interaction_{year}" for year in range(2018, 2024)]
@@ -559,7 +551,7 @@ def _(EFFECT_YEAR_RANGE, go, model):
         xaxis_title="Year estimate", yaxis_title="Estimated elasticity"
     )
 
-    fig_elasticities.show()
+    fig_elasticities
     return
 
 
@@ -572,7 +564,6 @@ def _(model):
 @app.cell
 def _(CHINA_CC, USA_CC, pl, px, unified_lf):
     # Just plot US's China imports over time
-
     us_china_trade_through_time = unified_lf.filter(
         pl.col("reporter_country") == CHINA_CC,
         pl.col("partner_country") == USA_CC,
@@ -1508,23 +1499,12 @@ def _(pycountry, top_30_importers):
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""## Run equation 2 again, but filtering for only targeted products (i.e. those which had a tariff applied)"""
-    )
+    mo.md(r"""## Run equation 2 again, but filtering for only targeted products (i.e. those which had a tariff applied)""")
     return
 
 
-@app.cell(hide_code=True)
-def _(
-    CHINA_CC,
-    USA_CC,
-    pd,
-    pf,
-    pl,
-    regression_df,
-    top_30_importers,
-    without_oil_unified_lf,
-):
+@app.cell
+def _(CHINA_CC, USA_CC, pl, top_30_importers):
     def eq2_filtering(df):
         # 1. Initial Filtering
         # Filter for relevant years (2012-2022 for context, but specifically 2012, 2016, 2017, 2022 for pivot)
@@ -1638,9 +1618,13 @@ def _(
         regression_df = regression_df.drop_nulls(subset=["y"])
         regression_df = regression_df.filter(pl.col("y").is_finite())
         return regression_df
+    return (eq2_filtering,)
 
 
-    cm_us_tariffs = pd.read_csv("data/intermediate/carter_mix_hs6_tariffs.csv")
+@app.cell
+def _(eq2_filtering, pd, pf, pl, without_oil_unified_lf):
+    # Filter to only be product codes which are in the tariff bunch
+    cm_us_tariffs = pd.read_csv("data/intermediate/cm_us_tariffs.csv")
 
     without_oil_unified_lf_only_targeted = without_oil_unified_lf.filter(
         pl.col("product_code").is_in(
@@ -1652,27 +1636,16 @@ def _(
 
     model_eq2_spec2 = pf.feols(
         fml="y ~ is_CHN_exporter:Post2017 + is_USA_exporter:Post2017 | reporter_country + C(Post2017)",
-        data=regression_df,
+        data=eq2_spec2_regression_df,
         vcov="hetero",
     )
     model_eq2_spec2.summary()
-    return (
-        cm_us_tariffs,
-        eq2_filtering,
-        eq2_spec2_regression_df,
-        model_eq2_spec2,
-    )
+    return cm_us_tariffs, model_eq2_spec2
 
 
 @app.cell
 def _(model_eq2_spec2):
     model_eq2_spec2.coefplot()
-    return
-
-
-@app.cell
-def _(eq2_spec2_regression_df):
-    eq2_spec2_regression_df
     return
 
 
@@ -1685,9 +1658,7 @@ def _():
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""## Run equation 2 again, but filtering for only non-targeted products (i.e. those which didnt have a tariff applied)"""
-    )
+    mo.md(r"""## Run equation 2 again, but filtering for only non-targeted products (i.e. those which didnt have a tariff applied)""")
     return
 
 

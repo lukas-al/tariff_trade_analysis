@@ -6,8 +6,15 @@
   "cells": [
     {
       "id": "Hbol",
-      "code_hash": "0ddade16caf3e43822cc9ef074e5b90a",
-      "outputs": [],
+      "code_hash": "53aa0f2768f17bb7ca69422c1d8cc10f",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
       "console": []
     },
     {
@@ -24,7 +31,7 @@
     },
     {
       "id": "bkHC",
-      "code_hash": "2e7281975538dd99d03bef87273af538",
+      "code_hash": "6b34931b63cf6b2172b73fc4aea8746d",
       "outputs": [],
       "console": []
     },
@@ -42,13 +49,13 @@
     },
     {
       "id": "Xref",
-      "code_hash": "fb6c1d1879e85b2fb8bd25b83b61c6f1",
+      "code_hash": "a87f37bca04e1be3a24127dc868d7fa0",
       "outputs": [],
       "console": []
     },
     {
       "id": "SFPL",
-      "code_hash": "2c0ea8c805c0bae973d174fb12e67643",
+      "code_hash": "1f8493d09ab553e68f8d12dcc402228d",
       "outputs": [],
       "console": []
     },
@@ -114,15 +121,45 @@
     },
     {
       "id": "TqIu",
-      "code_hash": "2380d027c80daf66c2936b65d78d5086",
-      "outputs": [],
+      "code_hash": "1110edba13045a58361a3488d7ff05ee",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='TqIu-0' random-id='8f386ff3-8d31-595e-6ce7-9c4c385a31f9'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;[{&#92;&quot;product_code&#92;&quot;:&#92;&quot;100111&#92;&quot;,&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2018-12-31T00:00:00.000&#92;&quot;,&#92;&quot;Tariff Rate Applied&#92;&quot;:17.5,&#92;&quot;hs_revision&#92;&quot;:&#92;&quot;HS6&#92;&quot;},{&#92;&quot;product_code&#92;&quot;:&#92;&quot;100119&#92;&quot;,&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2019-11-16T12:00:00.000&#92;&quot;,&#92;&quot;Tariff Rate Applied&#92;&quot;:11.25000065,&#92;&quot;hs_revision&#92;&quot;:&#92;&quot;HS6&#92;&quot;},{&#92;&quot;product_code&#92;&quot;:&#92;&quot;100191&#92;&quot;,&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2019-11-16T12:00:00.000&#92;&quot;,&#92;&quot;Tariff Rate Applied&#92;&quot;:11.25000065,&#92;&quot;hs_revision&#92;&quot;:&#92;&quot;HS6&#92;&quot;},{&#92;&quot;product_code&#92;&quot;:&#92;&quot;100199&#92;&quot;,&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2018-12-31T00:00:00.000&#92;&quot;,&#92;&quot;Tariff Rate Applied&#92;&quot;:17.5,&#92;&quot;hs_revision&#92;&quot;:&#92;&quot;HS6&#92;&quot;},{&#92;&quot;product_code&#92;&quot;:&#92;&quot;100210&#92;&quot;,&#92;&quot;Effective Date&#92;&quot;:&#92;&quot;2019-11-16T12:00:00.000&#92;&quot;,&#92;&quot;Tariff Rate Applied&#92;&quot;:11.25000065,&#92;&quot;hs_revision&#92;&quot;:&#92;&quot;HS6&#92;&quot;}]&quot;' data-total-rows='5' data-total-columns='4' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;product_code&quot;, [&quot;string&quot;, &quot;object&quot;]], [&quot;Effective Date&quot;, [&quot;datetime&quot;, &quot;datetime64[ns]&quot;]], [&quot;Tariff Rate Applied&quot;, [&quot;number&quot;, &quot;float64&quot;]], [&quot;hs_revision&quot;, [&quot;string&quot;, &quot;object&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
       "console": []
     },
     {
       "id": "Vxnm",
       "code_hash": "d19312b002e33cc30db588f7059fd490",
-      "outputs": [],
-      "console": []
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Number of unique product codes before translation: 4873\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Number of H0 codes (not translated): 0\nNumber of HS codes successfully translated (renamed): 0\nNumber of non-H0 HS codes left alone (no translation found): 4873\n"
+        },
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Number of unique product codes after translation: 4873\n"
+        }
+      ]
     },
     {
       "id": "DnEU",
@@ -138,7 +175,7 @@
     },
     {
       "id": "ecfG",
-      "code_hash": "e2dab9dd1ab38061be1bb66917e110a0",
+      "code_hash": "0f2d8cee7b4d186d46aa3ebc7ae556cc",
       "outputs": [],
       "console": []
     },
@@ -150,7 +187,7 @@
     },
     {
       "id": "ZBYS",
-      "code_hash": "e423eaaf17ff41809ed334f267988bb1",
+      "code_hash": "17ba484605c9e44e1aa954d85f4737d5",
       "outputs": [],
       "console": []
     },
@@ -194,6 +231,19 @@
       "id": "aqbW",
       "code_hash": "f647a7082d069f360689bc9f3bf81f3b",
       "outputs": [],
+      "console": []
+    },
+    {
+      "id": "PnUD",
+      "code_hash": "16940c0b7f9537332b47a2515d44b8f2",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
       "console": []
     }
   ]

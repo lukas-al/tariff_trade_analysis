@@ -1333,9 +1333,7 @@ def _():
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""## Map tariff rates to HS codes using CH99 mapping and manual data"""
-    )
+    mo.md(r"""## Map tariff rates to HS codes using CH99 mapping and manual data""")
     return
 
 
@@ -1434,7 +1432,7 @@ def _(Path, pd, pl):
         cm_us_tariffs["Tariff Rate Applied"] * 100
     )
 
-    cm_us_tariffs.head(1)
+    cm_us_tariffs.head()
     return (cm_us_tariffs,)
 
 
@@ -1442,6 +1440,14 @@ def _(Path, pd, pl):
 def _(cm_us_tariffs, pl, vectorized_hs_translation):
     # Remap the cartermix to use HS0
     cm_us_tariffs_remapped = vectorized_hs_translation(pl.LazyFrame(cm_us_tariffs))
+    return (cm_us_tariffs_remapped,)
+
+
+@app.cell
+def _(cm_us_tariffs_remapped):
+    cm_us_tariffs_remapped.collect().write_csv(
+        "data/intermediate/cm_us_tariffs.csv"
+    )
     return
 
 
