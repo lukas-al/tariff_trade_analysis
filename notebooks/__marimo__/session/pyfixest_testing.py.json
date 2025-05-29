@@ -1,0 +1,53 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.13.8"
+  },
+  "cells": [
+    {
+      "id": "Hbol",
+      "code_hash": "e6c6f9b0805c3f769180dccdb98f5fe7",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "fVXh",
+      "code_hash": "ab27948aaf12427a9d1cfde3cd16b797",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "###\n\nEstimation:  OLS\nDep. var.: Y, Fixed effects: f1^f2\nInference:  hetero\nObservations:  997\n\n| Coefficient   |   Estimate |   Std. Error |   t value |   Pr(>|t|) |   2.5% |   97.5% |\n|:--------------|-----------:|-------------:|----------:|-----------:|-------:|--------:|\n| X1            |     -0.879 |        0.104 |    -8.487 |      0.000 | -1.083 |  -0.676 |\n| X2            |     -0.160 |        0.028 |    -5.785 |      0.000 | -0.214 |  -0.106 |\n---\nRMSE: 0.928 R2: 0.838 R2 Within: 0.259 \n"
+        }
+      ]
+    },
+    {
+      "id": "zJzV",
+      "code_hash": "8d777f385d3dfec8815d20f7496026dc",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='zJzV-0' random-id='f790b89e-52ce-70ce-352a-b0b7d7c675f0'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;[{&#92;&quot;Y&#92;&quot;:null,&#92;&quot;Y2&#92;&quot;:2.3571033468,&#92;&quot;X1&#92;&quot;:0.0,&#92;&quot;X2&#92;&quot;:0.4578575807,&#92;&quot;f1&#92;&quot;:15.0,&#92;&quot;f2&#92;&quot;:0.0,&#92;&quot;f3&#92;&quot;:7.0,&#92;&quot;group_id&#92;&quot;:9.0,&#92;&quot;Z1&#92;&quot;:-0.3306068158,&#92;&quot;Z2&#92;&quot;:1.0548261517,&#92;&quot;weights&#92;&quot;:0.661477578},{&#92;&quot;Y&#92;&quot;:-1.4586432515,&#92;&quot;Y2&#92;&quot;:5.1631473589,&#92;&quot;X1&#92;&quot;:null,&#92;&quot;X2&#92;&quot;:-4.998406372,&#92;&quot;f1&#92;&quot;:6.0,&#92;&quot;f2&#92;&quot;:21.0,&#92;&quot;f3&#92;&quot;:4.0,&#92;&quot;group_id&#92;&quot;:8.0,&#92;&quot;Z1&#92;&quot;:null,&#92;&quot;Z2&#92;&quot;:-4.1136901423,&#92;&quot;weights&#92;&quot;:0.7727320549},{&#92;&quot;Y&#92;&quot;:0.1691315858,&#92;&quot;Y2&#92;&quot;:0.7511399955,&#92;&quot;X1&#92;&quot;:2.0,&#92;&quot;X2&#92;&quot;:1.5584795971,&#92;&quot;f1&#92;&quot;:null,&#92;&quot;f2&#92;&quot;:1.0,&#92;&quot;f3&#92;&quot;:7.0,&#92;&quot;group_id&#92;&quot;:16.0,&#92;&quot;Z1&#92;&quot;:1.2077779988,&#92;&quot;Z2&#92;&quot;:0.4652821269,&#92;&quot;weights&#92;&quot;:0.9909285413},{&#92;&quot;Y&#92;&quot;:3.3195134087,&#92;&quot;Y2&#92;&quot;:-2.6563676007,&#92;&quot;X1&#92;&quot;:1.0,&#92;&quot;X2&#92;&quot;:1.5604024687,&#92;&quot;f1&#92;&quot;:1.0,&#92;&quot;f2&#92;&quot;:10.0,&#92;&quot;f3&#92;&quot;:11.0,&#92;&quot;group_id&#92;&quot;:3.0,&#92;&quot;Z1&#92;&quot;:2.8699966848,&#92;&quot;Z2&#92;&quot;:0.4675698474,&#92;&quot;weights&#92;&quot;:0.0211227022},{&#92;&quot;Y&#92;&quot;:0.1344200082,&#92;&quot;Y2&#92;&quot;:-1.8664162284,&#92;&quot;X1&#92;&quot;:2.0,&#92;&quot;X2&#92;&quot;:-3.4722324219,&#92;&quot;f1&#92;&quot;:19.0,&#92;&quot;f2&#92;&quot;:20.0,&#92;&quot;f3&#92;&quot;:6.0,&#92;&quot;group_id&#92;&quot;:14.0,&#92;&quot;Z1&#92;&quot;:0.8358185669,&#92;&quot;Z2&#92;&quot;:-3.1156685172,&#92;&quot;weights&#92;&quot;:0.7908145083},{&#92;&quot;Y&#92;&quot;:-0.2783502354,&#92;&quot;Y2&#92;&quot;:0.9645259537,&#92;&quot;X1&#92;&quot;:2.0,&#92;&quot;X2&#92;&quot;:-2.0377499091,&#92;&quot;f1&#92;&quot;:13.0,&#92;&quot;f2&#92;&quot;:3.0,&#92;&quot;f3&#92;&quot;:11.0,&#92;&quot;group_id&#92;&quot;:15.0,&#92;&quot;Z1&#92;&quot;:1.767161525,&#92;&quot;Z2&#92;&quot;:-2.1051558381,&#92;&quot;weights&#92;&quot;:0.9479432797},{&#92;&quot;Y&#92;&quot;:-1.5197896585,&#92;&quot;Y2&#92;&quot;:-5.3539588009,&#92;&quot;X1&#92;&quot;:1.0,&#92;&quot;X2&#92;&quot;:-7.4753688549,&#92;&quot;f1&#92;&quot;:2.0,&#92;&quot;f2&#92;&quot;:16.0,&#92;&quot;f3&#92;&quot;:0.0,&#92;&quot;group_id&#92;&quot;:18.0,&#92;&quot;Z1&#92;&quot;:2.8685370498,&#92;&quot;Z2&#92;&quot;:-7.1011477644,&#92;&quot;weights&#92;&quot;:0.6055240977},{&#92;&quot;Y&#92;&quot;:-2.0724510504,&#92;&quot;Y2&#92;&quot;:4.9690341798,&#92;&quot;X1&#92;&quot;:0.0,&#92;&quot;X2&#92;&quot;:2.4779777531,&#92;&quot;f1&#92;&quot;:2.0,&#92;&quot;f2&#92;&quot;:23.0,&#92;&quot;f3&#92;&quot;:5.0,&#92;&quot;group_id&#92;&quot;:10.0,&#92;&quot;Z1&#92;&quot;:-2.1767845962,&#92;&quot;Z2&#92;&quot;:2.2220059926,&#92;&quot;weights&#92;&quot;:0.3352672686},{&#92;&quot;Y&#92;&quot;:0.7005250811,&#92;&quot;Y2&#92;&quot;:-3.3756381184,&#92;&quot;X1&#92;&quot;:1.0,&#92;&quot;X2&#92;&quot;:3.3444206955,&#92;&quot;f1&#92;&quot;:16.0,&#92;&quot;f2&#92;&quot;:18.0,&#92;&quot;f3&#92;&quot;:0.0,&#92;&quot;group_id&#92;&quot;:7.0,&#92;&quot;Z1&#92;&quot;:0.1291930385,&#92;&quot;Z2&#92;&quot;:3.2294376469,&#92;&quot;weights&#92;&quot;:0.9395270088},{&#92;&quot;Y&#92;&quot;:-0.3502136867,&#92;&quot;Y2&#92;&quot;:3.3403545796,&#92;&quot;X1&#92;&quot;:2.0,&#92;&quot;X2&#92;&quot;:1.5392706436,&#92;&quot;f1&#92;&quot;:27.0,&#92;&quot;f2&#92;&quot;:7.0,&#92;&quot;f3&#92;&quot;:2.0,&#92;&quot;group_id&#92;&quot;:10.0,&#92;&quot;Z1&#92;&quot;:1.0987688783,&#92;&quot;Z2&#92;&quot;:-1.2387760953,&#92;&quot;weights&#92;&quot;:0.9875797978}]&quot;' data-total-rows='1000' data-total-columns='11' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;Y&quot;, [&quot;number&quot;, &quot;float64&quot;]], [&quot;Y2&quot;, [&quot;number&quot;, &quot;float64&quot;]], [&quot;X1&quot;, [&quot;number&quot;, &quot;float64&quot;]], [&quot;X2&quot;, [&quot;number&quot;, &quot;float64&quot;]], [&quot;f1&quot;, [&quot;number&quot;, &quot;float64&quot;]], [&quot;f2&quot;, [&quot;number&quot;, &quot;float64&quot;]], [&quot;f3&quot;, [&quot;number&quot;, &quot;float64&quot;]], [&quot;group_id&quot;, [&quot;number&quot;, &quot;float64&quot;]], [&quot;Z1&quot;, [&quot;number&quot;, &quot;float64&quot;]], [&quot;Z2&quot;, [&quot;number&quot;, &quot;float64&quot;]], [&quot;weights&quot;, [&quot;number&quot;, &quot;float64&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='true' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    }
+  ]
+}

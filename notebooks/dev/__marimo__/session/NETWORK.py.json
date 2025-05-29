@@ -1,0 +1,226 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.12.8"
+  },
+  "cells": [
+    {
+      "id": "Hbol",
+      "code_hash": "45295391b2f2e704f27fffd1547058ce",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "MJUe",
+      "code_hash": "d0f43454f0aac1a3c764036cd285af64",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "vblA",
+      "code_hash": "dad880f8bf9c4b17a1460ddc10498a34",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "dbf2314f57950d07d6d44fa04069e4f6",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "38fd01b83f0a4462f9a6936be8a1f8e1",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "PKri",
+      "code_hash": "5afe3d981a762a1aeb0ed9b25a63ff22",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "Xref",
+      "code_hash": "6c69675a892d2babcacaea21e492cfad",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "SFPL",
+      "code_hash": "777fe2031bab486487254487daad22d8",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "BYtC",
+      "code_hash": "b27fff7661e2c9796625a700220b50ec",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "RGSE",
+      "code_hash": "64f6b148b127e91812a40ffa1d229418",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "Kclp",
+      "code_hash": "5fb41d42be11990e0f5fa742d6f85759",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "emfo",
+      "code_hash": "9b05e7679b9fc7589c8867e8a9c6b43c",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "Hstk",
+      "code_hash": "1eac3c67742f1736ac15f534c8a6a722",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "nWHF",
+      "code_hash": "e9659ad0add3827e969347f0333de9e5",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "iLit",
+      "code_hash": "f714d077f05070b5bca5680237dbe3ce",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "ZHCJ",
+      "code_hash": "64ad7332f0ee3e264e34219999ff82ff",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "ROlb",
+      "code_hash": "b21f720bb8ace816b8bc3e817667bcf6",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "qnkX",
+      "code_hash": "602fb9869f0ffd15bcf602dbd1f72ff6",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "TqIu",
+      "code_hash": "5799874a353bedeeb388ff338b143f49",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "Vxnm",
+      "code_hash": "bf23020c61136c287de496495145d165",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "DnEU",
+      "code_hash": "689d84b52828859ddf9f100767ca9ce9",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "ulZA",
+      "code_hash": "fc31c4a2b31e788d6b1dc52df451116a",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "ecfG",
+      "code_hash": "f68a84098b2fc1d44c6c8e0e611dfe11",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Pvdt",
+      "code_hash": "b23bdf80080399486668c328e402b436",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "  country_code    country_name country_iso2 country_iso3\n0            4     Afghanistan           AF          AFG\n1            8         Albania           AL          ALB\n2           12         Algeria           DZ          DZA\n3           16  American Samoa           AS          ASM\n4           20         Andorra           AD          AND\n----\n     Country Name ISO3 Numeric Code\n0     Afghanistan  AFG            4\n1         Albania  ALB            8\n2         Algeria  DZA           12\n3  American Samoa  ASM           16\n4         Andorra  AND           20\n----\n  RegionCode              RegionName  Partner      PartnerName\n0        00A  Australia GSP for LDCs        4      Afghanistan\n1        00A  Australia GSP for LDCs       24           Angola\n2        00A  Australia GSP for LDCs       50       Bangladesh\n3        00A  Australia GSP for LDCs       64           Bhutan\n4        00A  Australia GSP for LDCs       90  Solomon Islands\n"
+        }
+      ]
+    },
+    {
+      "id": "ZBYS",
+      "code_hash": "f4a79d20a62bb1a0aa9919c261229c75",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "aLJB",
+      "code_hash": "705822b27a09f1307ecc54bec5729bfb",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "nHfw",
+      "code_hash": "be14ef5ddc71918ea48d13caad81dde4",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "xXTn",
+      "code_hash": "8deae5216d0b9181b6ed3caa4682507a",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "AjVT",
+      "code_hash": "1de252808dc32c6d992118093c8b5cd7",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "pHFh",
+      "code_hash": null,
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "NCOB",
+      "code_hash": "c4eca4a4754829e252d4566e9d6898dc",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "aqbW",
+      "code_hash": "686fe3d338a5b964f793338d303a4b7a",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "TRpd",
+      "code_hash": "89207e7e83c64f69805fac4f5069f9c4",
+      "outputs": [],
+      "console": []
+    }
+  ]
+}

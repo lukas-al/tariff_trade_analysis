@@ -1,0 +1,422 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.13.8"
+  },
+  "cells": [
+    {
+      "id": "Hbol",
+      "code_hash": "5bef0e82523e738e3fcb0c6e8909e1ab",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "MJUe",
+      "code_hash": "db775812188af0b68bf9f6c934ef2e33",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "vblA",
+      "code_hash": "a6778989e21c991c0d3196c7d18af75d",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "664a2e8daafbe9e7c60125f922f85307",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "2de667e739917fb95a2510ff92280f77",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "PKri",
+      "code_hash": "281280b768ae65add2d8e879949a81f4",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "Xref",
+      "code_hash": "6746f246db64ba043d9972877879e62b",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "SFPL",
+      "code_hash": "2cd8f55a34d2aa679687c5bf401377ab",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "BYtC",
+      "code_hash": "e5f21cae5fa15eb2634e1324a2c25944",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "RGSE",
+      "code_hash": "2f846b51edf0d93125ff66395e39f2be",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "Kclp",
+      "code_hash": "74935d6170b5fb3cf6d1e9c01f6acb93",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "emfo",
+      "code_hash": "2e9af75ce5f23b4c17d01a5f08cf075a",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "Hstk",
+      "code_hash": "e1822f1ef3422f0fcd7d6c81ce2bbfdd",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "nWHF",
+      "code_hash": "c88d254481d962329c80646f6e1e6dd2",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "iLit",
+      "code_hash": "552404034c826e4cc5a73e59798ea82f",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "ZHCJ",
+      "code_hash": "681b99216044c75fddbcd59586ffb9ce",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "ROlb",
+      "code_hash": "f9caa5e2116c0ec666716d6dedd82faa",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "qnkX",
+      "code_hash": "1af156b12cf6880a6654e20a146276f5",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "TqIu",
+      "code_hash": "d51a0cd23753a995c1d66d0931e6e16c",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "Vxnm",
+      "code_hash": "976983e1034bb454ee15bdaf5a115daa",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "DnEU",
+      "code_hash": "b5b2d8b1cb4be580786a43cc5b9b0764",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "ulZA",
+      "code_hash": "9adabbca409e54374bd133ec67141fb9",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "ecfG",
+      "code_hash": "be08756a958014a8169ca91baa843729",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "Pvdt",
+      "code_hash": "b4bcea28e6e5fc86b9826c26c58002a1",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "ZBYS",
+      "code_hash": "e308678967751224259e8d89a0379193",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "aLJB",
+      "code_hash": "4281c873bf68644e463e60d7972836a4",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "nHfw",
+      "code_hash": "8db10add35f81b65235083fb6c2ea4ed",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "xXTn",
+      "code_hash": "26ea4e8fb96bd1d8f92bab8f78a5aae9",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "AjVT",
+      "code_hash": "306a53c694f3309a6f56e9876fcded5e",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "pHFh",
+      "code_hash": "b05288cccdf3f4e1b5026ab27c2e3c21",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "NCOB",
+      "code_hash": "e0d294e4e198294bd5b8eddcb62318f8",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "aqbW",
+      "code_hash": "e36f256861b95b062dda381f18b005df",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "TRpd",
+      "code_hash": "b4bce4039e86a82f8c9e526b9895cc12",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "TXez",
+      "code_hash": "1c31b25d51f3e0fd1bee0f0927ce0776",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "dNNg",
+      "code_hash": "325196f6b84a54f61914e0df98335209",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "yCnT",
+      "code_hash": "066283c2538769f82539c79d4c2b90eb",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "wlCL",
+      "code_hash": "2689dd7a03785d041be60a194f37da5a",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "kqZH",
+      "code_hash": "d7281d514161ee55e009e9c5f1463fd3",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "wAgl",
+      "code_hash": "297dc66f806c5d77b00634517bf20edf",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "rEll",
+      "code_hash": "c9576ee093a92c69e09ad94d9bddebaa",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "dGlV",
+      "code_hash": "50ae1a99f73f278b6d427d5bf82c709f",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "SdmI",
+      "code_hash": "9c90b46ad62b7ebb61165604fddb64dd",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "lgWD",
+      "code_hash": "3f3d889f4c7a2cc9f7e4ebb6a208988b",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "yOPj",
+      "code_hash": "519194a5736849cca4e788af568855d4",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "fwwy",
+      "code_hash": "337ca16329e57bc72260c5352ce8c1f0",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "LJZf",
+      "code_hash": "46be22c1542a0e9d035ec3b5dd7f4272",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "urSm",
+      "code_hash": "7e81df111b2d214136c0237b63cc36de",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "jxvo",
+      "code_hash": "4636d2d937f63ae90a85552a58188948",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "mWxS",
+      "code_hash": "698faac3973f290839b52bdc47445634",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "CcZR",
+      "code_hash": "48532ce4629e005754404c1b0d9eedb9",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "YWSi",
+      "code_hash": "0041cba524e4f5823be3b2d8f2a04291",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "zlud",
+      "code_hash": "744b2f2d59621b110a3dfd2ee297c0c5",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "tZnO",
+      "code_hash": "8792b3b33c1d4adfddb239b8a1be9e42",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "xvXZ",
+      "code_hash": "6feea68b1a07c50fd3256b30f89c8b06",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "CLip",
+      "code_hash": "4fc3f8b3db1edc56423d8ac1bc842b29",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "YECM",
+      "code_hash": "701597783f66b7e383f2739238ff05c5",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "cEAS",
+      "code_hash": "4311dfb324f74c9b998e937c97959d5e",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "iXej",
+      "code_hash": "2f4a53a08f7b792169cabaffeb85a180",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "EJmg",
+      "code_hash": "64248ea9d6ef8208e8cd659540992342",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "UmEG",
+      "code_hash": "ec0bb3d56f9773892c69918dfc987673",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "vEBW",
+      "code_hash": "1d2036a5b5acf72add985176f8a1572e",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "kLmu",
+      "code_hash": "7b09dd7247ad4ba6608d5e5e5ed5a5b2",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "IpqN",
+      "code_hash": "7e9270db4971b230e0de80a8d7a198d8",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "dxZZ",
+      "code_hash": "94886f8995c48e92faab9e73fb46a680",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "dlnW",
+      "code_hash": "03b783fb25f0a128eeb05e97cf8a114c",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "TTti",
+      "code_hash": "1a87900aa42d66dc1be80a755ab7e929",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "RKFZ",
+      "code_hash": "cc71cba5be011d7ffdd7c4c2b2fa4802",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "IaQp",
+      "code_hash": "56753d2e0cf87edb7f4e6067bd4e4525",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "IWgg",
+      "code_hash": "bb7f3cce7e468953a736702c80e20364",
+      "outputs": [],
+      "console": []
+    }
+  ]
+}
