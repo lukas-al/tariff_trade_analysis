@@ -21,7 +21,7 @@ def _():
 def _(mo):
     mo.md(
         r"""
-    # FE world for a FE girl
+    # Panel Regressions
 
     1. Run the equation 2 regressions from HM across all countries, showing how the UK's imports changed over time relative to other countries
     2. Update the direct effect equation to consider more carefully the impact on the UK.
@@ -593,7 +593,9 @@ def _(mo):
 
 @app.cell
 def _(mo):
-    mo.md(r"""### Below is a pretty big table of all the regressions. Scroll through as desired...""")
+    mo.md(
+        r"""### Below is a pretty big table of all the regressions. Scroll through as desired..."""
+    )
     return
 
 

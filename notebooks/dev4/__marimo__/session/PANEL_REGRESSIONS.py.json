@@ -19,12 +19,12 @@
     },
     {
       "id": "MJUe",
-      "code_hash": "b9bc905ca7b6ad19fa8f6703d06d108f",
+      "code_hash": "2256d06b0b9c374f07bab544a21c0b20",
       "outputs": [
         {
           "type": "data",
           "data": {
-            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"fe-world-for-a-fe-girl\">FE world for a FE girl</h1>\n<ol>\n<li>Run the equation 2 regressions from HM across all countries, showing how the UK's imports changed over time relative to other countries</li>\n<li>Update the direct effect equation to consider more carefully the impact on the UK.</li>\n<li>Experiment with some alternative specifications for this equation</li>\n</ol></span>"
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"fe-world-for-a-fe\">FE world for a FE</h1>\n<ol>\n<li>Run the equation 2 regressions from HM across all countries, showing how the UK's imports changed over time relative to other countries</li>\n<li>Update the direct effect equation to consider more carefully the impact on the UK.</li>\n<li>Experiment with some alternative specifications for this equation</li>\n</ol></span>"
           }
         }
       ],

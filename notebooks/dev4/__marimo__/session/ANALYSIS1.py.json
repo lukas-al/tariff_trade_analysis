@@ -1,0 +1,125 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.13.8"
+  },
+  "cells": [
+    {
+      "id": "Hbol",
+      "code_hash": "1d0db38904205bec4d6f6f6a1f6cec3e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "eKhH",
+      "code_hash": "db4cc8bef7ad77321c7d4bba4fe1724e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h1 id=\"analysis-1-indirect-effects-of-trade-war-1-on-the-uk\">Analysis 1: Indirect effects of Trade war 1 on the UK</h1>\n<span class=\"paragraph\">This notebook explores the effects of the 2018 US-China trade war on UK imports from China. This is to either validate or invalidate the 'dumping' hypothesis of a continued and/or increased trade war 2.</span>\n<span class=\"paragraph\">To answer this question, we construct the following dataset:</span>\n<ol>\n<li>Trade values (USD), and trade volumes (SI unit), for bilateral trade between all countries in the world, annually. At the HS6 product level (some 5000 unique product codes). This data is sourced from <a href=\"https://www.cepii.fr/CEPII/en/bdd_modele/bdd_modele_item.asp?id=37\" rel=\"noopener\" target=\"_blank\">CEPII</a>, where they describe it as such:<blockquote>\n<span class=\"paragraph\">BACI provides data on bilateral trade flows for 200 countries at the product level (5000 products). Products correspond to the \"Harmonized System\" nomenclature (6 digit code).</span>\n</blockquote>\n</li>\n<li>The simple average (required as tariffs are often applied at the hs10 level) ad-valorem equivalent tariffs for each of the ~5000 products, resulting from both preferential agreements and on a most-favoured nation basis. This is sourced from the <a href=\"https://wits.worldbank.org/\" rel=\"noopener\" target=\"_blank\">WITS tariff database</a>, produced by the World Bank.</li>\n<li>Specific 'exceptional' tariffs introduced by the US administration during the 2018 US-China trade war. These are sourced from replication materials for <a href=\"https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5101245\" rel=\"noopener\" target=\"_blank\">this paper</a> by Trang T. Hoang and Carter Mix at the Federal Reserve Board.</li>\n</ol></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "xXiH",
+      "code_hash": "845b0491c1355f8f09a6d3d2cbff70df",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h4 id=\"extensions\">Extensions</h4>\n<ul>\n<li>Varying control groups</li>\n<li>Varying fixed effects</li>\n<li>RoW rather than the US</li>\n<li>Varying the measurement period of the effect</li>\n<li>Placebo tests</li>\n<li>Experimenting with clustered std errors.</li>\n</ul></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "hbAY",
+      "code_hash": "430145dbff7d2144087c835490bde927",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h2 id=\"analysis\">Analysis</h2>\n<span class=\"paragraph\">We are essentially trying to connect UK imports from China, to the application of tariffs by the US on Chinese goods in the 2018 trade war. We are attempting to determine if there is a causal link as follows:</span>\n<ol>\n<li>The US tariffs Chinese goods.</li>\n<li>In response to a) the increased effective price for US importers &amp; consumers; b) other political pressures, the US demand for Chinese goods falls.</li>\n<li>Chinese exporters respond by reducing their price and identifying new trading relationships with other countries, including the UK.</li>\n<li>This results in an increased volume of Chinese goods, at a lower export price, being sent to the UK. This is called 'dumping'.</li>\n</ol></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "fCRT",
+      "code_hash": "baa44f809a52ea187c7410437cd98433",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h2 id=\"methodology\">Methodology</h2></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Ljhi",
+      "code_hash": "ec676211ada6d6beadedc1c9c9adaedf",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h3 id=\"approach-1\">Approach 1</h3>\n<span class=\"paragraph\">To assess this question, first order, we perform a typical causal inference study. We construct a panel of bilateral trade between a range of countries, where the treatement is the application of tariffs by the US on China of a specific good. Our observed outcome variable is a) the volume; b) the value; c) the unit value; of exports from China to the UK. </span>\n<span class=\"paragraph\">We are interested in the effect of the tariffs on UK imports, but include all global bilateral trade from the rest of the world as well. This allows us to implicitly construct control groups across two dimensions: a) imports of those products tariffed by the US from countries other than China which were not tariffed; b) imports from China of products which were not tariffed.</span>\n<span class=\"paragraph\">Relatedly, we employ fixed effects (more flexible dummy variables) to control for variation between our treatment and non-treatment groups as well as confounding effects. Replicating an existing specification, we control for a) variation across time within exporter and specific product; b) variation across time within importer and product; c) variation between importer-exporter pair. This specification is important to get right.</span>\n<blockquote>\n<span class=\"paragraph\">If we condition on a common/descendent/mediating effects of the treatment (tariff application by the US), we cause selection bias, reducing the power of our test to detect the impact of the treatment on the observed outcome variable (UK imports from China).</span>\n</blockquote></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "BNap",
+      "code_hash": "4fc248fad961bc96427209c6ac4c08f9",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h4 id=\"specification\">Specification</h4>\n<span class=\"paragraph\">We fit an OLS fixed effect panel regression, using the <a href=\"https://github.com/py-econometrics/pyfixest\" rel=\"noopener\" target=\"_blank\">pyfixest</a> package. The model is ultimately specified as follows:</span>\n<marimo-tex class=\"arithmatex\">||[\n\\begin{align*}\nL_{i,j,p,t} &amp;= \\beta \\cdot \\left( \\mathbb{I}(i = \\mathrm{UK}) \\cdot \\mathbb{I}(j = \\mathrm{China}) \\cdot \\mathbb{I}(t \\in [2017,2024]) \\cdot \\mathrm{Tariff}_{p,t}^{\\mathrm{US-China}} \\right) \\\\\n&amp;\\quad + \\alpha_{i,p,t} + \\lambda_{i,j} + \\omega_{j,p,t} + \\varepsilon_{i,j,p,t}\n\\end{align*}\n||]</marimo-tex><span class=\"paragraph\">Where the notation is defined as follows:</span>\n<ul>\n<li><marimo-tex class=\"arithmatex\">||(L_{i,j,p,t}||)</marimo-tex>: Represents the dependent variable, specifically <marimo-tex class=\"arithmatex\">||(L_{i,j,p,t} = \\log(\\mathrm{Value}_{i,j,p,t})||)</marimo-tex>.<ul>\n<li><marimo-tex class=\"arithmatex\">||(\\mathrm{Value}_{i,j,p,t}||)</marimo-tex>: The underlying traded value/volume/price of interest for the observation.</li>\n</ul>\n</li>\n<li>Indices:<ul>\n<li><marimo-tex class=\"arithmatex\">||(i||)</marimo-tex>: Represents the importer.</li>\n<li><marimo-tex class=\"arithmatex\">||(j||)</marimo-tex>: Represents the exporter.</li>\n<li><marimo-tex class=\"arithmatex\">||(p||)</marimo-tex>: Represents the product code.</li>\n<li><marimo-tex class=\"arithmatex\">||(t||)</marimo-tex>: Represents the year.</li>\n</ul>\n</li>\n<li><marimo-tex class=\"arithmatex\">||(\\beta||)</marimo-tex>: The coefficient of interest, quantifying the impact of the main regressor term.</li>\n<li><marimo-tex class=\"arithmatex\">||(\\mathbb{I}(\\cdot)||)</marimo-tex>: The indicator function, which equals 1 if the condition in the parenthesis is true, and 0 otherwise.<ul>\n<li><marimo-tex class=\"arithmatex\">||(\\mathbb{I}(i = \\mathrm{UK})||)</marimo-tex>: Equals 1 if the importer <marimo-tex class=\"arithmatex\">||(i||)</marimo-tex> is the United Kingdom, 0 otherwise.</li>\n<li><marimo-tex class=\"arithmatex\">||(\\mathbb{I}(j = \\mathrm{China})||)</marimo-tex>: Equals 1 if the exporter <marimo-tex class=\"arithmatex\">||(j||)</marimo-tex> is China, 0 otherwise.</li>\n<li><marimo-tex class=\"arithmatex\">||(\\mathbb{I}(t \\in [2017,2024])||)</marimo-tex>: Equals 1 if the year <marimo-tex class=\"arithmatex\">||(t||)</marimo-tex> falls within the range of 2017 to 2024 (inclusive), 0 otherwise.</li>\n</ul>\n</li>\n<li><marimo-tex class=\"arithmatex\">||(\\mathrm{Tariff}_{p,t}^{\\mathrm{US-China}}||)</marimo-tex>: The average official tariff rate between the US and China for product code <marimo-tex class=\"arithmatex\">||(p||)</marimo-tex> in year <marimo-tex class=\"arithmatex\">||(t||)</marimo-tex>. (Note: The main regressor specifically conditions on UK importer and China exporter, while this tariff term is specified for US-China. Ensure this is intended and clearly defined in your context; it might represent a benchmark or a proxy if direct UK-China tariffs are not used here.)</li>\n<li>Fixed Effects: These terms control for unobserved heterogeneity.<ul>\n<li><marimo-tex class=\"arithmatex\">||(\\alpha_{i,p,t}||)</marimo-tex>: Represents importer-product-year fixed effects, controlling for any unobserved factors specific to each combination of an importer <marimo-tex class=\"arithmatex\">||(i||)</marimo-tex>, product code <marimo-tex class=\"arithmatex\">||(p||)</marimo-tex>, and year <marimo-tex class=\"arithmatex\">||(t||)</marimo-tex>. This corresponds to the <code>importer^product_code^year</code> term.</li>\n<li><marimo-tex class=\"arithmatex\">||(\\lambda_{i,j}||)</marimo-tex>: Represents importer-exporter fixed effects, controlling for unobserved factors specific to each pair of an importer <marimo-tex class=\"arithmatex\">||(i||)</marimo-tex> and exporter <marimo-tex class=\"arithmatex\">||(j||)</marimo-tex>. This corresponds to the <code>importer^exporter</code> term.</li>\n<li><marimo-tex class=\"arithmatex\">||(\\omega_{j,p,t}||)</marimo-tex>: Represents exporter-product-year fixed effects, controlling for unobserved factors specific to each combination of an exporter <marimo-tex class=\"arithmatex\">||(j||)</marimo-tex>, product code <marimo-tex class=\"arithmatex\">||(p||)</marimo-tex>, and year <marimo-tex class=\"arithmatex\">||(t||)</marimo-tex>. This corresponds to the <code>exporter^product_code^year</code> term.</li>\n</ul>\n</li>\n<li><marimo-tex class=\"arithmatex\">||(\\varepsilon_{i,j,p,t}||)</marimo-tex>: The idiosyncratic error term for importer <marimo-tex class=\"arithmatex\">||(i||)</marimo-tex>, exporter <marimo-tex class=\"arithmatex\">||(j||)</marimo-tex>, product <marimo-tex class=\"arithmatex\">||(p||)</marimo-tex>, and year <marimo-tex class=\"arithmatex\">||(t||)</marimo-tex>. It captures all other unobserved factors not accounted for by the regressors or fixed effects.</li>\n</ul></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "wJOQ",
+      "code_hash": "4d496593d152d303796becab5214f9ee",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h4 id=\"interpretation\">Interpretation</h4>\n<span class=\"paragraph\">Interpreting this model, the coefficient <marimo-tex class=\"arithmatex\">||(\\beta||)</marimo-tex> quantifies the estimated percentage change in the specific metric used for <marimo-tex class=\"arithmatex\">||(\\log(\\mathrm{Value}_{i,j,p,t})||)</marimo-tex> (i.e., import value, quantity, or price) for UK imports from China in response to a one percentage point increase in the <marimo-tex class=\"arithmatex\">||(\\mathrm{Tariff}_{p,t}^{\\mathrm{US-China}}||)</marimo-tex>.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "iNOp",
+      "code_hash": "104517b59def27683b2bc463ebaf4e89",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<span class=\"markdown prose dark:prose-invert\"><h2 id=\"further-considerations\">Further Considerations</h2>\n<span class=\"paragraph\">It is important to note that the policy response of individual countries, such as the UK, to the US tariffs on China is embedded within our data (i.e. endogenous). For example, the UK implemented industry-specific subsidies alongside various import restrictions. Third countries exhibited a wide-ranging willingness to absorb exports from China in the 2018 trade war. See <a href=\"https://cepr.org/voxeu/columns/redirecting-chinese-exports-us-evidence-trade-deflection-first-us-china-trade-war\" rel=\"noopener\" target=\"_blank\">this paper for more</a>.</span>\n<blockquote>\n<span class=\"paragraph\"><em>\"There is huge variation across importing nations in the scale of Chinese trade deflection and in their appetite for absorbing extra imports without taking defensive action.\"</em></span>\n</blockquote></span>"
+          }
+        }
+      ],
+      "console": []
+    }
+  ]
+}
