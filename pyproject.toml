@@ -21,6 +21,8 @@ dependencies = [
     "pyvis>=0.3.2",
     "pyfixest>=0.29.0",
     "pdfplumber>=0.11.6",
+    "lets-plot>=4.6.2",
+    "jupyter>=1.1.1",
 ]
 
 [build-system]

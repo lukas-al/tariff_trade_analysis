@@ -593,9 +593,7 @@ def _(mo):
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""### Below is a pretty big table of all the regressions. Scroll through as desired..."""
-    )
+    mo.md(r"""### Below is a pretty big table of all the regressions. Scroll through as desired...""")
     return
 
 

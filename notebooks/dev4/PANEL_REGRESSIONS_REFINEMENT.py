@@ -14,9 +14,8 @@ def _():
     import pycountry
     import re
     import matplotlib.pyplot as plt
-
     from typing import Optional
-    return Optional, mo, pl, plt, pycountry, pyfixest, re
+    return Optional, mo, pl, pycountry, pyfixest, re
 
 
 @app.cell
@@ -112,7 +111,7 @@ def _(Optional, pl, pyfixest, re):
             pl.col("partner_country").alias("importer"),
             pl.col("reporter_country").alias("exporter"),
             tariff_expr,
-        ).filter(pl.col("year").is_in(year_range))
+        )
 
         interaction_filter = (pl.col("importer").is_in(interaction_importers)) & (
             pl.col("exporter").is_in(interaction_exporters)
@@ -142,7 +141,7 @@ def _(Optional, pl, pyfixest, re):
         model = pyfixest.feols(fml=formula, data=clean_df, vcov=vcov)
 
         etable = pyfixest.etable(model)
-        coefplot = model.coefplot(joint=True)
+        coefplot = model.coefplot(joint=True, plot_backend="matplotlib")
 
         return model, etable, coefplot
     return (run_direct_effect_regression,)
@@ -329,13 +328,25 @@ def _(pl):
 
 
 @app.cell
-def _(mo, prepare_analysis_data, run_direct_effect_regression, unified_lf):
+def _():
+    EFFECT_YEAR_RANGE = [str(y) for y in range(2017, 2024)]
+    return (EFFECT_YEAR_RANGE,)
+
+
+@app.cell
+def _(
+    EFFECT_YEAR_RANGE,
+    mo,
+    prepare_analysis_data,
+    run_direct_effect_regression,
+    unified_lf,
+):
     # 1. Prepare the analysis data with specific parameters
     analysis_lf = prepare_analysis_data(
         source_lf=unified_lf,
         top_n=40,
         selection_year="2017",
-        year_range_to_keep=[str(y) for y in range(2017, 2024)],
+        year_range_to_keep=[str(y) for y in range(2016, 2024)],
         selection_method="total_trade",
         oil_export_threshold=50.0,
         countries_to_exclude=["643", "344"],  # Russia, Hong Kong
@@ -345,9 +356,7 @@ def _(mo, prepare_analysis_data, run_direct_effect_regression, unified_lf):
     interaction_name = "UK_from_China"
     importer_list = ["826"]  # UK
     exporter_list = ["156"]  # China
-    EFFECT_YEAR_RANGE = [
-        str(y) for y in range(2018, 2024)
-    ]  # 1 year less than the range of the data
+    # 1 year less than the range of the data
 
     regressors = " + ".join(
         f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
@@ -357,7 +366,6 @@ def _(mo, prepare_analysis_data, run_direct_effect_regression, unified_lf):
 
     # 3. Run the model
     model, etable, plot = run_direct_effect_regression(
-        data=analysis_lf,
         interaction_term_name=interaction_name,
         interaction_importers=importer_list,
         interaction_exporters=exporter_list,
@@ -367,7 +375,7 @@ def _(mo, prepare_analysis_data, run_direct_effect_regression, unified_lf):
 
     # 4. View the results
     mo.vstack([etable, plot, model.summary()])
-    return EFFECT_YEAR_RANGE, analysis_lf
+    return (analysis_lf,)
 
 
 @app.cell
@@ -574,7 +582,7 @@ def _(analysis_lf, mo, run_direct_effect_regression):
         regressors = " + ".join(
             f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
         )
-        formula = f"log(value) ~ {regressors} | importer^year^product_code + importer^exporter"
+        formula = f"log(value) ~ {regressors} | exporter^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
         # 3. Run the model
@@ -626,7 +634,7 @@ def _(analysis_lf, mo, run_direct_effect_regression):
         regressors = " + ".join(
             f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
         )
-        formula = f"log(unit_value) ~ {regressors} | importer^year^product_code + importer^exporter"
+        formula = f"log(unit_value) ~ {regressors} | exporter^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
         # 3. Run the model
@@ -678,7 +686,7 @@ def _(analysis_lf, mo, run_direct_effect_regression):
         regressors = " + ".join(
             f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
         )
-        formula = f"log(quantity) ~ {regressors} | importer^year^product_code + importer^exporter"
+        formula = f"log(quantity) ~ {regressors} | exporter^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
         # 3. Run the model
@@ -736,31 +744,25 @@ def _(mo):
 
 
 @app.cell
-def _(
-    RoW_list,
-    mo,
-    prepare_analysis_data,
-    run_direct_effect_regression,
-    unified_lf,
-):
-    def _():
-        # 1. Prepare the analysis data with specific parameters
-        analysis_lf = prepare_analysis_data(
-            source_lf=unified_lf,
-            top_n=40,
-            selection_year="2017",
-            year_range_to_keep=[str(y) for y in range(2017, 2024)],
-            selection_method="total_trade",
-            oil_export_threshold=50.0,
-            countries_to_exclude=["643", "344"],  # Russia, Hong Kong
-        )
+def _(RoW_list, analysis_lf, mo, run_direct_effect_regression):
+    def _(analysis_lf):
+        # # 1. Prepare the analysis data with specific parameters
+        # analysis_lf = prepare_analysis_data(
+        #     source_lf=unified_lf,
+        #     top_n=40,
+        #     selection_year="2017",
+        #     year_range_to_keep=[str(y) for y in range(2017, 2024)],
+        #     selection_method="total_trade",
+        #     oil_export_threshold=50.0,
+        #     countries_to_exclude=["643", "344"],  # Russia, Hong Kong
+        # )
 
         # 2. Build the formula
         interaction_name = "RoW_from_China"
         importer_list = RoW_list
         exporter_list = ["156"]  # China
         EFFECT_YEAR_RANGE = [
-            str(y) for y in range(2018, 2024)
+            str(y) for y in range(2017, 2024)
         ]  # 1 year less than the range of the data
 
         regressors = " + ".join(
@@ -783,7 +785,7 @@ def _(
         return mo.vstack([etable, plot, model.summary()])
 
 
-    _()
+    _(analysis_lf)
     return
 
 
@@ -794,37 +796,31 @@ def _(mo):
 
 
 @app.cell
-def _(
-    RoW_list,
-    mo,
-    prepare_analysis_data,
-    run_direct_effect_regression,
-    unified_lf,
-):
-    def _():
-        # 1. Prepare the analysis data with specific parameters
-        analysis_lf = prepare_analysis_data(
-            source_lf=unified_lf,
-            top_n=40,
-            selection_year="2017",
-            year_range_to_keep=[str(y) for y in range(2017, 2024)],
-            selection_method="total_trade",
-            oil_export_threshold=50.0,
-            countries_to_exclude=["643", "344"],  # Russia, Hong Kong
-        )
+def _(RoW_list, analysis_lf, mo, run_direct_effect_regression):
+    def _(analysis_lf):
+        # # 1. Prepare the analysis data with specific parameters
+        # analysis_lf = prepare_analysis_data(
+        #     source_lf=unified_lf,
+        #     top_n=40,
+        #     selection_year="2017",
+        #     year_range_to_keep=[str(y) for y in range(2017, 2024)],
+        #     selection_method="total_trade",
+        #     oil_export_threshold=50.0,
+        #     countries_to_exclude=["643", "344"],  # Russia, Hong Kong
+        # )
 
         # 2. Build the formula
         interaction_name = "RoW_from_China"
         importer_list = RoW_list
         exporter_list = ["156"]  # China
         EFFECT_YEAR_RANGE = [
-            str(y) for y in range(2018, 2024)
+            str(y) for y in range(2017, 2024)
         ]  # 1 year less than the range of the data
 
         regressors = " + ".join(
             f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
         )
-        formula = f"log(unit_value) ~ {regressors} | importer^year^product_code + importer^exporter"
+        formula = f"log(unit_value) ~ {regressors} | exporter^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
         # 3. Run the model
@@ -841,7 +837,7 @@ def _(
         return mo.vstack([etable, plot, model.summary()])
 
 
-    _()
+    _(analysis_lf)
     return
 
 
@@ -852,37 +848,31 @@ def _(mo):
 
 
 @app.cell
-def _(
-    RoW_list,
-    mo,
-    prepare_analysis_data,
-    run_direct_effect_regression,
-    unified_lf,
-):
-    def _():
-        # 1. Prepare the analysis data with specific parameters
-        analysis_lf = prepare_analysis_data(
-            source_lf=unified_lf,
-            top_n=40,
-            selection_year="2017",
-            year_range_to_keep=[str(y) for y in range(2017, 2024)],
-            selection_method="total_trade",
-            oil_export_threshold=50.0,
-            countries_to_exclude=["643", "344"],  # Russia, Hong Kong
-        )
+def _(RoW_list, analysis_lf, mo, run_direct_effect_regression):
+    def _(analysis_lf):
+        # # 1. Prepare the analysis data with specific parameters
+        # analysis_lf = prepare_analysis_data(
+        #     source_lf=unified_lf,
+        #     top_n=40,
+        #     selection_year="2017",
+        #     year_range_to_keep=[str(y) for y in range(2017, 2024)],
+        #     selection_method="total_trade",
+        #     oil_export_threshold=50.0,
+        #     countries_to_exclude=["643", "344"],  # Russia, Hong Kong
+        # )
 
         # 2. Build the formula
         interaction_name = "RoW_from_China"
         importer_list = RoW_list
         exporter_list = ["156"]  # China
         EFFECT_YEAR_RANGE = [
-            str(y) for y in range(2018, 2024)
+            str(y) for y in range(2017, 2024)
         ]  # 1 year less than the range of the data
 
         regressors = " + ".join(
             f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
         )
-        formula = f"log(quantity) ~ {regressors} | importer^year^product_code + importer^exporter"
+        formula = f"log(quantity) ~ {regressors} | exporter^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
         # 3. Run the model
@@ -899,7 +889,7 @@ def _(
         return mo.vstack([etable, plot, model.summary()])
 
 
-    _()
+    _(analysis_lf)
     return
 
 
@@ -911,23 +901,23 @@ def _(mo):
 
 @app.cell
 def _(mo):
-    mo.md(r"""### no jpt - value""")
+    mo.md(r"""### no ipt - value""")
     return
 
 
 @app.cell
-def _(mo, prepare_analysis_data, run_direct_effect_regression, unified_lf):
-    def _():
+def _(analysis_lf, mo, run_direct_effect_regression):
+    def _(analysis_lf):
         # 1. Prepare the analysis data with specific parameters
-        analysis_lf = prepare_analysis_data(
-            source_lf=unified_lf,
-            top_n=40,
-            selection_year="2017",
-            year_range_to_keep=[str(y) for y in range(2016, 2024)],
-            selection_method="total_trade",
-            oil_export_threshold=50.0,
-            countries_to_exclude=["643", "344"],  # Russia, Hong Kong
-        )
+        # analysis_lf = prepare_analysis_data(
+        #     source_lf=unified_lf,
+        #     top_n=40,
+        #     selection_year="2017",
+        #     year_range_to_keep=[str(y) for y in range(2016, 2024)],
+        #     selection_method="total_trade",
+        #     oil_export_threshold=50.0,
+        #     countries_to_exclude=["643", "344"],  # Russia, Hong Kong
+        # )
 
         # 2. Build the formula
         interaction_name = "USA_from_China"
@@ -957,29 +947,29 @@ def _(mo, prepare_analysis_data, run_direct_effect_regression, unified_lf):
         return mo.vstack([etable, plot, model.summary()])
 
 
-    _()
+    _(analysis_lf)
     return
 
 
 @app.cell
 def _(mo):
-    mo.md(r"""### no jpt - unit value""")
+    mo.md(r"""### no ipt - unit value""")
     return
 
 
 @app.cell
-def _(mo, prepare_analysis_data, run_direct_effect_regression, unified_lf):
-    def _():
-        # 1. Prepare the analysis data with specific parameters
-        analysis_lf = prepare_analysis_data(
-            source_lf=unified_lf,
-            top_n=40,
-            selection_year="2017",
-            year_range_to_keep=[str(y) for y in range(2016, 2024)],
-            selection_method="total_trade",
-            oil_export_threshold=50.0,
-            countries_to_exclude=["643", "344"],  # Russia, Hong Kong
-        )
+def _(analysis_lf, mo, run_direct_effect_regression):
+    def _(analysis_lf):
+        # # 1. Prepare the analysis data with specific parameters
+        # analysis_lf = prepare_analysis_data(
+        #     source_lf=unified_lf,
+        #     top_n=40,
+        #     selection_year="2017",
+        #     year_range_to_keep=[str(y) for y in range(2016, 2024)],
+        #     selection_method="total_trade",
+        #     oil_export_threshold=50.0,
+        #     countries_to_exclude=["643", "344"],  # Russia, Hong Kong
+        # )
 
         # 2. Build the formula
         interaction_name = "USA_from_China"
@@ -1009,29 +999,29 @@ def _(mo, prepare_analysis_data, run_direct_effect_regression, unified_lf):
         return mo.vstack([etable, plot, model.summary()])
 
 
-    _()
+    _(analysis_lf)
     return
 
 
 @app.cell
 def _(mo):
-    mo.md(r"""### no jpt - quantity""")
+    mo.md(r"""### no ipt - quantity""")
     return
 
 
 @app.cell
-def _(mo, prepare_analysis_data, run_direct_effect_regression, unified_lf):
-    def _():
-        # 1. Prepare the analysis data with specific parameters
-        analysis_lf = prepare_analysis_data(
-            source_lf=unified_lf,
-            top_n=40,
-            selection_year="2017",
-            year_range_to_keep=[str(y) for y in range(2016, 2024)],
-            selection_method="total_trade",
-            oil_export_threshold=50.0,
-            countries_to_exclude=["643", "344"],  # Russia, Hong Kong
-        )
+def _(analysis_lf, mo, run_direct_effect_regression):
+    def _(analysis_lf):
+        # # 1. Prepare the analysis data with specific parameters
+        # analysis_lf = prepare_analysis_data(
+        #     source_lf=unified_lf,
+        #     top_n=40,
+        #     selection_year="2017",
+        #     year_range_to_keep=[str(y) for y in range(2016, 2024)],
+        #     selection_method="total_trade",
+        #     oil_export_threshold=50.0,
+        #     countries_to_exclude=["643", "344"],  # Russia, Hong Kong
+        # )
 
         # 2. Build the formula
         interaction_name = "USA_from_China"
@@ -1061,7 +1051,7 @@ def _(mo, prepare_analysis_data, run_direct_effect_regression, unified_lf):
         return mo.vstack([etable, plot, model.summary()])
 
 
-    _()
+    _(analysis_lf)
     return
 
 
@@ -1084,18 +1074,18 @@ def _(mo):
 
 
 @app.cell
-def _(mo, pl, prepare_analysis_data, run_direct_effect_regression, unified_lf):
-    def _():
+def _(analysis_lf, mo, pl, run_direct_effect_regression):
+    def _(analysis_lf):
         # 1. Prepare the analysis data with specific parameters
-        analysis_lf = prepare_analysis_data(
-            source_lf=unified_lf,
-            top_n=40,
-            selection_year="2017",
-            year_range_to_keep=[str(y) for y in range(2016, 2024)],
-            selection_method="total_trade",
-            oil_export_threshold=50.0,
-            countries_to_exclude=["643", "344"],  # Russia, Hong Kong
-        )
+        # analysis_lf = prepare_analysis_data(
+        #     source_lf=unified_lf,
+        #     top_n=40,
+        #     selection_year="2017",
+        #     year_range_to_keep=[str(y) for y in range(2016, 2024)],
+        #     selection_method="total_trade",
+        #     oil_export_threshold=50.0,
+        #     countries_to_exclude=["643", "344"],  # Russia, Hong Kong
+        # )
 
         print(analysis_lf.head().collect())
 
@@ -1133,7 +1123,7 @@ def _(mo, pl, prepare_analysis_data, run_direct_effect_regression, unified_lf):
         return mo.vstack([etable, plot, model.summary()])
 
 
-    _()
+    _(analysis_lf)
     return
 
 
@@ -1144,18 +1134,18 @@ def _(mo):
 
 
 @app.cell
-def _(mo, pl, prepare_analysis_data, run_direct_effect_regression, unified_lf):
-    def _():
-        # 1. Prepare the analysis data with specific parameters
-        analysis_lf = prepare_analysis_data(
-            source_lf=unified_lf,
-            top_n=40,
-            selection_year="2017",
-            year_range_to_keep=[str(y) for y in range(2016, 2024)],
-            selection_method="total_trade",
-            oil_export_threshold=50.0,
-            countries_to_exclude=["643", "344"],  # Russia, Hong Kong
-        )
+def _(analysis_lf_HMREP, mo, pl, run_direct_effect_regression):
+    def _(analysis_lf):
+        # # 1. Prepare the analysis data with specific parameters
+        # analysis_lf = prepare_analysis_data(
+        #     source_lf=unified_lf,
+        #     top_n=40,
+        #     selection_year="2017",
+        #     year_range_to_keep=[str(y) for y in range(2016, 2024)],
+        #     selection_method="total_trade",
+        #     oil_export_threshold=50.0,
+        #     countries_to_exclude=["643", "344"],  # Russia, Hong Kong
+        # )
 
         print(analysis_lf.head().collect())
 
@@ -1191,7 +1181,7 @@ def _(mo, pl, prepare_analysis_data, run_direct_effect_regression, unified_lf):
         return mo.vstack([etable, plot, model.summary()])
 
 
-    _()
+    _(analysis_lf_HMREP)
     return
 
 
@@ -1496,7 +1486,7 @@ def _():
     #     regressors = " + ".join(
     #         f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
     #     )
-    #     formula = f"log(value) ~ {regressors} | importer^year^product_code + importer^exporter"
+    #     formula = f"log(value) ~ {regressors} | exporter^year^product_code + importer^exporter"
     #     print(f"Formula for model:\n{formula}")
 
     #     # 3. Run the model
@@ -1535,14 +1525,12 @@ def _(mo):
     > The authors removed products for which the U.S. applied more widespread tariffs, specifically mentioning steel and washing machines, from their analysis. This was done to isolate the effect of the U.S.-China bilateral tariffs.
 
     In the following section, we replicate that approach directly. This will inform our final approach which we present in the results.
-
-
     """
     )
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(pycountry):
     USA_CC = pycountry.countries.search_fuzzy("USA")[0].numeric
     CHINA_CC = pycountry.countries.search_fuzzy("China")[0].numeric
@@ -1553,20 +1541,30 @@ def _(pycountry):
     UK_CC = pycountry.countries.search_fuzzy("United Kingdom")[0].numeric
     GERMANY_CC = pycountry.countries.search_fuzzy("Germany")[0].numeric
     FRANCE_CC = pycountry.countries.search_fuzzy("France")[0].numeric
+    KOREA_CC = pycountry.countries.search_fuzzy("Korea")[0].numeric
+    TURKEY_CC = pycountry.countries.search_fuzzy("Turkiye")[0].numeric
+    AUSTRALIA_CC = pycountry.countries.search_fuzzy("Australia")[0].numeric
+    SAUDI_CC = pycountry.countries.search_fuzzy("Saudi Arabia")[0].numeric
+    MEXICO_CC = pycountry.countries.search_fuzzy("Mexico")[0].numeric
+    CANADA_CC = pycountry.countries.search_fuzzy("Canada")[0].numeric
+    INDONESIA_CC = pycountry.countries.search_fuzzy("Indonesia")[0].numeric
+    INDIA_CC = pycountry.countries.search_fuzzy("India")[0].numeric
+
 
     HM_COUNTRY_LIST = [
         USA_CC,
         CHINA_CC,
+        UK_CC,
         BRAZIL_CC,
         IRELAND_CC,
         ITALY_CC,
         SOUTHAFRICA_CC,
-        UK_CC,
         GERMANY_CC,
         FRANCE_CC,
     ]
 
     HM_ROW_LIST = [
+        UK_CC,
         BRAZIL_CC,
         IRELAND_CC,
         ITALY_CC,
@@ -1574,7 +1572,45 @@ def _(pycountry):
         GERMANY_CC,
         FRANCE_CC,
     ]
-    return HM_COUNTRY_LIST, HM_ROW_LIST
+
+    HM_COUNTRY_LIST_EXPANDED = [
+        USA_CC,
+        CHINA_CC,
+        UK_CC,
+        BRAZIL_CC,
+        IRELAND_CC,
+        ITALY_CC,
+        SOUTHAFRICA_CC,
+        GERMANY_CC,
+        FRANCE_CC,
+        KOREA_CC,
+        TURKEY_CC,
+        AUSTRALIA_CC,
+        SAUDI_CC,
+        MEXICO_CC,
+        CANADA_CC,
+        INDONESIA_CC,
+        INDIA_CC,
+    ]
+
+    HM_ROW_LIST_EXPANDED = [
+        UK_CC,
+        BRAZIL_CC,
+        IRELAND_CC,
+        ITALY_CC,
+        SOUTHAFRICA_CC,
+        GERMANY_CC,
+        FRANCE_CC,
+        KOREA_CC,
+        TURKEY_CC,
+        AUSTRALIA_CC,
+        SAUDI_CC,
+        MEXICO_CC,
+        CANADA_CC,
+        INDONESIA_CC,
+        INDIA_CC,
+    ]
+    return HM_COUNTRY_LIST, HM_COUNTRY_LIST_EXPANDED, HM_ROW_LIST
 
 
 @app.cell(hide_code=True)
@@ -1873,7 +1909,7 @@ def _(analysis_lf_HMREP, mo, run_direct_effect_regression):
         regressors = " + ".join(
             f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
         )
-        formula = f"log(unit_value) ~ {regressors} | importer^year^product_code + importer^exporter"
+        formula = f"log(unit_value) ~ {regressors} | exporter^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
         # 3. Run the model
@@ -1914,7 +1950,7 @@ def _(analysis_lf_HMREP, mo, run_direct_effect_regression):
         regressors = " + ".join(
             f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
         )
-        formula = f"log(quantity) ~ {regressors} | importer^year^product_code + importer^exporter"
+        formula = f"log(quantity) ~ {regressors} | exporter^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
         # 3. Run the model
@@ -1961,7 +1997,7 @@ def _(analysis_lf_HMREP, mo, run_direct_effect_regression):
         regressors = " + ".join(
             f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
         )
-        formula = f"log(value) ~ {regressors} | importer^year^product_code + importer^exporter"
+        formula = f"log(value) ~ {regressors} | exporter^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
         # 3. Run the model
@@ -2002,7 +2038,7 @@ def _(analysis_lf_HMREP, mo, run_direct_effect_regression):
         regressors = " + ".join(
             f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
         )
-        formula = f"log(unit_value) ~ {regressors} | importer^year^product_code + importer^exporter"
+        formula = f"log(unit_value) ~ {regressors} | exporter^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
         # 3. Run the model
@@ -2043,7 +2079,7 @@ def _(analysis_lf_HMREP, mo, run_direct_effect_regression):
         regressors = " + ".join(
             f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
         )
-        formula = f"log(quantity) ~ {regressors} | importer^year^product_code + importer^exporter"
+        formula = f"log(quantity) ~ {regressors} | exporter^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
         # 3. Run the model
@@ -2090,7 +2126,7 @@ def _(HM_ROW_LIST, analysis_lf_HMREP, mo, run_direct_effect_regression):
         regressors = " + ".join(
             f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
         )
-        formula = f"log(value) ~ {regressors} | importer^year^product_code + importer^exporter"
+        formula = f"log(value) ~ {regressors} | exporter^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
         # 3. Run the model
@@ -2131,7 +2167,7 @@ def _(HM_ROW_LIST, analysis_lf_HMREP, mo, run_direct_effect_regression):
         regressors = " + ".join(
             f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
         )
-        formula = f"log(unit_value) ~ {regressors} | importer^year^product_code + importer^exporter"
+        formula = f"log(unit_value) ~ {regressors} | exporter^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
         # 3. Run the model
@@ -2172,7 +2208,7 @@ def _(HM_ROW_LIST, analysis_lf_HMREP, mo, run_direct_effect_regression):
         regressors = " + ".join(
             f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
         )
-        formula = f"log(quantity) ~ {regressors} | importer^year^product_code + importer^exporter"
+        formula = f"log(quantity) ~ {regressors} | exporter^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
         # 3. Run the model
@@ -2206,71 +2242,408 @@ def _(mo):
 
 
 @app.cell
+def _(mo):
+    mo.md(r"""## HM sample - value""")
+    return
+
+
+@app.cell
 def _(
     EFFECT_YEAR_RANGE,
-    HM_COUNTRY_LIST,
+    HM_ROW_LIST,
     analysis_lf_HMREP,
     mo,
-    plt,
     pycountry,
-    pyfixest,
     run_direct_effect_regression,
 ):
-    def _():
+    def _(analysis_lf_HMREP):
         models = {}
-        exporter_of_interest = "156"  # China
-
-        for country_code in mo.status.progress_bar(HM_COUNTRY_LIST):
+        model_renamer = {}
+        for country_code in mo.status.progress_bar(HM_ROW_LIST):
             # Use pycountry to get a descriptive key (e.g., "USA")
             country_key = pycountry.countries.get(numeric=country_code).alpha_3
             interaction_term_name = f"{country_key}_from_China"
 
             # Dynamically build the formula for the current country
-            regressors = " + ".join(
+            regressors = "+".join(
                 f"{interaction_term_name}_{year}" for year in EFFECT_YEAR_RANGE
             )
-            formula = (
-                f"log(value) ~ {regressors} | "
-                f"importer^year^product_code + importer^exporter"
-            )
+            formula = f"log(value)~{regressors}|exporter^year^product_code+importer^exporter"
 
-            # Call your API for each country
+            print(f"Running for {country_key}")
             model, _, _ = run_direct_effect_regression(
                 data=analysis_lf_HMREP,
                 interaction_term_name=interaction_term_name,
-                interaction_importers=[country_code],  # Pass the current country
-                interaction_exporters=[exporter_of_interest],
-                year_range=EFFECT_YEAR_RANGE,
+                interaction_importers=[country_code],
+                interaction_exporters=["156"],  # Chiina
+                year_range=[str(y) for y in range(2017, 2024)],
                 formula=formula,
             )
 
-            # Collect the model object, keyed by the country's alpha_3 code
+            model_renamer[formula] = country_key
             models[country_key] = model
 
-        # After the loop, generate a single table and plot from all collected models
-        print("--- Aggregated Regression Results ---")
-        summary_table = pyfixest.etable(models)
-        print(summary_table)
-
-        print("\n--- Aggregated Coefficient Plot ---")
-        pyfixest.coefplot(models, grid=True)
-        return plt.show()
+        return models, model_renamer
 
 
-    _()
+    models_value, model_renamer_value = _(analysis_lf_HMREP)
+    return model_renamer_value, models_value
+
+
+@app.cell
+def _(mo, model_renamer_value, models_value, pyfixest):
+    mo.vstack(
+        [
+            mo.md("--- Aggregated Regression Results ---"),
+            pyfixest.etable(
+                models=models_value.values(), model_heads=models_value.keys()
+            ),
+            mo.md("--- Aggregated Coefficient Plot ---"),
+            pyfixest.coefplot(
+                models=models_value.values(),
+                rename_models=model_renamer_value,
+            ),
+        ]
+    )
     return
 
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
-    # Next steps
-    1. Rerun the spec with the same countries as the Hoang-Mix paper regression 1. Limit to those 7-ish countries
+    mo.md(r"""## HM sample - unit_value""")
+    return
 
-    2. Isolate a range of countries - how correlated is the result to trade barriers imposed by countries?
-    """
+
+@app.cell
+def _(
+    EFFECT_YEAR_RANGE,
+    HM_ROW_LIST,
+    analysis_lf_HMREP,
+    mo,
+    pycountry,
+    run_direct_effect_regression,
+):
+    def _(analysis_lf_HMREP):
+        models = {}
+        model_renamer = {}
+        for country_code in mo.status.progress_bar(HM_ROW_LIST):
+            # Use pycountry to get a descriptive key (e.g., "USA")
+            country_key = pycountry.countries.get(numeric=country_code).alpha_3
+            interaction_term_name = f"{country_key}_from_China"
+
+            # Dynamically build the formula for the current country
+            regressors = "+".join(
+                f"{interaction_term_name}_{year}" for year in EFFECT_YEAR_RANGE
+            )
+            formula = f"log(unit_value)~{regressors}|exporter^year^product_code+importer^exporter"
+
+            print(f"Running for {country_key}")
+            model, _, _ = run_direct_effect_regression(
+                data=analysis_lf_HMREP,
+                interaction_term_name=interaction_term_name,
+                interaction_importers=[country_code],
+                interaction_exporters=["156"],  # Chiina
+                year_range=[str(y) for y in range(2017, 2024)],
+                formula=formula,
+            )
+
+            model_renamer[formula] = country_key
+            models[country_key] = model
+
+        return models, model_renamer
+
+
+    models_price, model_renamer_price = _(analysis_lf_HMREP)
+    return model_renamer_price, models_price
+
+
+@app.cell
+def _(mo, model_renamer_price, models_price, pyfixest):
+    mo.vstack(
+        [
+            mo.md("--- Aggregated Regression Results ---"),
+            pyfixest.etable(
+                models=models_price.values(), model_heads=models_price.keys()
+            ),
+            mo.md("--- Aggregated Coefficient Plot ---"),
+            pyfixest.coefplot(
+                models=models_price.values(),
+                rename_models=model_renamer_price,
+            ),
+        ]
     )
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(r"""## HM sample - quantity""")
+    return
+
+
+@app.cell
+def _(
+    EFFECT_YEAR_RANGE,
+    HM_ROW_LIST,
+    analysis_lf_HMREP,
+    mo,
+    pycountry,
+    run_direct_effect_regression,
+):
+    def _(analysis_lf_HMREP):
+        models = {}
+        model_renamer = {}
+        for country_code in mo.status.progress_bar(HM_ROW_LIST):
+            # Use pycountry to get a descriptive key (e.g., "USA")
+            country_key = pycountry.countries.get(numeric=country_code).alpha_3
+            interaction_term_name = f"{country_key}_from_China"
+
+            # Dynamically build the formula for the current country
+            regressors = "+".join(
+                f"{interaction_term_name}_{year}" for year in EFFECT_YEAR_RANGE
+            )
+            formula = f"log(quantity)~{regressors}|exporter^year^product_code+importer^exporter"
+
+            print(f"Running for {country_key}")
+            model, _, _ = run_direct_effect_regression(
+                data=analysis_lf_HMREP,
+                interaction_term_name=interaction_term_name,
+                interaction_importers=[country_code],
+                interaction_exporters=["156"],  # Chiina
+                year_range=[str(y) for y in range(2017, 2024)],
+                formula=formula,
+            )
+
+            model_renamer[formula] = country_key
+            models[country_key] = model
+
+        return models, model_renamer
+
+
+    models_qty, model_renamer_qty = _(analysis_lf_HMREP)
+    return model_renamer_qty, models_qty
+
+
+@app.cell
+def _(mo, model_renamer_qty, models_qty, pyfixest):
+    mo.vstack(
+        [
+            mo.md("--- x Regression Results ---"),
+            pyfixest.etable(
+                models=models_qty.values(), model_heads=models_qty.keys()
+            ),
+            mo.md("--- Aggregated Coefficient Plot ---"),
+            pyfixest.coefplot(
+                models=models_qty.values(),
+                rename_models=model_renamer_qty,
+            ),
+        ]
+    )
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(r"""## Expanded RoW sample - to align with [this voxEU paper](https://cepr.org/voxeu/columns/redirecting-chinese-exports-us-evidence-trade-deflection-first-us-china-trade-war)""")
+    return
+
+
+@app.cell
+def _(
+    HM_COUNTRY_LIST_EXPANDED,
+    alu_steel_product_codes,
+    prepare_analysis_data,
+    unified_lf,
+):
+    analysis_lf_HMREP_EXP = prepare_analysis_data(
+        source_lf=unified_lf,
+        year_range_to_keep=[str(y) for y in range(2016, 2024)],
+        selection_method="total_trade",
+        oil_export_threshold=50.0,
+        countries_to_exclude=["643", "344"],  # Russia, Hong Kong
+        countries_to_include=HM_COUNTRY_LIST_EXPANDED,
+        product_codes_to_exclude=alu_steel_product_codes,
+    )
+    return (analysis_lf_HMREP_EXP,)
+
+
+@app.cell
+def _(mo):
+    mo.md(r"""## Expanded RoW sample - value""")
+    return
+
+
+@app.cell
+def _(
+    EFFECT_YEAR_RANGE,
+    HM_ROW_LIST,
+    analysis_lf_HMREP_EXP,
+    mo,
+    pycountry,
+    pyfixest,
+    run_direct_effect_regression,
+):
+    def _(analysis_lf_HMREP_EXP):
+        models = {}
+        model_renamer = {}
+        for country_code in mo.status.progress_bar(HM_ROW_LIST):
+            # Use pycountry to get a descriptive key (e.g., "USA")
+            country_key = pycountry.countries.get(numeric=country_code).alpha_3
+            interaction_term_name = f"{country_key}_from_China"
+
+            # Dynamically build the formula for the current country
+            regressors = "+".join(
+                f"{interaction_term_name}_{year}" for year in EFFECT_YEAR_RANGE
+            )
+            formula = f"log(value)~{regressors}|exporter^year^product_code+importer^exporter"
+
+            print(f"Running for {country_key}")
+            model, _, _ = run_direct_effect_regression(
+                data=analysis_lf_HMREP_EXP,
+                interaction_term_name=interaction_term_name,
+                interaction_importers=[country_code],
+                interaction_exporters=["156"],  # Chiina
+                year_range=[str(y) for y in range(2017, 2024)],
+                formula=formula,
+            )
+
+            model_renamer[formula] = country_key
+            models[country_key] = model
+
+        return mo.vstack(
+            [
+                mo.md("--- x Regression Results ---"),
+                pyfixest.etable(models=models.values(), model_heads=models.keys()),
+                mo.md("--- Aggregated Coefficient Plot ---"),
+                pyfixest.coefplot(
+                    models=models.values(),
+                    rename_models=models,
+                ),
+            ]
+        )
+
+
+    _(analysis_lf_HMREP_EXP)
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(r"""## Expanded RoW Sample - UnitValue""")
+    return
+
+
+@app.cell
+def _(
+    EFFECT_YEAR_RANGE,
+    HM_ROW_LIST,
+    analysis_lf_HMREP_EXP,
+    mo,
+    pycountry,
+    pyfixest,
+    run_direct_effect_regression,
+):
+    def _(analysis_lf_HMREP_EXP):
+        models = {}
+        model_renamer = {}
+        for country_code in mo.status.progress_bar(HM_ROW_LIST):
+            # Use pycountry to get a descriptive key (e.g., "USA")
+            country_key = pycountry.countries.get(numeric=country_code).alpha_3
+            interaction_term_name = f"{country_key}_from_China"
+
+            # Dynamically build the formula for the current country
+            regressors = "+".join(
+                f"{interaction_term_name}_{year}" for year in EFFECT_YEAR_RANGE
+            )
+            formula = f"log(unit_value)~{regressors}|exporter^year^product_code+importer^exporter"
+
+            print(f"Running for {country_key}")
+            model, _, _ = run_direct_effect_regression(
+                data=analysis_lf_HMREP_EXP,
+                interaction_term_name=interaction_term_name,
+                interaction_importers=[country_code],
+                interaction_exporters=["156"],  # Chiina
+                year_range=[str(y) for y in range(2017, 2024)],
+                formula=formula,
+            )
+
+            model_renamer[formula] = country_key
+            models[country_key] = model
+
+        return mo.vstack(
+            [
+                mo.md("--- x Regression Results ---"),
+                pyfixest.etable(models=models.values(), model_heads=models.keys()),
+                mo.md("--- Aggregated Coefficient Plot ---"),
+                pyfixest.coefplot(
+                    models=models.values(),
+                    rename_models=models,
+                ),
+            ]
+        )
+
+
+    _(analysis_lf_HMREP_EXP)
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(r"""## Expanded RoW Sample: quantity""")
+    return
+
+
+@app.cell
+def _(
+    EFFECT_YEAR_RANGE,
+    HM_ROW_LIST,
+    analysis_lf_HMREP_EXP,
+    mo,
+    pycountry,
+    pyfixest,
+    run_direct_effect_regression,
+):
+    def _(analysis_lf_HMREP_EXP):
+        models = {}
+        model_renamer = {}
+        for country_code in mo.status.progress_bar(HM_ROW_LIST):
+            # Use pycountry to get a descriptive key (e.g., "USA")
+            country_key = pycountry.countries.get(numeric=country_code).alpha_3
+            interaction_term_name = f"{country_key}_from_China"
+
+            # Dynamically build the formula for the current country
+            regressors = "+".join(
+                f"{interaction_term_name}_{year}" for year in EFFECT_YEAR_RANGE
+            )
+            formula = f"log(quantity)~{regressors}|exporter^year^product_code+importer^exporter"
+
+            print(f"Running for {country_key}")
+            model, _, _ = run_direct_effect_regression(
+                data=analysis_lf_HMREP_EXP,
+                interaction_term_name=interaction_term_name,
+                interaction_importers=[country_code],
+                interaction_exporters=["156"],  # Chiina
+                year_range=[str(y) for y in range(2017, 2024)],
+                formula=formula,
+            )
+
+            model_renamer[formula] = country_key
+            models[country_key] = model
+
+        return mo.vstack(
+            [
+                mo.md("--- x Regression Results ---"),
+                pyfixest.etable(models=models.values(), model_heads=models.keys()),
+                mo.md("--- Aggregated Coefficient Plot ---"),
+                pyfixest.coefplot(
+                    models=models.values(),
+                    rename_models=models,
+                ),
+            ]
+        )
+
+
+    _(analysis_lf_HMREP_EXP)
     return
 
 
