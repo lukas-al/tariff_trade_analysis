@@ -29,74 +29,72 @@ import pyfixest
 ```
 
 # Introduction
+
 This document explores the effects of the 2018 US-China trade war on UK imports from China. We attempt to find evidence for the existence of dumping, and to extrapolate this evidence to identify an implied effect over trade war 2.
 
-## Rationalle
+## Rationale
+
 We are essentially trying to connect UK imports from China, to the application of tariffs by the US on Chinese goods in the 2018 trade war. We are attempting to determine if there is a causal link as follows:
 
-1. The US tariffs Chinese goods.
-2. In response to a) the increased effective price for US importers & consumers; b) other political pressures, the US demand for Chinese goods falls.
-3. Chinese exporters respond by reducing their price and identifying new trading relationships with other countries, including the UK.
-4. This results in an increased volume of Chinese goods, at a lower export price, being sent to the UK. This is called 'dumping'.
+1.  The US tariffs Chinese goods.
+2.  In response to a) the increased effective price for US importers & consumers; b) other political pressures, the US demand for Chinese goods falls.
+3.  Chinese exporters respond by reducing their price and identifying new trading relationships with other countries, including the UK.
+4.  This results in an increased volume of Chinese goods, at a lower export price, being sent to the UK. This is called 'dumping'.
 
 ## Data
+
 To answer this question, we construct the following dataset:
 
-1. **Bilateral Trade Data**: Trade values (USD) and volumes (SI unit) for bilateral trade between all countries in the world, annually, at the HS6 product level (\~5000 unique products). Sourced from [CEPII BACI](https://www.cepii.fr/CEPII/en/bdd_modele/bdd_modele_item.asp?id=37).  
-2. **Tariff Data**: Simple average ad-valorem equivalent tariffs for each product, year, and bilateral pair, including preferential and most-favoured nation rates. Sourced from the [WITS tariff database](https://wits.worldbank.org/).  
-3. **Exceptional Tariffs**: Specific tariffs from the 2018 US-China trade war, sourced from replication materials for [Hoang and Mix (2025)](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5101245) and validated against the [US Trade Representative's website](https://ustr.gov/issue-areas/enforcement/section-301-investigations).
+1.  **Bilateral Trade Data**: Trade values (USD) and volumes (SI unit) for bilateral trade between all countries in the world, annually, at the HS6 product level (\~5000 unique products). Sourced from [CEPII BACI](https://www.cepii.fr/CEPII/en/bdd_modele/bdd_modele_item.asp?id=37).
+2.  **Tariff Data**: Simple average ad-valorem equivalent tariffs for each product, year, and bilateral pair, including preferential and most-favoured nation rates. Sourced from the [WITS tariff database](https://wits.worldbank.org/).
+3.  **Exceptional Tariffs**: Specific tariffs from the 2018 US-China trade war, sourced from replication materials for [Hoang and Mix (2025)](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5101245) and validated against the [US Trade Representative's website](https://ustr.gov/issue-areas/enforcement/section-301-investigations).
 
-# **Methodology**
+# Methodology
 
-## **High-Dimensional Fixed Effect Panel Regression**
+## High-Dimensional Fixed Effect Panel Regression
 
-To approach this question, we employ a causal inference assessment. We construct a panel of bilateral trade between a range of countries, where the treatment is the application of tariffs by the US on China for a specific good. Our observed outcome variable is a) the value, b) the volume, or c) the unit value of trade.  
-We include global bilateral trade data to construct robust control groups across two dimensions:  
-a) imports of tariffed products from non-tariffed countries.  
-b) imports from China of non-tariffed products.  
-We remove steel and aluminium products from the sample to control for confounders associated with the broad-based application of US tariffs on those goods globally.  
-We employ high-dimensional fixed effects to control for unobserved heterogeneity and confounding effects.
+To approach this question, we employ a causal inference assessment. We construct a panel of bilateral trade between a range of countries, where the treatment is the application of tariffs by the US on China for a specific good. Our observed outcome variable is a) the value, b) the volume, or c) the unit value of trade. We include global bilateral trade data to construct robust control groups across two dimensions: a) imports of tariffed products from non-tariffed countries. b) imports from China of non-tariffed products. We remove steel and aluminium products from the sample to control for confounders associated with the broad-based application of US tariffs on those goods globally. We employ high-dimensional fixed effects to control for unobserved heterogeneity and confounding effects.
 
-### **Specification**
+### Specification
 
-We fit an OLS fixed-effect panel regression using the pyfixest package. Adapting the equation from [Hoang and Mix (2025)](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5101245), we specify the following model:  
-$$  
-\\begin{align\*}  
-L\_{i,j,p,t} &= \\beta \\cdot \\left( \\mathbb{I}(i \= \\text{Importer}) \\cdot \\mathbb{I}(j \= \\text{Exporter}) \\cdot \\mathbb{I}(t \\in \[2017,2024\]) \\cdot \\text{Tariff}{p,t}^{\\text{US-China}} \\right) \\  
-&\\quad \+ \\alpha{j,p,t} \+ \\lambda\_{i,j} \+ \\varepsilon\_{i,j,p,t}  
-\\end{align\*}  
-$$  
+We fit an OLS fixed-effect panel regression using the pyfixest package. Adapting the equation from [Hoang and Mix (2025)](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5101245), we specify the following model:
+
+$$
+\begin{align*}
+L_{i,j,p,t} &= \beta \cdot \left( \mathbb{I}(i = \text{Importer}) \cdot \mathbb{I}(j = \text{Exporter}) \cdot \mathbb{I}(t \in [2017,2024]) \cdot \text{Tariff}_{p,t}^{\text{US-China}} \right) \\
+&\quad + \alpha_{j,p,t} + \lambda_{i,j} + \varepsilon_{i,j,p,t}
+\end{align*}
+$$
+
 Where:
 
-* $L\_{i,j,p,t}$: The dependent variable, e.g., $\\log(\\text{Value}\_{i,j,p,t})$.  
-* Indices: $i$ (importer), $j$ (exporter), $p$ (product), $t$ (year).  
-* $\\beta$: The coefficient of interest, quantifying the impact of the interaction term.  
-* $\\mathbb{I}(\\cdot)$: An indicator function.  
-* $\\text{Tariff}\_{p,t}^{\\text{US-China}}$: The US-China tariff rate for product $p$ in year $t$.  
-* Fixed Effects: $\\alpha\_{j,p,t}$ (importer-product-year) and $\\lambda\_{i,j}$ (importer-exporter) control for unobserved heterogeneity.  
-* $\\varepsilon\_{i,j,p,t}$: The idiosyncratic error term.
+-   $L_{i,j,p,t}$: The dependent variable, e.g., $\log(\text{Value}_{i,j,p,t})$.
+-   Indices: $i$ (importer), $j$ (exporter), $p$ (product), $t$ (year).
+-   $\beta$: The coefficient of interest, quantifying the impact of the interaction term.
+-   $\mathbb{I}(\cdot)$: An indicator function.
+-   $\text{Tariff}_{p,t}^{\text{US-China}}$: The US-China tariff rate for product $p$ in year $t$.
+-   Fixed Effects: $\alpha_{j,p,t}$ (importer-product-year) and $\lambda_{i,j}$ (importer-exporter) control for unobserved heterogeneity.
+-   $\varepsilon_{i,j,p,t}$: The idiosyncratic error term.
 
 Following standard practice, we use heteroskedasticity-robust standard errors.
 
-### **Interpretation**
+### Interpretation
 
-The coefficient $\\beta$ quantifies the estimated percentage change in the outcome variable (e.g., import value) for the specified importer-exporter pair in response to a one percentage point increase in the US-China tariff.
+The coefficient $\beta$ quantifies the estimated percentage change in the outcome variable (e.g., import value) for the specified importer-exporter pair in response to a one percentage point increase in the US-China tariff.
 
-## **Further Considerations**
+## Further Considerations
 
-It is important to note that the policy response of individual countries to the US tariffs on China is endogenous. Third countries exhibited a wide-ranging willingness to absorb deflected exports from China. See [this paper for more](https://cepr.org/voxeu/columns/redirecting-chinese-exports-us-evidence-trade-deflection-first-us-china-trade-war).  
-*"There is huge variation across importing nations in the scale of Chinese trade deflection and in their appetite for absorbing extra imports without taking defensive action."*
+It is important to note that the policy response of individual countries to the US tariffs on China is endogenous. Third countries exhibited a wide-ranging willingness to absorb deflected exports from China. See [this paper for more](https://cepr.org/voxeu/columns/redirecting-chinese-exports-us-evidence-trade-deflection-first-us-china-trade-war). *"There is huge variation across importing nations in the scale of Chinese trade deflection and in their appetite for absorbing extra imports without taking defensive action."*
 
-# **Results**
+# Results
 
-Summarising \- we do not identify a clear case of trade diversion from China to the UK, particularly as compared to the rest of the world, as a result of the 2018 US-China trade war. We do not find evidence to reject the hypothesis that the aggregate cross-elasticity of UK imports from China to US tariffs on those goods was significantly different from zero. If any effect exists, it is small and hidden at the aggregate level.  
-The rest of this section is structured as follows:
+Summarising - we do not identify a clear case of trade diversion from China to the UK, particularly as compared to the rest of the world, as a result of the 2018 US-China trade war. We do not find evidence to reject the hypothesis that the aggregate cross-elasticity of UK imports from China to US tariffs on those goods was significantly different from zero. If any effect exists, it is small and hidden at the aggregate level. The rest of this section is structured as follows:
 
-1. **US Imports from China**: We identify the direct impact of US tariffs on its own imports from China. This serves as a baseline and validates our methodology.  
-2. **RoW Imports from China**: We compare this against the impact on the Rest of the World (RoW).  
-3. **UK Imports from China**: We look at the specific impact on UK imports.  
-4. **Individual Country Effects**: We examine countries that exhibited significant trade diversion.  
-5. **Conclusion**: We discuss what can be applied to the current trade war, discussing limitations and conditioning on policy responses.
+1.  **US Imports from China**: We identify the direct impact of US tariffs on its own imports from China. This serves as a baseline and validates our methodology.
+2.  **RoW Imports from China**: We compare this against the impact on the Rest of the World (RoW).
+3.  **UK Imports from China**: We look at the specific impact on UK imports.
+4.  **Individual Country Effects**: We examine countries that exhibited significant trade diversion.
+5.  **Conclusion**: We discuss what can be applied to the current trade war, discussing limitations and conditioning on policy responses.
 
 ```{python}
 #| label: functions
@@ -280,23 +278,12 @@ def plot_elasticity_multi(models_dict: dict) -> go.Figure:
         fig.add_trace(go.Scatter(x=plot_df["year"], y=elasticities_mean, name=name, mode="lines+markers", line=dict(color=color_rgb), marker=dict(size=8)))
     fig.update_layout(xaxis_title="Year", yaxis_title="Estimated Elasticity", hovermode="x unified", legend_title="Model", xaxis=dict(tickmode="linear"))
     return fig
-```
-
-```{python}
 #| label: data-prep
 #| code-summary: "Data Loading and Preparation"
 
-
-unified_lf = pl.scan_parquet("data/final/unified_trade_tariff_partitioned")
-except FileNotFoundError:
-    print("Data file not found. Please update the path to 'unified_trade_tariff_partitioned'.")
-    # Create a dummy LazyFrame to allow the rest of the script to run without error.
-    schema = {
-        'reporter_country': pl.Utf8, 'partner_country': pl.Utf8, 'product_code': pl.Utf8,
-        'year': pl.Utf8, 'value': pl.Float64, 'quantity': pl.Float64,
-        'unit_value': pl.Float64, 'average_tariff_official': pl.Float64
-    }
-    unified_lf = pl.DataFrame([], schema=schema).lazy()
+unified_lf = pl.scan_parquet(
+    "/Users/lukasalemu/Documents/00. Bank of England/03. MPIL/tariff_trade_analysis/data/final/unified_trade_tariff_partitioned"
+)
 
 alu_steel_product_codes = [
     # Steel Products
@@ -346,13 +333,13 @@ HM_RoW_list_mini = [
     pycountry.countries.search_fuzzy("Germany")[0].numeric,
     pycountry.countries.search_fuzzy("France")[0].numeric,
 ]
-```     
+```
 
-## **1\. The impact on US imports from China**
+## 1. The impact on US imports from China
 
 We construct three regressions, each targeting a different dependent variable: total bilateral trade value (USD), total quantity (SI units), and unit value (Value/Quantity).
 
-### **US Imports from China (Value)**
+### US Imports from China (Value)
 
 ```{python}
 #| label: us-value-reg
@@ -372,17 +359,21 @@ model, etable, plot = run_direct_effect_regression(
 
 fig_elasticity = plot_elasticity(model, keyword=interaction_name)
 
+plot.show()
 etable
 ```
 
 ```{python}
+#| label: fig-us-value-plot
+#| echo: false
+#| fig-cap: "Estimated elasticity of US import value from China."
+
 fig_elasticity.show()
 ```
 
-As expected, the coefficient on the interaction term is negative, indicating that US imports from China of tariffed goods fell in response to the tariffs. The estimated elasticity is around \-0.9% in 2019, suggesting a 1 percentage point increase in the tariff rate leads to a 0.9% decrease in the value of US imports from China of those goods. This aligns with our priors and comparable literature.  
-We see significant changes in the parameter over subsequent years. The magnitude of the shift and its consistency across countries (as shown later) suggests that the fixed effects may not be fully absorbing the effects of the COVID-19 pandemic. We therefore treat results from 2020 onwards with caution.
+As expected, the coefficient on the interaction term is negative, indicating that US imports from China of tariffed goods fell in response to the tariffs. The estimated elasticity is around -0.9% in 2019, suggesting a 1 percentage point increase in the tariff rate leads to a 0.9% decrease in the value of US imports from China of those goods. This aligns with our priors and comparable literature. We see significant changes in the parameter over subsequent years. The magnitude of the shift and its consistency across countries (as shown later) suggests that the fixed effects may not be fully absorbing the effects of the COVID-19 pandemic. We therefore treat results from 2020 onwards with caution.
 
-### **US Imports from China (Quantity)**
+### US Imports from China (Quantity)
 
 ```{python}
 #| label: us-quantity-reg
@@ -391,7 +382,7 @@ We see significant changes in the parameter over subsequent years. The magnitude
 interaction_name = "USA_from_China"
 formula = f"log(quantity) ~ {' + '.join(f'{interaction_name}_{y}' for y in range(2017, 2024))} | importer^year^product_code + importer^exporter"
 
-model_q, etable_q, _ = run_direct_effect_regression(
+model_q, etable_q, plot_q = run_direct_effect_regression(
     data=analysis_lf,
     interaction_term_name=interaction_name,
     interaction_importers=["840"], # USA
@@ -400,25 +391,30 @@ model_q, etable_q, _ = run_direct_effect_regression(
     formula=formula,
 )
 fig_elasticity_q = plot_elasticity(model_q, keyword=interaction_name)
+plot_q.show()
 etable_q
 ```
 
 ```{python}
+#| label: fig-us-quantity-plot
+#| echo: false
+#| fig-cap: "Estimated elasticity of US import quantity from China."
+
 fig_elasticity_q.show()
 ```
 
 The effect on total traded quantities is similar to that on total traded value.
 
-### **US Imports from China (Unit Value)**
+### US Imports from China (Unit Value)
 
-``` {python}
+```{python}
 #| label: us-price-reg
 #| code-summary: "Run Regression: US Imports Unit Value"
 
 interaction_name = "USA_from_China"
 formula = f"log(unit_value) ~ {' + '.join(f'{interaction_name}_{y}' for y in range(2017, 2024))} | importer^year^product_code + importer^exporter"
 
-model_p, etable_p, _ = run_direct_effect_regression(
+model_p, etable_p, plot_p = run_direct_effect_regression(
     data=analysis_lf,
     interaction_term_name=interaction_name,
     interaction_importers=["840"], # USA
@@ -427,20 +423,25 @@ model_p, etable_p, _ = run_direct_effect_regression(
     formula=formula,
 )
 fig_elasticity_p = plot_elasticity(model_p, keyword=interaction_name)
+plot_p.show()
 etable_p
 ```
 
-``` {python}
+```{python}
+#| label: fig-us-price-plot
+#| echo: false
+#| fig-cap: "Estimated elasticity of US import unit value from China."
+
 fig_elasticity_p.show()
 ```
 
 A-priori, we would not expect a large price response, as other research has concluded that Chinese exporters did not absorb the cost of tariffs. The positive coefficient in 2019 is interesting, suggesting prices may have increased at the margin, possibly due to compositional effects within the HS6 product categories.
 
-## **2\. The impact on Chinese exports to the RoW**
+## 2. The impact on Chinese exports to the RoW
 
 We repeat the exercise, targeting the Rest of the World (RoW), defined as our sample of 40 countries minus the US, China, and UK. A-priori, we hypothesise an increase in volume and a decrease in unit price for RoW imports from China.
 
-### **RoW Imports from China (Value)**
+### RoW Imports from China (Value)
 
 ```{python}
 #| label: row-value-reg
@@ -462,637 +463,205 @@ etable_rw
 ```
 
 ```{python}
+#| label: fig-row-value-plot
+#| echo: false
+#| fig-cap: "Estimated elasticity of RoW import value from China."
+
 fig_elasticity_rw.show()
 ```
 
-### **RoW Imports from China (Quantity)**
-
-
-
-# OLD BELOW
+### RoW Imports from China (Quantity)
 
 ```{python}
-def run_direct_effect_regression(
-    data: pl.LazyFrame,
-    interaction_term_name: str,
-    interaction_importers: list[str],
-    interaction_exporters: list[str],
-    year_range: list[str],
-    formula: str,
-    vcov: Optional[str | dict] = "hetero",
-    filter_expression: Optional[pl.Expr] = None,
-):
-    """
-    Runs a direct effect regression based on US-China tariffs.
+#| label: row-quantity-reg
+#| code-summary: "Run Regression: RoW Imports Quantity"
 
-    This function preserves all columns from the input data and dynamically
-    handles the dependent variable specified in the formula.
+interaction_name = "RoW_from_China"
+formula = f"log(quantity) ~ {' + '.join(f'{interaction_name}_{y}' for y in range(2017, 2024))} | importer^year^product_code + importer^exporter"
 
-    Args:
-        data: Pre-filtered LazyFrame. Must contain the dependent variable
-                column specified in the formula.
-        interaction_term_name: A descriptive name for the interaction.
-        interaction_importers: A list of importer country codes for the interaction.
-        interaction_exporters: A list of exporter country codes for the interaction.
-        year_range: A list of years (as strings) for the analysis.
-        formula: The complete regression formula for pyfixest.
-        vcov: The variance-covariance matrix specification.
-        filter_expression: An optional Polars expression to filter the data
-                            after tariff calculation but before regression.
-
-    Returns:
-        A tuple containing the model object, the etable, and the coefficient plot.
-    """
-    USA_CC = "840"
-    CHINA_CC = "156"
-
-    try:
-        dependent_var_str = formula.split("~")[0].strip()
-        dependent_var_col = re.findall(r"\b\w+\b", dependent_var_str)[-1]
-    except IndexError:
-        raise ValueError(
-            f"Could not parse dependent variable from formula: {formula}"
-        )
-
-    tariff_expr = (
-        pl.col("average_tariff_official")
-        .filter(
-            (pl.col("partner_country") == USA_CC)
-            & (pl.col("reporter_country") == CHINA_CC)
-        )
-        .mean()
-        .over(["year", "product_code"])
-        .alias("tariff_us_china")
-    )
-
-    input_lf = data.with_columns(
-        pl.col("partner_country").alias("importer"),
-        pl.col("reporter_country").alias("exporter"),
-        tariff_expr,
-    ).filter(pl.col("year").is_in(year_range))
-
-    interaction_filter = (pl.col("importer").is_in(interaction_importers)) & (
-        pl.col("exporter").is_in(interaction_exporters)
-    )
-
-    interaction_expressions = [
-        pl.when(interaction_filter & (pl.col("year") == str(year)))
-        .then(pl.col("tariff_us_china"))
-        .otherwise(0.0)
-        .alias(f"{interaction_term_name}_{year}")
-        for year in year_range
-    ]
-
-    final_lf = input_lf.with_columns(*interaction_expressions)
-
-    # Apply the additional filter expression if provided
-    if filter_expression is not None:
-        final_lf = final_lf.filter(filter_expression)
-
-    print(
-        f"Checking for nulls in dependent variable '{dependent_var_col}' and 'tariff_us_china'."
-    )
-    clean_df = final_lf.drop_nulls(
-        subset=[dependent_var_col, "tariff_us_china"]
-    ).collect()
-
-    model = pyfixest.feols(fml=formula, data=clean_df, vcov=vcov)
-
-    etable = pyfixest.etable(model)
-    coefplot = model.coefplot(joint=True, plot_backend="matplotlib")
-
-    return model, etable, coefplot
-```
-
-```{python}
-def get_oil_exporting_countries(
-    lzdf: pl.LazyFrame, oil_export_percentage_threshold: float
-) -> list[str]:
-    """
-    Finds countries where oil products (HS code '27') exceed a certain
-    percentage of their total export value.
-    """
-    print("--- Filtering out oil countries ---")
-
-    total_exports = lzdf.group_by("reporter_country").agg(
-        pl.sum("value").alias("total_value")
-    )
-
-    oil_exports = (
-        lzdf.filter(pl.col("product_code").str.starts_with("27"))
-        .group_by("reporter_country")
-        .agg(pl.sum("value").alias("oil_value"))
-    )
-
-    summary = total_exports.join(
-        oil_exports, on="reporter_country", how="left"
-    ).with_columns(pl.col("oil_value").fill_null(0.0))
-
-    summary = summary.with_columns(
-        ((pl.col("oil_value") / pl.col("total_value")) * 100).alias(
-            "oil_export_percentage"
-        )
-    )
-
-    filtered_countries = summary.filter(
-        pl.col("oil_export_percentage") > oil_export_percentage_threshold
-    )
-
-    return filtered_countries.collect()["reporter_country"].to_list()
-```
-
-```{python}
-def prepare_analysis_data(
-    source_lf: pl.LazyFrame,
-    top_n: int | None = None,
-    selection_year: str | None = None,
-    year_range_to_keep: list[str] | None = None,
-    selection_method: str = "total_trade",
-    oil_export_threshold: float | None = 50.0,
-    countries_to_exclude: list[str] | None = None,
-    countries_to_include: list[str] | None = None,
-    product_codes_to_exclude: list[str] | None = None,
-) -> pl.LazyFrame:
-    """
-    Filters and subsets the main trade dataset to create a sample for analysis.
-
-    Args:
-        source_lf: The initial LazyFrame of the full trade dataset.
-        top_n: The number of top countries to select (e.g., 40).
-        selection_year: The year used to determine the top countries.
-        year_range_to_keep: A list of years to keep in the final dataset.
-        selection_method: Method to determine top countries ("total_trade" or "importers").
-        oil_export_threshold: Export percentage to classify a country as an oil exporter.
-        countries_to_exclude: A list of country codes to remove.
-        countries_to_include: A specific list of country codes to use for the analysis.
-        product_codes_to_exclude: A list of product code prefixes (e.g., HS chapters)
-                                    to remove from the dataset.
-
-    Returns:
-        A filtered LazyFrame.
-    """
-    if countries_to_include and (top_n or selection_year):
-        raise ValueError(
-            "'countries_to_include' cannot be used with 'top_n' or 'selection_year'."
-        )
-    if not countries_to_include and not (top_n and selection_year):
-        raise ValueError(
-            "Either 'countries_to_include' or both 'top_n' and 'selection_year' must be provided."
-        )
-
-    print("--- Cleaning data ---")
-
-    lf = source_lf
-
-    if product_codes_to_exclude:
-        print(
-            f"Excluding product codes starting with: {product_codes_to_exclude}"
-        )
-        exclusion_expr = pl.any_horizontal(
-            pl.col("product_code").str.starts_with(code)
-            for code in product_codes_to_exclude
-        )
-        lf = lf.filter(~exclusion_expr)
-
-    if oil_export_threshold is not None:
-        oil_countries = get_oil_exporting_countries(lf, oil_export_threshold)
-        lf = lf.filter(~pl.col("reporter_country").is_in(oil_countries))
-
-    if countries_to_include:
-        top_countries_list = countries_to_include
-    else:
-        trade_in_year_lf = lf.filter(pl.col("year") == selection_year)
-
-        if selection_method == "importers":
-            top_countries_df = (
-                trade_in_year_lf.group_by("partner_country")
-                .agg(pl.sum("value").alias("import_value"))
-                .sort("import_value", descending=True)
-                .head(top_n)
-                .collect()
-            )
-            top_countries_list = top_countries_df["partner_country"].to_list()
-
-        elif selection_method == "total_trade":
-            exports_lf = trade_in_year_lf.select(
-                pl.col("reporter_country").alias("country"), "value"
-            )
-            imports_lf = trade_in_year_lf.select(
-                pl.col("partner_country").alias("country"), "value"
-            )
-
-            top_countries_df = (
-                pl.concat([exports_lf, imports_lf])
-                .group_by("country")
-                .agg(pl.sum("value").alias("total_trade"))
-                .sort("total_trade", descending=True)
-                .head(top_n)
-                .collect()
-            )
-            top_countries_list = top_countries_df["country"].to_list()
-        else:
-            raise ValueError(
-                "selection_method must be 'importers' or 'total_trade'"
-            )
-
-    if countries_to_exclude:
-        top_countries_list = [
-            c for c in top_countries_list if c not in countries_to_exclude
-        ]
-
-    print(f"Final sample includes {len(top_countries_list)} countries.")
-
-    analysis_lf = lf.filter(
-        pl.col("reporter_country").is_in(top_countries_list)
-        & pl.col("partner_country").is_in(top_countries_list)
-    )
-
-    if year_range_to_keep:
-        analysis_lf = analysis_lf.filter(
-            pl.col("year").is_in(year_range_to_keep)
-        )
-
-    return analysis_lf
-```
-
-```{python}
-def plot_elasticity(model, keyword):
-    coefficients = model.coef()
-    conf_intervals = model.confint()
-
-    # Find all coefficient names containing the keyword
-    interaction_vars = [v for v in coefficients.index if keyword in v]
-
-    if not interaction_vars:
-        raise ValueError(f"No coefficients found with the keyword: '{keyword}'")
-
-    # Build a dataframe with the relevant data
-    df = pd.DataFrame(
-        {
-            "coefficient": coefficients[interaction_vars] * 100,
-            "ci_lower": conf_intervals.loc[interaction_vars, "2.5%"] * 100,
-            "ci_upper": conf_intervals.loc[interaction_vars, "97.5%"] * 100,
-        }
-    )
-
-    # Calculate elasticity (E_s = -beta_s) and its CI
-    elasticities_mean = df["coefficient"].values
-    elasticities_ci_lower = df["ci_upper"].values
-    elasticities_ci_upper = df["ci_lower"].values
-
-    fig = go.Figure()
-
-    fig.add_trace(
-        go.Scatter(
-            x=df.index,
-            y=elasticities_ci_upper,
-            mode="lines",
-            line=dict(width=0),
-            showlegend=False,
-        )
-    )
-
-    fig.add_trace(
-        go.Scatter(
-            x=df.index,
-            y=elasticities_ci_lower,
-            mode="lines",
-            line=dict(width=0),
-            fillcolor="rgba(31, 119, 180, 0.2)",
-            fill="tonexty",
-            showlegend=False,
-            name="95% CI",
-        )
-    )
-
-    fig.add_trace(
-        go.Scatter(
-            x=df.index,
-            y=elasticities_mean,
-            mode="lines+markers",
-            name="Estimated elasticity of trade response to tariffs in US-China trade war",
-            line=dict(color="rgb(31, 119, 180)"),
-            marker=dict(size=8),
-        )
-    )
-
-    fig.update_layout(
-        xaxis_title="Year Estimate",
-        yaxis_title="Estimated Elasticity",
-        hovermode="x unified",
-        showlegend=False,
-    )
-
-    return fig
-```
-
-```{python}
-def plot_elasticity_multi(models_dict) -> go.Figure:
-    """
-    Generates an elasticity plot comparing multiple PyFixest model objects.
-
-    Args:
-        models_dict: A dictionary where keys are descriptive names (and keywords
-                        for interaction variables) and values are fitted Feols models.
-
-    Returns:
-        A Plotly Figure object showing estimated elasticities for all models.
-    """
-    fig = go.Figure()
-    colors = px.colors.qualitative.Plotly
-
-    for i, (name, model) in enumerate(models_dict.items()):
-        color_rgb = colors[i % len(colors)]
-        color_rgba = color_rgb.replace("rgb", "rgba").replace(")", ", 0.2)")
-
-        coefficients = model.coef()
-        conf_intervals = model.confint()
-
-        # The dictionary key 'name' is used as the keyword
-        interaction_vars = [v for v in coefficients.index if name in v]
-
-        if not interaction_vars:
-            print(f"Warning: No coefficients found for '{name}'. Skipping.")
-            continue
-
-        plot_df = pd.DataFrame(
-            {
-                "coefficient": coefficients[interaction_vars],
-                "ci_lower": conf_intervals.loc[interaction_vars, "2.5%"],
-                "ci_upper": conf_intervals.loc[interaction_vars, "97.5%"],
-            }
-        )
-
-        plot_df["year"] = plot_df.index.str.extract(r"(\d{4})").astype(int)
-        plot_df = plot_df.sort_values("year")
-
-        elasticities_mean = abs(plot_df["coefficient"])
-        elasticities_ci_lower = -plot_df["ci_upper"]
-        elasticities_ci_upper = -plot_df["ci_lower"]
-
-        # Add traces for the current model
-        fig.add_trace(
-            go.Scatter(
-                x=plot_df["year"],
-                y=elasticities_ci_upper,
-                mode="lines",
-                line=dict(width=0),
-                showlegend=False,
-            )
-        )
-
-        fig.add_trace(
-            go.Scatter(
-                x=plot_df["year"],
-                y=elasticities_ci_lower,
-                mode="lines",
-                line=dict(width=0),
-                fillcolor=color_rgba,
-                fill="tonexty",
-                showlegend=False,
-            )
-        )
-
-        fig.add_trace(
-            go.Scatter(
-                x=plot_df["year"],
-                y=elasticities_mean,
-                name=name,
-                mode="lines+markers",
-                line=dict(color=color_rgb),
-                marker=dict(size=8),
-            )
-        )
-
-    fig.update_layout(
-        xaxis_title="Year",
-        yaxis_title="Estimated Elasticity",
-        hovermode="x unified",
-        legend_title="Model",
-        xaxis=dict(tickmode="linear"),
-    )
-
-    return fig
-```
-
-# --- Data loading and prep ---
-
-```{python}
-unified_lf = pl.scan_parquet(
-    "/Users/lukasalemu/Documents/00. Bank of England/03. MPIL/tariff_trade_analysis/data/final/unified_trade_tariff_partitioned"
-)
-alu_steel_product_codes = [
-    # Steel Products (720610-721650)
-    "720610", "720690", "720711", "720712", "720719", "720720", "720810", "720825", "720826", "720827",
-    "720836", "720837", "720838", "720839", "720840", "720851", "720852", "720853", "720854", "720890",
-    "720915", "720916", "720917", "720918", "720925", "720926", "720927", "720928", "720990", "721011",
-    "721012", "721020", "721030", "721041", "721049", "721050", "721061", "721069", "721070", "721090",
-    "721113", "721114", "721119", "721123", "721129", "721190", "721210", "721220", "721230", "721240",
-    "721250", "721260", "721310", "721320", "721391", "721399", "721410", "721420", "721430", "721491",
-    "721499", "721510", "721550", "721590", "721610", "721621", "721622", "721631", "721632", "721633",
-    "721640", "721650",
-
-    # Steel Products (721699-730690)
-    "721699", "721710", "721720", "721730", "721790", "721810", "721891", "721899", "721911", "721912",
-    "721913", "721914", "721921", "721922", "721923", "721924", "721931", "721932", "721933", "721934",
-    "721935", "721990", "722011", "722012", "722020", "722090", "722100", "722211", "722219", "722220",
-    "722230", "722240", "722300", "722410", "722490", "722511", "722519", "722530", "722540", "722550",
-    "722591", "722592", "722599", "722611", "722619", "722620", "722691", "722692", "722699", "722710",
-    "722720", "722790", "722810", "722820", "722830", "722840", "722850", "722860", "722870", "722880",
-    "722920", "722990", "730110", "730210", "730240", "730290", "730411", "730419", "730422", "730423",
-    "730424", "730429", "730431", "730439", "730441", "730449", "730451", "730459", "730490", "730511",
-    "730512", "730519", "730520", "730531", "730539", "730590", "730611", "730619", "730621", "730629",
-    "730630", "730640", "730650", "730661", "730669", "730690",
-
-    # Aluminum Products
-    "760110", "760120",  # Unwrought aluminum
-    "760410", "760421", "760429",  # Bars, rods, and profiles
-    "760511", "760519", "760521", "760529",  # Wire
-    "760611", "760612", "760691", "760692",  # Plates, sheets, and strip
-    "760711", "760719", "760720",  # Foil
-    "760810", "760820",  # Tubes and pipes
-    "760900",  # Tube or pipe fittings
-]
-analysis_lf = prepare_analysis_data(
-    source_lf=unified_lf,
-    top_n=40,
-    selection_year="2017",
-    year_range_to_keep=[str(y) for y in range(2016, 2024)],  # 2016–2023
-    selection_method="total_trade",
-    oil_export_threshold=50.0,
-    countries_to_exclude=["643", "344"],  # Russia, Hong Kong
-    product_codes_to_exclude=alu_steel_product_codes,
-)
-analysis_lf.head().collect()
-```
-
-# --- Analysis and Results ---
-
-## Indirect effects of Trade war 1 on the UK
-
-This document explores the effects of the 2018 US-China trade war on UK imports from China. We attempt to find evidence for the existence of dumping, and to extrapolate this evidence to identify an implied effect over trade war 2.
-
-## Rationalle
-
-We are essentially trying to connect UK imports from China, to the application of tariffs by the US on Chinese goods in the 2018 trade war. We are attempting to determine if there is a causal link as follows:
-
-1.  The US tariffs Chinese goods.
-2.  In response to a) the increased effective price for US importers & consumers; b) other political pressures, the US demand for Chinese goods falls.
-3.  Chinese exporters respond by reducing their price and identifying new trading relationships with other countries, including the UK.
-4.  This results in an increased volume of Chinese goods, at a lower export price, being sent to the UK. This is called 'dumping'.
-
-## Data
-
-To answer this question, we construct the following dataset:
-
-1.  Trade values (USD), and trade volumes (SI unit), for bilateral trade between all countries in the world, annually. At the HS6 product level (some 5000 unique product codes). This data is sourced from [CEPII](https://www.cepii.fr/CEPII/en/bdd_modele/bdd_modele_item.asp?id=37).
-2.  The simple average ad-valorem equivalent tariffs for each of the \~5000 products, through time and for each bilateral trading pair, resulting from both preferential agreements and on a most-favoured nation basis. This is sourced from the [WITS tariff database](https://wits.worldbank.org/), produced by the World Bank.
-3.  Specific 'exceptional' tariffs introduced by the US administration during the 2018 US-China trade war. These are sourced from replication materials for [this paper](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5101245) by Trang T. Hoang and Carter Mix at the Federal Reserve Board.
-
-## Methodology
-
-### High-Dimensional Fixed Effect Panel Regression
-
-To approach this question, first order, we run a causal inference assessment. We construct a panel of bilateral trade between a range of countries, where the treatment is the application of tariffs by the US on China of a specific good. Our observed outcome variable is a) the volume; b) the value; c) the unit value; of exports from China to the UK.
-
-We are interested in the effect of the tariffs on UK imports, but include all global bilateral trade from the rest of the world as well. This allows us to implicitly construct control groups across two dimensions: a) imports of those products tariffed by the US from countries other than China which were not tariffed; b) imports from China of products which were not tariffed.
-
-We remove Steel and Aluminium products from the sample, as in Hoang-Mix, to control for confounders associated with the broad-based application of tariffs on all countries by the USA.
-
-We employ fixed effects to control for variation between our treatment and non-treatment groups as well as confounding effects. Replicating and extending the specification from [@mix], we control for: - variation across time within exporter and specific product (importer \^ year \^ product_code), - variation between importer-exporter pair (importer \^ exporter).
-
-> Note for self: If we condition on a common/descendent/mediating effects (e.g. fluctuations in price of goods) of the treatment (tariff application by the US), we cause selection bias, reducing the power of our test to detect the impact of the treatment on the observed outcome variable (UK imports from China).
-
-#### Specification
-
-We fit an OLS fixed effect panel regression, using the [pyfixest](https://github.com/py-econometrics/pyfixest) package.
-
-Adapting the equation defined in Section 3.1 of [Mix-Huang, 2025](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5101245), we specify the following model:
-
-$$
-\begin{align*}
-L_{i,j,p,t} &= \beta \cdot \left( \mathbb{I}(j = \mathrm{UK}) \cdot \mathbb{I}(i = \mathrm{China}) \cdot \mathbb{I}(t \in [2017,2024]) \cdot \mathrm{Tariff}_{p,t}^{\mathrm{US-China}} \right) \\
-&\quad + \alpha_{j,p,t} + \lambda_{i,j} + \varepsilon_{i,j,p,t}
-\end{align*}
-$$
-
-Where:
-
--   $L_{i,j,p,t}$: Dependent variable, $L_{i,j,p,t} = \log(\mathrm{Value}_{i,j,p,t})$.
--   $i$: Exporter.
--   $j$: Importer.
--   $p$: Product code.
--   $t$: Year.
--   $\beta$: Coefficient of interest.
--   $\mathbb{I}(\cdot)$: Indicator function.
--   $\mathrm{Tariff}_{p,t}^{\mathrm{US-China}}$: Average official tariff rate between the US and China for product $p$ in year $t$.
--   $\alpha_{j,p,t}$: Importer-product-year fixed effects.
--   $\lambda_{i,j}$: Exporter-importer fixed effects.
--   $\varepsilon_{i,j,p,t}$: Error term. It captures all other unobserved factors not accounted for by the regressors or fixed effects.
-
-For a first pass, and similar to other literature, we use un-clustered heteroskedasticity-robust standard errors (Eicker-Huber-White).
-
-#### Interpretation
-
-The coefficient $\beta$ quantifies the estimated percentage change in the specific metric used for $\log(\mathrm{Value}_{i,j,p,t})$ (i.e., import value, quantity, or price) for UK imports from China in response to a one percentage point increase in the $\mathrm{Tariff}_{p,t}^{\mathrm{US-China}}$.
-
-### Extensions and alternate specifications
-
-Based on this foundation, we vary the specification to test our results for robustness, vary the question being answered, compare against literature, etc. Dimensions which we perform this variation across are:
-
--   Varying control groups (range & breadth of the sample)
--   Varying fixed effects
--   RoW, US, and UK as the importer
--   Varying the measurement period of the effect (various baseline years)
--   Placebo tests (TBD)
--   Clustering standard errors with varying specifications
-
-A range of alternate specifications for all models is contained in the Appendix.
-
-## Further Considerations
-
-The policy response of individual countries, such as the UK, to the US tariffs on China is embedded within our data (i.e. endogenous). For example, the UK implemented industry-specific subsidies alongside various import restrictions. Third countries exhibited a wide-ranging willingness to absorb exports from China in the 2018 trade war. See [this paper for more](https://cepr.org/voxeu/columns/redirecting-chinese-exports-us-evidence-trade-deflection-first-us-china-trade-war).
-
-> *"There is huge variation across importing nations in the scale of Chinese trade deflection and in their appetite for absorbing extra imports without taking defensive action."*
-
-## Results
-
-Summarising - we do not identify a clear case of trade diversion from China to the UK, particularly as compared to the rest of the world, as a result of the 2018 US-China trade war.
-
-For US imports from China, the coefficient on the interaction term is negative, indicating that US imports from China of the tariffed goods fell in response to the tariffs. The estimated elasticity is around -0.009 in 2019, suggesting a 1% increase in the tariff rate leads to a circa 0.9% decrease in US imports from China of those goods. This aligns with priors and comparable literature.
-
-We see significant changes in the value of our estimated parameter over the years subsequent to 2019. The magnitude and consistency across countries suggest that the fixed effects may not fully absorb the effects of COVID-19, where supply chains globally and particularly from China were significantly affected. Results from 2020 onwards should be treated with caution.
-
-For the RoW (Rest of World, excluding US, China, Russia, Hong Kong, and UK), we observe that prices stay the same in 2018 while export values/volumes from China to RoW fell. Prices decrease consistently, though non-monotonically, over 2019–2023, while export values and quantities increase, suggesting Chinese exporters are successfully finding new markets for their goods.
-
-For the UK, we do not find evidence to reject the hypothesis that there was a significant difference from 0 for the aggregate cross-elasticity of UK imports from China of specific goods to US tariffs on those goods. If there is any effect, it is small and hidden at the aggregate level. This is consistent with the UK policy response of subsidies and import restrictions.
-
-New: We also run regressions for individual RoW countries, aggregating results to compare the effect across a basket of countries. This helps identify heterogeneity in trade diversion effects.
-
-The rest of this section is structured as follows:
-
-1.  First, we identify the impact on US imports from China of the US tariffs.
-2.  Second, we compare this against the impact on the RoW - a select basket of countries. These first two sections serve to identify the efficacy of our methodology.
-3.  Third, we look at the impact on UK imports of Chinese goods of the US tariffs.
-4.  Fourth, we examine countries which exhibited significant trade diversion
-5.  Fifth, we examine how correlated this is to the endogenous protectionist policy response by the relevant country
-6.  Finally, we conclude as to what we can apply from this to the current trade war, discussing limitations and conditioning on the policy response.
-
-## The impact on US imports from China of the US tariffs.
-
-We construct three regressions, each targeting a different dependent variable - Total bilateral trade value in USD, total quantity in SI units, and a unit value price constructed by dividing the total value by total quantity.
-
-Turning first to total traded value...
-
-```{python}
-# --- Regression ---
-# 2. Build the formula
-interaction_name = "USA_from_China"
-importer_list = ["840"]  # USA
-exporter_list = ["156"]  # China
-
-regressors = " + ".join(f"{interaction_name}_{year}" for year in [str(y) for y in range(2017, 2024)])
-formula = f"log(value) ~ {regressors} | importer^year^product_code + importer^exporter"
-print(f"Formula for model:\n{formula}")
-
-# 3. Run the model
-model, etable, plot = run_direct_effect_regression(
+model_rwq, etable_rwq, _ = run_direct_effect_regression(
     data=analysis_lf,
     interaction_term_name=interaction_name,
-    interaction_importers=importer_list,
-    interaction_exporters=exporter_list,
+    interaction_importers=RoW_list,
+    interaction_exporters=["156"], # China
     year_range=[str(y) for y in range(2016, 2024)],
     formula=formula,
 )
-fig_elasticity = plot_elasticity(model, keyword=interaction_name)
-
-fig_elasticity.show()
-etable.show()
-plot.show()
-model.summary()
+fig_elasticity_rwq = plot_elasticity(model_rwq, keyword=interaction_name)
+etable_rwq
 ```
 
+```{python}
+#| label: fig-row-quantity-plot
+#| echo: false
+#| fig-cap: "Estimated elasticity of RoW import quantity from China."
 
-As expected, the coefficient on the interaction term is negative, indicating that US imports from China of the tariffed goods fell in response to the tariffs. The estimated (partial) elasticity is around -0.009 in 2019, the first year following the tariffs suggesting a 1% increase in the tariff rate leads to a circa 0.9% decrease in US imports from China of those goods.
+fig_elasticity_rwq.show()
+```
 
-This is aligned with our priors, and with various comparable literature [CITE CITE CITE].
+### RoW Imports from China (Unit Value)
 
-We see significant changes in the value of our estimated parameter over the years subsequent to 2019. We might expect a sustained monotonic reduction in the value of the coefficient, as supply chains continue to disentangle. 
+```{python}
+#| label: row-price-reg
+#| code-summary: "Run Regression: RoW Imports Unit Value"
 
-However, and as we will observe below, the magnitude of the shift and its consistency across countries suggests that the fixed effects may not be fully absorbing the effects of COVID, where supply chains globally and particularly from China were significantly affected. We therefore treat results from 2020 onwards with caution. Section [X] outlines some approaches we take to mitigate the impact of COVID [???].
+interaction_name = "RoW_from_China"
+formula = f"log(unit_value) ~ {' + '.join(f'{interaction_name}_{y}' for y in range(2017, 2024))} | importer^year^product_code + importer^exporter"
 
-Next, looking at the quantity traded, in dimensioned units (which we aggregate over).
+model_rwp, etable_rwp, _ = run_direct_effect_regression(
+    data=analysis_lf,
+    interaction_term_name=interaction_name,
+    interaction_importers=RoW_list,
+    interaction_exporters=["156"], # China
+    year_range=[str(y) for y in range(2016, 2024)],
+    formula=formula,
+)
+fig_elasticity_rwp = plot_elasticity(model_rwp, keyword=interaction_name)
+etable_rwp
+```
 
-### Intuition
+```{python}
+#| label: fig-row-price-plot
+#| echo: false
+#| fig-cap: "Estimated elasticity of RoW import unit value from China."
 
-In this case, our control group is as follows:
+fig_elasticity_rwp.show()
+```
 
--   Bilateral trade values between non-US and non-China in both tariffed and non-tariffed goods
--   US imports of non-tariffed goods from China
--   US imports of tariffed goods from countries other than China
+Taking these results together, we see that outside of an anomalous 2018, prices for RoW imports from China decrease consistently from 2019 onwards, while quantities and values increase. This is broadly consistent with our priors about trade diversion.
 
-For each of our products.
+## 3. The impact on UK imports from China
 
-Our sample *does* include some goods which were tariffed
+We now turn to our key question, running the same regressions but targeting the UK-China trading relationship.
 
--   countries, including the US and countries other than China, of goods which were tariffed.
+### UK Imports from China (Value)
+
+```{python}
+#| label: uk-value-reg
+#| code-summary: "Run Regression: UK Imports Value"
+
+interaction_name = "UK_from_China"
+formula = f"log(value) ~ {' + '.join(f'{interaction_name}_{y}' for y in range(2017, 2024))} | importer^year^product_code + importer^exporter"
+
+model_uk, etable_uk, _ = run_direct_effect_regression(
+    data=analysis_lf,
+    interaction_term_name=interaction_name,
+    interaction_importers=["826"], # UK
+    interaction_exporters=["156"], # China
+    year_range=[str(y) for y in range(2016, 2024)],
+    formula=formula,
+)
+fig_elasticity_uk = plot_elasticity(model_uk, keyword=interaction_name)
+etable_uk
+```
+
+```{python}
+#| label: fig-uk-value-plot
+#| echo: false
+#| fig-cap: "Estimated elasticity of UK import value from China."
+
+fig_elasticity_uk.show()
+```
+
+### UK Imports from China (Quantity)
+
+```{python}
+#| label: uk-quantity-reg
+#| code-summary: "Run Regression: UK Imports Quantity"
+
+interaction_name = "UK_from_China"
+formula = f"log(quantity) ~ {' + '.join(f'{interaction_name}_{y}' for y in range(2017, 2024))} | importer^year^product_code + importer^exporter"
+
+model_ukq, etable_ukq, _ = run_direct_effect_regression(
+    data=analysis_lf,
+    interaction_term_name=interaction_name,
+    interaction_importers=["826"], # UK
+    interaction_exporters=["156"], # China
+    year_range=[str(y) for y in range(2016, 2024)],
+    formula=formula,
+)
+fig_elasticity_ukq = plot_elasticity(model_ukq, keyword=interaction_name)
+etable_ukq
+```
+
+```{python}
+#| label: fig-uk-quantity-plot
+#| echo: false
+#| fig-cap: "Estimated elasticity of UK import quantity from China."
+
+fig_elasticity_ukq.show()
+```
+
+### UK Imports from China (Unit Value)
+
+```{python}
+#| label: uk-price-reg
+#| code-summary: "Run Regression: UK Imports Unit Value"
+
+interaction_name = "UK_from_China"
+formula = f"log(unit_value) ~ {' + '.join(f'{interaction_name}_{y}' for y in range(2017, 2024))} | importer^year^product_code + importer^exporter"
+
+model_ukp, etable_ukp, _ = run_direct_effect_regression(
+    data=analysis_lf,
+    interaction_term_name=interaction_name,
+    interaction_importers=["826"], # UK
+    interaction_exporters=["156"], # China
+    year_range=[str(y) for y in range(2016, 2024)],
+    formula=formula,
+)
+fig_elasticity_ukp = plot_elasticity(model_ukp, keyword=interaction_name)
+etable_ukp
+#| label: fig-uk-price-plot
+#| echo: false
+#| fig-cap: "Estimated elasticity of UK import unit value from China."
+
+fig_elasticity_ukp.show()
+```
+
+It is difficult to justify arguments of significant dumping from China on the UK from this data. The coefficients are mostly statistically insignificant, and there is no clear pattern of price decreases coupled with quantity increases. This is to be expected, given the UK's policy response included subsidies and import restrictions, which would counteract any dumping effect.
+
+## 4. Individual Countries within RoW
+
+We now run the value regression for a small basket of individual countries to observe the heterogeneity of the effect. The list of countries is:
+
+```{python}
+#| echo: false
+# Note: This requires the HM_RoW_list_mini variable from the data-prep chunk
+country_names = [pycountry.countries.get(numeric=cc).name for cc in HM_RoW_list_mini]
+print(", ".join(country_names) + ".")
+#| label: multi-country-reg
+#| code-summary: "Run Regressions for Individual Countries"
+
+models_value = {}
+model_renamer_value = {}
+
+for country_code in HM_RoW_list_mini:
+    country_key = pycountry.countries.get(numeric=country_code).alpha_3
+    interaction_term_name = f"{country_key}_from_China"
+    formula = f"log(value) ~ {' + '.join(f'{interaction_term_name}_{y}' for y in range(2017, 2024))} | importer^year^product_code + importer^exporter"
+      
+    model, _, _ = run_direct_effect_regression(
+        data=analysis_lf,
+        interaction_term_name=interaction_term_name,
+        interaction_importers=[country_code],
+        interaction_exporters=["156"],
+        year_range=[str(y) for y in range(2016, 2024)],
+        formula=formula,
+    )
+    model_renamer_value[formula] = country_key
+    models_value[country_key] = model
+
+pyfixest.etable(models=models_value.values(), model_heads=models_value.keys())
+```
+
+```{python}
+#| label: multi-country-plot
+#| code-summary: "Plot Multi-Country Results"
+#| echo: false
+#| fig-cap: "Heterogeneity of import value elasticity across selected countries."
+
+fig_multi_value = plot_elasticity_multi(models_dict=models_value)
+fig_multi_value.show()
+```
+
+The results show significant heterogeneity across countries, reinforcing the idea that national policy responses and economic structures heavily mediate the effects of trade diversion.

@@ -74,3 +74,6 @@ manager = "uv"
 
 [tool.uv.sources]
 mpil-tariff-trade-analysis = { workspace = true }
+[tool.pyrefly]
+project-includes = ["**/*"]
+project-excludes = ["**/*venv/**/*"]
