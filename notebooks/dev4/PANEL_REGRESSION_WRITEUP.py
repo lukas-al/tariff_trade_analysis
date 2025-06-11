@@ -12,10 +12,10 @@ def _():
     import marimo as mo
     import pandas as pd
     import plotly.graph_objects as go
+    import plotly.io as pio
     import polars as pl
     import pycountry
     import pyfixest
-    import plotly.io as pio
 
     pio.renderers.default = "notebook"
     return Optional, go, mo, pd, pl, pycountry, pyfixest, re
@@ -67,16 +67,11 @@ def _(Optional, pl, pyfixest, re):
             dependent_var_str = formula.split("~")[0].strip()
             dependent_var_col = re.findall(r"\b\w+\b", dependent_var_str)[-1]
         except IndexError:
-            raise ValueError(
-                f"Could not parse dependent variable from formula: {formula}"
-            )
+            raise ValueError(f"Could not parse dependent variable from formula: {formula}")
 
         tariff_expr = (
             pl.col("average_tariff_official")
-            .filter(
-                (pl.col("partner_country") == USA_CC)
-                & (pl.col("reporter_country") == CHINA_CC)
-            )
+            .filter((pl.col("partner_country") == USA_CC) & (pl.col("reporter_country") == CHINA_CC))
             .mean()
             .over(["year", "product_code"])
             .alias("tariff_us_china")
@@ -88,9 +83,7 @@ def _(Optional, pl, pyfixest, re):
             tariff_expr,
         ).filter(pl.col("year").is_in(year_range))
 
-        interaction_filter = (pl.col("importer").is_in(interaction_importers)) & (
-            pl.col("exporter").is_in(interaction_exporters)
-        )
+        interaction_filter = (pl.col("importer").is_in(interaction_importers)) & (pl.col("exporter").is_in(interaction_exporters))
 
         interaction_expressions = [
             pl.when(interaction_filter & (pl.col("year") == str(year)))
@@ -106,12 +99,8 @@ def _(Optional, pl, pyfixest, re):
         if filter_expression is not None:
             final_lf = final_lf.filter(filter_expression)
 
-        print(
-            f"Checking for nulls in dependent variable '{dependent_var_col}' and 'tariff_us_china'."
-        )
-        clean_df = final_lf.drop_nulls(
-            subset=[dependent_var_col, "tariff_us_china"]
-        ).collect()
+        print(f"Checking for nulls in dependent variable '{dependent_var_col}' and 'tariff_us_china'.")
+        clean_df = final_lf.drop_nulls(subset=[dependent_var_col, "tariff_us_china"]).collect()
 
         model = pyfixest.feols(fml=formula, data=clean_df, vcov=vcov)
 
@@ -119,45 +108,31 @@ def _(Optional, pl, pyfixest, re):
         coefplot = model.coefplot(joint=True, plot_backend="matplotlib")
 
         return model, etable, coefplot
+
     return (run_direct_effect_regression,)
 
 
 @app.cell
 def _(pl):
-    def get_oil_exporting_countries(
-        lzdf: pl.LazyFrame, oil_export_percentage_threshold: float
-    ) -> list[str]:
+    def get_oil_exporting_countries(lzdf: pl.LazyFrame, oil_export_percentage_threshold: float) -> list[str]:
         """
         Finds countries where oil products (HS code '27') exceed a certain
         percentage of their total export value.
         """
         print("--- Filtering out oil countries ---")
 
-        total_exports = lzdf.group_by("reporter_country").agg(
-            pl.sum("value").alias("total_value")
-        )
+        total_exports = lzdf.group_by("reporter_country").agg(pl.sum("value").alias("total_value"))
 
-        oil_exports = (
-            lzdf.filter(pl.col("product_code").str.starts_with("27"))
-            .group_by("reporter_country")
-            .agg(pl.sum("value").alias("oil_value"))
-        )
+        oil_exports = lzdf.filter(pl.col("product_code").str.starts_with("27")).group_by("reporter_country").agg(pl.sum("value").alias("oil_value"))
 
-        summary = total_exports.join(
-            oil_exports, on="reporter_country", how="left"
-        ).with_columns(pl.col("oil_value").fill_null(0.0))
+        summary = total_exports.join(oil_exports, on="reporter_country", how="left").with_columns(pl.col("oil_value").fill_null(0.0))
 
-        summary = summary.with_columns(
-            ((pl.col("oil_value") / pl.col("total_value")) * 100).alias(
-                "oil_export_percentage"
-            )
-        )
+        summary = summary.with_columns(((pl.col("oil_value") / pl.col("total_value")) * 100).alias("oil_export_percentage"))
 
-        filtered_countries = summary.filter(
-            pl.col("oil_export_percentage") > oil_export_percentage_threshold
-        )
+        filtered_countries = summary.filter(pl.col("oil_export_percentage") > oil_export_percentage_threshold)
 
         return filtered_countries.collect()["reporter_country"].to_list()
+
     return (get_oil_exporting_countries,)
 
 
@@ -193,26 +168,17 @@ def _(get_oil_exporting_countries, pl):
             A filtered LazyFrame.
         """
         if countries_to_include and (top_n or selection_year):
-            raise ValueError(
-                "'countries_to_include' cannot be used with 'top_n' or 'selection_year'."
-            )
+            raise ValueError("'countries_to_include' cannot be used with 'top_n' or 'selection_year'.")
         if not countries_to_include and not (top_n and selection_year):
-            raise ValueError(
-                "Either 'countries_to_include' or both 'top_n' and 'selection_year' must be provided."
-            )
+            raise ValueError("Either 'countries_to_include' or both 'top_n' and 'selection_year' must be provided.")
 
         print("--- Cleaning data ---")
 
         lf = source_lf
 
         if product_codes_to_exclude:
-            print(
-                f"Excluding product codes starting with: {product_codes_to_exclude}"
-            )
-            exclusion_expr = pl.any_horizontal(
-                pl.col("product_code").str.starts_with(code)
-                for code in product_codes_to_exclude
-            )
+            print(f"Excluding product codes starting with: {product_codes_to_exclude}")
+            exclusion_expr = pl.any_horizontal(pl.col("product_code").str.starts_with(code) for code in product_codes_to_exclude)
             lf = lf.filter(~exclusion_expr)
 
         if oil_export_threshold is not None:
@@ -235,12 +201,8 @@ def _(get_oil_exporting_countries, pl):
                 top_countries_list = top_countries_df["partner_country"].to_list()
 
             elif selection_method == "total_trade":
-                exports_lf = trade_in_year_lf.select(
-                    pl.col("reporter_country").alias("country"), "value"
-                )
-                imports_lf = trade_in_year_lf.select(
-                    pl.col("partner_country").alias("country"), "value"
-                )
+                exports_lf = trade_in_year_lf.select(pl.col("reporter_country").alias("country"), "value")
+                imports_lf = trade_in_year_lf.select(pl.col("partner_country").alias("country"), "value")
 
                 top_countries_df = (
                     pl.concat([exports_lf, imports_lf])
@@ -252,28 +214,20 @@ def _(get_oil_exporting_countries, pl):
                 )
                 top_countries_list = top_countries_df["country"].to_list()
             else:
-                raise ValueError(
-                    "selection_method must be 'importers' or 'total_trade'"
-                )
+                raise ValueError("selection_method must be 'importers' or 'total_trade'")
 
         if countries_to_exclude:
-            top_countries_list = [
-                c for c in top_countries_list if c not in countries_to_exclude
-            ]
+            top_countries_list = [c for c in top_countries_list if c not in countries_to_exclude]
 
         print(f"Final sample includes {len(top_countries_list)} countries.")
 
-        analysis_lf = lf.filter(
-            pl.col("reporter_country").is_in(top_countries_list)
-            & pl.col("partner_country").is_in(top_countries_list)
-        )
+        analysis_lf = lf.filter(pl.col("reporter_country").is_in(top_countries_list) & pl.col("partner_country").is_in(top_countries_list))
 
         if year_range_to_keep:
-            analysis_lf = analysis_lf.filter(
-                pl.col("year").is_in(year_range_to_keep)
-            )
+            analysis_lf = analysis_lf.filter(pl.col("year").is_in(year_range_to_keep))
 
         return analysis_lf
+
     return (prepare_analysis_data,)
 
 
@@ -347,6 +301,7 @@ def _(go, pd):
         )
 
         return fig
+
     return (plot_elasticity,)
 
 
@@ -438,6 +393,7 @@ def _(go, pd, px):
         )
 
         return fig
+
     return
 
 
@@ -792,8 +748,9 @@ def _(mo):
     * $\mathbb{I}(\cdot)$: The indicator function, which equals 1 if the condition in the parenthesis is true, and 0 otherwise.
         * $\mathbb{I}(i = \mathrm{UK})$: Equals 1 if the importer $i$ is the United Kingdom, 0 otherwise.
         * $\mathbb{I}(j = \mathrm{China})$: Equals 1 if the exporter $j$ is China, 0 otherwise.
-        * $\mathbb{I}(t \in [2017,2024])$: Equals 1 if the year $t$ falls within the range of 2017 to 2024 (inclusive), 0 otherwise.
+        * $\mathbb{I}(t \in [2017,2024])$: Equals 1 for each year $t$ which falls within the range of 2017 to 2023 (inclusive), 0 otherwise. Implemented in such a way that each year gets a seperate interaction term. 
     * $\mathrm{Tariff}_{p,t}^{\mathrm{US-China}}$: The average official tariff rate between the US and China for product code $p$ in year $t$.
+
     * Fixed Effects: These terms control for unobserved heterogeneity between groups, including various sources of bias due to differences between our treated and untreated groups. They work by essentially de-meaning within a specific group, leaving only heterogeneity within that group.
         * $\alpha_{j,p,t}$: Represents importer-product-year fixed effects, controlling for any unobserved factors specific to each combination of an exporter $i$, product code $p$, and year $t$. 
         * $\lambda_{i,j}$: Represents importer-exporter fixed effects, controlling for unobserved factors specific to each pair of an importer $i$ and exporter $j$.
@@ -898,10 +855,7 @@ def _(analysis_lf, mo, plot_elasticity, run_direct_effect_regression):
         importer_list = ["840"]  # USA
         exporter_list = ["156"]  # China
 
-        regressors = " + ".join(
-            f"{interaction_name}_{year}"
-            for year in [str(y) for y in range(2017, 2024)]
-        )
+        regressors = " + ".join(f"{interaction_name}_{year}" for year in [str(y) for y in range(2017, 2024)])
         formula = f"log(value) ~ {regressors} | importer^year^product_code + importer^exporter + exporter^year^product_code"
         print(f"Formula for model:\n{formula}")
 
@@ -919,7 +873,6 @@ def _(analysis_lf, mo, plot_elasticity, run_direct_effect_regression):
 
         # 4. View the results
         return mo.vstack([etable, plot, fig_elasticity, model.summary()])
-
 
     _()
     return
@@ -951,10 +904,7 @@ def _(analysis_lf, mo, plot_elasticity, run_direct_effect_regression):
         importer_list = ["840"]  # USA
         exporter_list = ["156"]  # China
 
-        regressors = " + ".join(
-            f"{interaction_name}_{year}"
-            for year in [str(y) for y in range(2017, 2024)]
-        )
+        regressors = " + ".join(f"{interaction_name}_{year}" for year in [str(y) for y in range(2017, 2024)])
         formula = f"log(quantity) ~ {regressors} | importer^year^product_code + importer^exporter + exporter^year^product_code"
         print(f"Formula for model:\n{formula}")
 
@@ -972,7 +922,6 @@ def _(analysis_lf, mo, plot_elasticity, run_direct_effect_regression):
 
         # 4. View the results
         return mo.vstack([etable, plot, fig_elasticity])
-
 
     _()
     return
@@ -998,10 +947,7 @@ def _(analysis_lf, mo, plot_elasticity, run_direct_effect_regression):
         importer_list = ["840"]  # USA
         exporter_list = ["156"]  # China
 
-        regressors = " + ".join(
-            f"{interaction_name}_{year}"
-            for year in [str(y) for y in range(2017, 2024)]
-        )
+        regressors = " + ".join(f"{interaction_name}_{year}" for year in [str(y) for y in range(2017, 2024)])
         formula = f"log(unit_value) ~ {regressors} | importer^year^product_code + importer^exporter + exporter^year^product_code"
         print(f"Formula for model:\n{formula}")
 
@@ -1019,7 +965,6 @@ def _(analysis_lf, mo, plot_elasticity, run_direct_effect_regression):
 
         # 4. View the results
         return mo.vstack([etable, plot, fig_elasticity])
-
 
     _()
     return
@@ -1131,10 +1076,7 @@ def _(
         importer_list = RoW_list
         exporter_list = ["156"]  # China
 
-        regressors = " + ".join(
-            f"{interaction_name}_{year}"
-            for year in [str(y) for y in range(2017, 2024)]
-        )
+        regressors = " + ".join(f"{interaction_name}_{year}" for year in [str(y) for y in range(2017, 2024)])
         formula = f"log(value) ~ {regressors} | importer^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
@@ -1153,7 +1095,6 @@ def _(
         # 4. View the results
         return mo.vstack([etable, plot, fig_elasticity])
 
-
     _()
     return
 
@@ -1172,10 +1113,7 @@ def _(
         importer_list = RoW_list
         exporter_list = ["156"]  # China
 
-        regressors = " + ".join(
-            f"{interaction_name}_{year}"
-            for year in [str(y) for y in range(2017, 2024)]
-        )
+        regressors = " + ".join(f"{interaction_name}_{year}" for year in [str(y) for y in range(2017, 2024)])
         formula = f"log(quantity) ~ {regressors} | importer^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
@@ -1194,7 +1132,6 @@ def _(
         # 4. View the results
         return mo.vstack([etable, plot, fig_elasticity])
 
-
     _()
     return
 
@@ -1213,10 +1150,7 @@ def _(
         importer_list = RoW_list
         exporter_list = ["156"]  # China
 
-        regressors = " + ".join(
-            f"{interaction_name}_{year}"
-            for year in [str(y) for y in range(2017, 2024)]
-        )
+        regressors = " + ".join(f"{interaction_name}_{year}" for year in [str(y) for y in range(2017, 2024)])
         formula = f"log(unit_value) ~ {regressors} | importer^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
@@ -1234,7 +1168,6 @@ def _(
 
         # 4. View the results
         return mo.vstack([etable, plot, fig_elasticity])
-
 
     _()
     return
@@ -1275,10 +1208,7 @@ def _(analysis_lf, mo, plot_elasticity, run_direct_effect_regression):
         importer_list = ["826"]  # UK
         exporter_list = ["156"]  # China
 
-        regressors = " + ".join(
-            f"{interaction_name}_{year}"
-            for year in [str(y) for y in range(2017, 2024)]
-        )
+        regressors = " + ".join(f"{interaction_name}_{year}" for year in [str(y) for y in range(2017, 2024)])
         formula = f"log(value) ~ {regressors} | importer^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
@@ -1297,7 +1227,6 @@ def _(analysis_lf, mo, plot_elasticity, run_direct_effect_regression):
         # 4. View the results
         return mo.vstack([etable, plot, fig_elasticity])
 
-
     _()
     return
 
@@ -1310,10 +1239,7 @@ def _(analysis_lf, mo, plot_elasticity, run_direct_effect_regression):
         importer_list = ["826"]  # UK
         exporter_list = ["156"]  # China
 
-        regressors = " + ".join(
-            f"{interaction_name}_{year}"
-            for year in [str(y) for y in range(2017, 2024)]
-        )
+        regressors = " + ".join(f"{interaction_name}_{year}" for year in [str(y) for y in range(2017, 2024)])
         formula = f"log(quantity) ~ {regressors} | importer^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
@@ -1332,7 +1258,6 @@ def _(analysis_lf, mo, plot_elasticity, run_direct_effect_regression):
         # 4. View the results
         return mo.vstack([etable, plot, fig_elasticity])
 
-
     _()
     return
 
@@ -1345,10 +1270,7 @@ def _(analysis_lf, mo, plot_elasticity, run_direct_effect_regression):
         importer_list = ["826"]  # UK
         exporter_list = ["156"]  # China
 
-        regressors = " + ".join(
-            f"{interaction_name}_{year}"
-            for year in [str(y) for y in range(2017, 2024)]
-        )
+        regressors = " + ".join(f"{interaction_name}_{year}" for year in [str(y) for y in range(2017, 2024)])
         formula = f"log(unit_value) ~ {regressors} | importer^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
@@ -1366,7 +1288,6 @@ def _(analysis_lf, mo, plot_elasticity, run_direct_effect_regression):
 
         # 4. View the results
         return mo.vstack([etable, plot, fig_elasticity])
-
 
     _()
     return
@@ -1401,7 +1322,6 @@ def _(HM_RoW_list_mini, mo, pycountry):
     We perform the same test across value, quantity and price.
 
     This is crashing the notebook due to OOM(?) Run with caution.
-
     """
     )
     return
