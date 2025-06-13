@@ -8,6 +8,7 @@ app = marimo.App(width="medium")
 def _():
     import marimo as mo
     import polars as pl
+
     return mo, pl
 
 
@@ -29,9 +30,7 @@ def _(mo):
 
 @app.cell
 def _(pl):
-    raw_tariffs = pl.scan_csv(
-        "data/raw/Pairs vbeta1 Dec 2024/tariffsPairs_88_21_vbeta1-2024-12.csv"
-    )
+    raw_tariffs = pl.scan_csv("data/raw/Pairs vbeta1 Dec 2024/tariffsPairs_88_21_vbeta1-2024-12.csv")
 
     raw_tariffs.head(1000).collect()
     return (raw_tariffs,)

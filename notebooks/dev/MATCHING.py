@@ -108,9 +108,7 @@ def _(mo):
 @app.cell
 def _(pd):
     # Load the raw CSV mapping file
-    pref_groups = pd.read_csv(
-        "data/raw/WITS_pref_groups/WITS_pref_groups.csv", encoding="iso-8859-1"
-    )
+    pref_groups = pd.read_csv("data/raw/WITS_pref_groups/WITS_pref_groups.csv", encoding="iso-8859-1")
     return (pref_groups,)
 
 
@@ -122,9 +120,7 @@ def _(pl, pref_groups):
         # Convert set to list here for easier Polars conversion
         .agg(lambda x: list(set(x)))
         .reset_index()
-        .rename(columns={"RegionCode": "region_code", "Partner": "partner_list"})[
-            ["region_code", "partner_list"]
-        ]
+        .rename(columns={"RegionCode": "region_code", "Partner": "partner_list"})[["region_code", "partner_list"]]
     )
 
     # Convert to Polars DataFrame
@@ -299,15 +295,9 @@ def _(baci, expanded_pref, mo, pl, renamed_avemfn):
 
     # 3. Calculate the final effective tariff
     # Use preferential tariff rate if available (not null), otherwise use MFN tariff rate
-    final_table = joined_all.with_columns(
-        pl.coalesce(pl.col("pref_tariff_rate"), pl.col("mfn_tariff_rate")).alias(
-            "effective_tariff_rate"
-        )
-    )
+    final_table = joined_all.with_columns(pl.coalesce(pl.col("pref_tariff_rate"), pl.col("mfn_tariff_rate")).alias("effective_tariff_rate"))
 
-    mo.md(
-        f"Joined table schema: `{final_table.collect_schema()}`"
-    )  # Use .collect_schema() for LazyFrames
+    mo.md(f"Joined table schema: `{final_table.collect_schema()}`")  # Use .collect_schema() for LazyFrames
     print("\nJoined Table Head (before final selection):")
     print(final_table.head().collect())
     return final_table, joined_all, joined_mfn, mfn_join_keys, pref_join_keys

@@ -13,6 +13,7 @@ def _():
     import polars as pl
     import pycountry
     import pyvis
+
     return mo, nx, os, pl, pycountry, pyvis
 
 
@@ -95,30 +96,18 @@ def _(mo, nx, pl, product_code_len, pycountry, unified_lf, unique_years):
         ### --- 2. Group the data to the right level of aggregation
         if product_code_len:
             # Shorten the product codes
-            filtered_lf = filtered_lf.with_columns(
-                pl.col("product_code").str.slice(offset=0, length=product_code_len)
-            )
+            filtered_lf = filtered_lf.with_columns(pl.col("product_code").str.slice(offset=0, length=product_code_len))
 
-            aggregated_lf = filtered_lf.group_by(
-                ["reporter_country", "partner_country", "product_code"]
-            ).agg(
-                (
-                    (pl.col("average_tariff_official") * pl.col("value")).sum()
-                    / pl.col("value").sum()
-                ).alias("weighted_tariff"),
+            aggregated_lf = filtered_lf.group_by(["reporter_country", "partner_country", "product_code"]).agg(
+                ((pl.col("average_tariff_official") * pl.col("value")).sum() / pl.col("value").sum()).alias("weighted_tariff"),
                 pl.sum("value"),
                 pl.sum("quantity"),
             )
 
         else:
             # Ignore product code - group across the rest
-            aggregated_lf = filtered_lf.group_by(
-                ["reporter_country", "partner_country"]
-            ).agg(
-                (
-                    (pl.col("average_tariff_official") * pl.col("value")).sum()
-                    / pl.col("value").sum()
-                ).alias("weighted_tariff"),
+            aggregated_lf = filtered_lf.group_by(["reporter_country", "partner_country"]).agg(
+                ((pl.col("average_tariff_official") * pl.col("value")).sum() / pl.col("value").sum()).alias("weighted_tariff"),
                 pl.sum("value"),
                 pl.sum("quantity"),
             )
@@ -153,13 +142,9 @@ def _(mo, nx, pl, product_code_len, pycountry, unified_lf, unique_years):
             }
 
             edge_key = None
-            if (
-                "product_code" in row
-            ):  # This field exists if product_code_len was set
+            if "product_code" in row:  # This field exists if product_code_len was set
                 attributes["product_code"] = row["product_code"]
-                edge_key = row[
-                    "product_code"
-                ]  # Use aggregated product code as edge key
+                edge_key = row["product_code"]  # Use aggregated product code as edge key
                 G_year.add_edge(reporter, partner, key=edge_key, **attributes)
             else:
                 # For MultiDiGraph, add_edge without a key will add a new edge with an auto key (e.g., 0)
@@ -703,9 +688,7 @@ def _(G_year, custom_js_to_inject, options_json_string, os, pyvis, year):
 
     # Inject our html
     body_end_tag = "</body>"
-    modified_html_content = html_content.replace(
-        body_end_tag, custom_js_to_inject + "\n" + body_end_tag
-    )
+    modified_html_content = html_content.replace(body_end_tag, custom_js_to_inject + "\n" + body_end_tag)
 
     # Save our file
     with open(base_path + final_pyvis_filename, "w", encoding="utf-8") as f:

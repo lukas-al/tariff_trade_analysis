@@ -90,9 +90,7 @@ def _(aggregate_baci, hs, release):
 @app.cell
 def _(duckdb, hs, release):
     # View some summary statistics
-    duckdb.sql(
-        f"SELECT * FROM read_parquet('data/final/BACI_{hs}_V{release}-total.parquet')"
-    ).show()
+    duckdb.sql(f"SELECT * FROM read_parquet('data/final/BACI_{hs}_V{release}-total.parquet')").show()
     return
 
 

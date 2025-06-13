@@ -15,6 +15,7 @@ def _():
     import re
     import matplotlib.pyplot as plt
     from typing import Optional
+
     return Optional, mo, pl, pycountry, pyfixest, re
 
 
@@ -92,16 +93,11 @@ def _(Optional, pl, pyfixest, re):
             dependent_var_str = formula.split("~")[0].strip()
             dependent_var_col = re.findall(r"\b\w+\b", dependent_var_str)[-1]
         except IndexError:
-            raise ValueError(
-                f"Could not parse dependent variable from formula: {formula}"
-            )
+            raise ValueError(f"Could not parse dependent variable from formula: {formula}")
 
         tariff_expr = (
             pl.col("average_tariff_official")
-            .filter(
-                (pl.col("partner_country") == USA_CC)
-                & (pl.col("reporter_country") == CHINA_CC)
-            )
+            .filter((pl.col("partner_country") == USA_CC) & (pl.col("reporter_country") == CHINA_CC))
             .mean()
             .over(["year", "product_code"])
             .alias("tariff_us_china")
@@ -113,9 +109,7 @@ def _(Optional, pl, pyfixest, re):
             tariff_expr,
         )
 
-        interaction_filter = (pl.col("importer").is_in(interaction_importers)) & (
-            pl.col("exporter").is_in(interaction_exporters)
-        )
+        interaction_filter = (pl.col("importer").is_in(interaction_importers)) & (pl.col("exporter").is_in(interaction_exporters))
 
         interaction_expressions = [
             pl.when(interaction_filter & (pl.col("year") == str(year)))
@@ -131,12 +125,8 @@ def _(Optional, pl, pyfixest, re):
         if filter_expression is not None:
             final_lf = final_lf.filter(filter_expression)
 
-        print(
-            f"Checking for nulls in dependent variable '{dependent_var_col}' and 'tariff_us_china'."
-        )
-        clean_df = final_lf.drop_nulls(
-            subset=[dependent_var_col, "tariff_us_china"]
-        ).collect()
+        print(f"Checking for nulls in dependent variable '{dependent_var_col}' and 'tariff_us_china'.")
+        clean_df = final_lf.drop_nulls(subset=[dependent_var_col, "tariff_us_china"]).collect()
 
         model = pyfixest.feols(fml=formula, data=clean_df, vcov=vcov)
 
@@ -144,6 +134,7 @@ def _(Optional, pl, pyfixest, re):
         coefplot = model.coefplot(joint=True, plot_backend="matplotlib")
 
         return model, etable, coefplot
+
     return (run_direct_effect_regression,)
 
 
@@ -160,40 +151,25 @@ def _(mo):
 
 @app.cell
 def _(pl):
-    def get_oil_exporting_countries(
-        lzdf: pl.LazyFrame, oil_export_percentage_threshold: float
-    ) -> list[str]:
+    def get_oil_exporting_countries(lzdf: pl.LazyFrame, oil_export_percentage_threshold: float) -> list[str]:
         """
         Finds countries where oil products (HS code '27') exceed a certain
         percentage of their total export value.
         """
         print("--- Filtering out oil countries ---")
 
-        total_exports = lzdf.group_by("reporter_country").agg(
-            pl.sum("value").alias("total_value")
-        )
+        total_exports = lzdf.group_by("reporter_country").agg(pl.sum("value").alias("total_value"))
 
-        oil_exports = (
-            lzdf.filter(pl.col("product_code").str.starts_with("27"))
-            .group_by("reporter_country")
-            .agg(pl.sum("value").alias("oil_value"))
-        )
+        oil_exports = lzdf.filter(pl.col("product_code").str.starts_with("27")).group_by("reporter_country").agg(pl.sum("value").alias("oil_value"))
 
-        summary = total_exports.join(
-            oil_exports, on="reporter_country", how="left"
-        ).with_columns(pl.col("oil_value").fill_null(0.0))
+        summary = total_exports.join(oil_exports, on="reporter_country", how="left").with_columns(pl.col("oil_value").fill_null(0.0))
 
-        summary = summary.with_columns(
-            ((pl.col("oil_value") / pl.col("total_value")) * 100).alias(
-                "oil_export_percentage"
-            )
-        )
+        summary = summary.with_columns(((pl.col("oil_value") / pl.col("total_value")) * 100).alias("oil_export_percentage"))
 
-        filtered_countries = summary.filter(
-            pl.col("oil_export_percentage") > oil_export_percentage_threshold
-        )
+        filtered_countries = summary.filter(pl.col("oil_export_percentage") > oil_export_percentage_threshold)
 
         return filtered_countries.collect()["reporter_country"].to_list()
+
     return (get_oil_exporting_countries,)
 
 
@@ -229,26 +205,17 @@ def _(get_oil_exporting_countries, pl):
             A filtered LazyFrame.
         """
         if countries_to_include and (top_n or selection_year):
-            raise ValueError(
-                "'countries_to_include' cannot be used with 'top_n' or 'selection_year'."
-            )
+            raise ValueError("'countries_to_include' cannot be used with 'top_n' or 'selection_year'.")
         if not countries_to_include and not (top_n and selection_year):
-            raise ValueError(
-                "Either 'countries_to_include' or both 'top_n' and 'selection_year' must be provided."
-            )
+            raise ValueError("Either 'countries_to_include' or both 'top_n' and 'selection_year' must be provided.")
 
         print("--- Cleaning data ---")
 
         lf = source_lf
 
         if product_codes_to_exclude:
-            print(
-                f"Excluding product codes starting with: {product_codes_to_exclude}"
-            )
-            exclusion_expr = pl.any_horizontal(
-                pl.col("product_code").str.starts_with(code)
-                for code in product_codes_to_exclude
-            )
+            print(f"Excluding product codes starting with: {product_codes_to_exclude}")
+            exclusion_expr = pl.any_horizontal(pl.col("product_code").str.starts_with(code) for code in product_codes_to_exclude)
             lf = lf.filter(~exclusion_expr)
 
         if oil_export_threshold is not None:
@@ -271,12 +238,8 @@ def _(get_oil_exporting_countries, pl):
                 top_countries_list = top_countries_df["partner_country"].to_list()
 
             elif selection_method == "total_trade":
-                exports_lf = trade_in_year_lf.select(
-                    pl.col("reporter_country").alias("country"), "value"
-                )
-                imports_lf = trade_in_year_lf.select(
-                    pl.col("partner_country").alias("country"), "value"
-                )
+                exports_lf = trade_in_year_lf.select(pl.col("reporter_country").alias("country"), "value")
+                imports_lf = trade_in_year_lf.select(pl.col("partner_country").alias("country"), "value")
 
                 top_countries_df = (
                     pl.concat([exports_lf, imports_lf])
@@ -288,28 +251,20 @@ def _(get_oil_exporting_countries, pl):
                 )
                 top_countries_list = top_countries_df["country"].to_list()
             else:
-                raise ValueError(
-                    "selection_method must be 'importers' or 'total_trade'"
-                )
+                raise ValueError("selection_method must be 'importers' or 'total_trade'")
 
         if countries_to_exclude:
-            top_countries_list = [
-                c for c in top_countries_list if c not in countries_to_exclude
-            ]
+            top_countries_list = [c for c in top_countries_list if c not in countries_to_exclude]
 
         print(f"Final sample includes {len(top_countries_list)} countries.")
 
-        analysis_lf = lf.filter(
-            pl.col("reporter_country").is_in(top_countries_list)
-            & pl.col("partner_country").is_in(top_countries_list)
-        )
+        analysis_lf = lf.filter(pl.col("reporter_country").is_in(top_countries_list) & pl.col("partner_country").is_in(top_countries_list))
 
         if year_range_to_keep:
-            analysis_lf = analysis_lf.filter(
-                pl.col("year").is_in(year_range_to_keep)
-            )
+            analysis_lf = analysis_lf.filter(pl.col("year").is_in(year_range_to_keep))
 
         return analysis_lf
+
     return (prepare_analysis_data,)
 
 
@@ -358,9 +313,7 @@ def _(
     exporter_list = ["156"]  # China
     # 1 year less than the range of the data
 
-    regressors = " + ".join(
-        f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
-    )
+    regressors = " + ".join(f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE)
     formula = f"log(value) ~ {regressors} | importer^year^product_code + exporter^year^product_code + importer^exporter"
     print(f"Formula for model:\n{formula}")
 
@@ -408,13 +361,9 @@ def _(analysis_lf, mo, run_direct_effect_regression):
         interaction_name = "UK_from_China"
         importer_list = ["826"]  # UK
         exporter_list = ["156"]  # China
-        EFFECT_YEAR_RANGE = [
-            str(y) for y in range(2017, 2024)
-        ]  # 1 year less than the range of the data
+        EFFECT_YEAR_RANGE = [str(y) for y in range(2017, 2024)]  # 1 year less than the range of the data
 
-        regressors = " + ".join(
-            f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
-        )
+        regressors = " + ".join(f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE)
         formula = f"log(value) ~ {regressors} | importer^year^product_code + exporter^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
@@ -430,7 +379,6 @@ def _(analysis_lf, mo, run_direct_effect_regression):
 
         # 4. View the results
         return mo.vstack([etable, plot, model.summary()])
-
 
     _(analysis_lf)
     return
@@ -460,13 +408,9 @@ def _(analysis_lf, mo, run_direct_effect_regression):
         interaction_name = "UK_from_China"
         importer_list = ["826"]  # UK
         exporter_list = ["156"]  # China
-        EFFECT_YEAR_RANGE = [
-            str(y) for y in range(2017, 2024)
-        ]  # 1 year less than the range of the data
+        EFFECT_YEAR_RANGE = [str(y) for y in range(2017, 2024)]  # 1 year less than the range of the data
 
-        regressors = " + ".join(
-            f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
-        )
+        regressors = " + ".join(f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE)
         formula = f"log(unit_value) ~ {regressors} | importer^year^product_code + exporter^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
@@ -482,7 +426,6 @@ def _(analysis_lf, mo, run_direct_effect_regression):
 
         # 4. View the results
         return mo.vstack([etable, plot, model.summary()])
-
 
     _(analysis_lf)
     return
@@ -512,13 +455,9 @@ def _(analysis_lf, mo, run_direct_effect_regression):
         interaction_name = "UK_from_China"
         importer_list = ["826"]  # UK
         exporter_list = ["156"]  # China
-        EFFECT_YEAR_RANGE = [
-            str(y) for y in range(2017, 2024)
-        ]  # 1 year less than the range of the data
+        EFFECT_YEAR_RANGE = [str(y) for y in range(2017, 2024)]  # 1 year less than the range of the data
 
-        regressors = " + ".join(
-            f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
-        )
+        regressors = " + ".join(f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE)
         formula = f"log(quantity) ~ {regressors} | importer^year^product_code + exporter^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
@@ -534,7 +473,6 @@ def _(analysis_lf, mo, run_direct_effect_regression):
 
         # 4. View the results
         return mo.vstack([etable, plot, model.summary()])
-
 
     _(analysis_lf)
     return
@@ -575,13 +513,9 @@ def _(analysis_lf, mo, run_direct_effect_regression):
         interaction_name = "UK_from_China"
         importer_list = ["826"]  # UK
         exporter_list = ["156"]  # China
-        EFFECT_YEAR_RANGE = [
-            str(y) for y in range(2017, 2024)
-        ]  # 1 year less than the range of the data
+        EFFECT_YEAR_RANGE = [str(y) for y in range(2017, 2024)]  # 1 year less than the range of the data
 
-        regressors = " + ".join(
-            f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
-        )
+        regressors = " + ".join(f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE)
         formula = f"log(value) ~ {regressors} | exporter^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
@@ -597,7 +531,6 @@ def _(analysis_lf, mo, run_direct_effect_regression):
 
         # 4. View the results
         return mo.vstack([etable, plot, model.summary()])
-
 
     _(analysis_lf)
     return
@@ -627,13 +560,9 @@ def _(analysis_lf, mo, run_direct_effect_regression):
         interaction_name = "UK_from_China"
         importer_list = ["826"]  # UK
         exporter_list = ["156"]  # China
-        EFFECT_YEAR_RANGE = [
-            str(y) for y in range(2017, 2024)
-        ]  # 1 year less than the range of the data
+        EFFECT_YEAR_RANGE = [str(y) for y in range(2017, 2024)]  # 1 year less than the range of the data
 
-        regressors = " + ".join(
-            f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
-        )
+        regressors = " + ".join(f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE)
         formula = f"log(unit_value) ~ {regressors} | exporter^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
@@ -649,7 +578,6 @@ def _(analysis_lf, mo, run_direct_effect_regression):
 
         # 4. View the results
         return mo.vstack([etable, plot, model.summary()])
-
 
     _(analysis_lf)
     return
@@ -679,13 +607,9 @@ def _(analysis_lf, mo, run_direct_effect_regression):
         interaction_name = "UK_from_China"
         importer_list = ["826"]  # UK
         exporter_list = ["156"]  # China
-        EFFECT_YEAR_RANGE = [
-            str(y) for y in range(2017, 2024)
-        ]  # 1 year less than the range of the data
+        EFFECT_YEAR_RANGE = [str(y) for y in range(2017, 2024)]  # 1 year less than the range of the data
 
-        regressors = " + ".join(
-            f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
-        )
+        regressors = " + ".join(f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE)
         formula = f"log(quantity) ~ {regressors} | exporter^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
@@ -701,7 +625,6 @@ def _(analysis_lf, mo, run_direct_effect_regression):
 
         # 4. View the results
         return mo.vstack([etable, plot, model.summary()])
-
 
     _(analysis_lf)
     return
@@ -761,13 +684,9 @@ def _(RoW_list, analysis_lf, mo, run_direct_effect_regression):
         interaction_name = "RoW_from_China"
         importer_list = RoW_list
         exporter_list = ["156"]  # China
-        EFFECT_YEAR_RANGE = [
-            str(y) for y in range(2017, 2024)
-        ]  # 1 year less than the range of the data
+        EFFECT_YEAR_RANGE = [str(y) for y in range(2017, 2024)]  # 1 year less than the range of the data
 
-        regressors = " + ".join(
-            f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
-        )
+        regressors = " + ".join(f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE)
         formula = f"log(value) ~ {regressors} | importer^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
@@ -783,7 +702,6 @@ def _(RoW_list, analysis_lf, mo, run_direct_effect_regression):
 
         # 4. View the results
         return mo.vstack([etable, plot, model.summary()])
-
 
     _(analysis_lf)
     return
@@ -813,13 +731,9 @@ def _(RoW_list, analysis_lf, mo, run_direct_effect_regression):
         interaction_name = "RoW_from_China"
         importer_list = RoW_list
         exporter_list = ["156"]  # China
-        EFFECT_YEAR_RANGE = [
-            str(y) for y in range(2017, 2024)
-        ]  # 1 year less than the range of the data
+        EFFECT_YEAR_RANGE = [str(y) for y in range(2017, 2024)]  # 1 year less than the range of the data
 
-        regressors = " + ".join(
-            f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
-        )
+        regressors = " + ".join(f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE)
         formula = f"log(unit_value) ~ {regressors} | exporter^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
@@ -835,7 +749,6 @@ def _(RoW_list, analysis_lf, mo, run_direct_effect_regression):
 
         # 4. View the results
         return mo.vstack([etable, plot, model.summary()])
-
 
     _(analysis_lf)
     return
@@ -865,13 +778,9 @@ def _(RoW_list, analysis_lf, mo, run_direct_effect_regression):
         interaction_name = "RoW_from_China"
         importer_list = RoW_list
         exporter_list = ["156"]  # China
-        EFFECT_YEAR_RANGE = [
-            str(y) for y in range(2017, 2024)
-        ]  # 1 year less than the range of the data
+        EFFECT_YEAR_RANGE = [str(y) for y in range(2017, 2024)]  # 1 year less than the range of the data
 
-        regressors = " + ".join(
-            f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
-        )
+        regressors = " + ".join(f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE)
         formula = f"log(quantity) ~ {regressors} | exporter^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
@@ -887,7 +796,6 @@ def _(RoW_list, analysis_lf, mo, run_direct_effect_regression):
 
         # 4. View the results
         return mo.vstack([etable, plot, model.summary()])
-
 
     _(analysis_lf)
     return
@@ -923,13 +831,9 @@ def _(analysis_lf, mo, run_direct_effect_regression):
         interaction_name = "USA_from_China"
         importer_list = ["840"]  # USA
         exporter_list = ["156"]  # China
-        EFFECT_YEAR_RANGE = [
-            str(y) for y in range(2017, 2024)
-        ]  # 1 year less than the range of the data
+        EFFECT_YEAR_RANGE = [str(y) for y in range(2017, 2024)]  # 1 year less than the range of the data
 
-        regressors = " + ".join(
-            f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
-        )
+        regressors = " + ".join(f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE)
         formula = f"log(value) ~ {regressors} | importer^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
@@ -945,7 +849,6 @@ def _(analysis_lf, mo, run_direct_effect_regression):
 
         # 4. View the results
         return mo.vstack([etable, plot, model.summary()])
-
 
     _(analysis_lf)
     return
@@ -975,13 +878,9 @@ def _(analysis_lf, mo, run_direct_effect_regression):
         interaction_name = "USA_from_China"
         importer_list = ["840"]  # USA
         exporter_list = ["156"]  # China
-        EFFECT_YEAR_RANGE = [
-            str(y) for y in range(2017, 2024)
-        ]  # 1 year less than the range of the data
+        EFFECT_YEAR_RANGE = [str(y) for y in range(2017, 2024)]  # 1 year less than the range of the data
 
-        regressors = " + ".join(
-            f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
-        )
+        regressors = " + ".join(f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE)
         formula = f"log(unit_value) ~ {regressors} | importer^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
@@ -997,7 +896,6 @@ def _(analysis_lf, mo, run_direct_effect_regression):
 
         # 4. View the results
         return mo.vstack([etable, plot, model.summary()])
-
 
     _(analysis_lf)
     return
@@ -1027,13 +925,9 @@ def _(analysis_lf, mo, run_direct_effect_regression):
         interaction_name = "USA_from_China"
         importer_list = ["840"]  # USA
         exporter_list = ["156"]  # China
-        EFFECT_YEAR_RANGE = [
-            str(y) for y in range(2017, 2024)
-        ]  # 1 year less than the range of the data
+        EFFECT_YEAR_RANGE = [str(y) for y in range(2017, 2024)]  # 1 year less than the range of the data
 
-        regressors = " + ".join(
-            f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
-        )
+        regressors = " + ".join(f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE)
         formula = f"log(quantity) ~ {regressors} | importer^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
@@ -1049,7 +943,6 @@ def _(analysis_lf, mo, run_direct_effect_regression):
 
         # 4. View the results
         return mo.vstack([etable, plot, model.summary()])
-
 
     _(analysis_lf)
     return
@@ -1093,16 +986,10 @@ def _(analysis_lf, mo, pl, run_direct_effect_regression):
         interaction_name = "UK_from_China"
         importer_list = ["826"]  # UK
         exporter_list = ["156"]  # China
-        EFFECT_YEAR_RANGE = [
-            str(y) for y in range(2017, 2024)
-        ]  # 1 year later than the range of the data
+        EFFECT_YEAR_RANGE = [str(y) for y in range(2017, 2024)]  # 1 year later than the range of the data
 
-        regressors = " + ".join(
-            f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
-        )
-        formula = (
-            f"log(value) ~ {regressors} | importer^exporter + product_code^year"
-        )
+        regressors = " + ".join(f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE)
+        formula = f"log(value) ~ {regressors} | importer^exporter + product_code^year"
         print(f"Formula for model:\n{formula}")
 
         # 2.5 - Write the filter expression to leave only UK imports
@@ -1121,7 +1008,6 @@ def _(analysis_lf, mo, pl, run_direct_effect_regression):
 
         # 4. View the results
         return mo.vstack([etable, plot, model.summary()])
-
 
     _(analysis_lf)
     return
@@ -1153,13 +1039,9 @@ def _(analysis_lf_HMREP, mo, pl, run_direct_effect_regression):
         interaction_name = "UK_from_China"
         importer_list = ["826"]  # UK
         exporter_list = ["156"]  # China
-        EFFECT_YEAR_RANGE = [
-            str(y) for y in range(2017, 2024)
-        ]  # 1 year later than the range of the data
+        EFFECT_YEAR_RANGE = [str(y) for y in range(2017, 2024)]  # 1 year later than the range of the data
 
-        regressors = " + ".join(
-            f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
-        )
+        regressors = " + ".join(f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE)
         formula = f"log(unit_value) ~ {regressors} | importer^exporter + product_code^year"
         print(f"Formula for model:\n{formula}")
 
@@ -1179,7 +1061,6 @@ def _(analysis_lf_HMREP, mo, pl, run_direct_effect_regression):
 
         # 4. View the results
         return mo.vstack([etable, plot, model.summary()])
-
 
     _(analysis_lf_HMREP)
     return
@@ -1211,16 +1092,10 @@ def _(mo, pl, prepare_analysis_data, run_direct_effect_regression, unified_lf):
         interaction_name = "UK_from_China"
         importer_list = ["826"]  # UK
         exporter_list = ["156"]  # China
-        EFFECT_YEAR_RANGE = [
-            str(y) for y in range(2017, 2024)
-        ]  # 1 year later than the range of the data
+        EFFECT_YEAR_RANGE = [str(y) for y in range(2017, 2024)]  # 1 year later than the range of the data
 
-        regressors = " + ".join(
-            f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
-        )
-        formula = (
-            f"log(quantity) ~ {regressors} | importer^exporter + product_code^year"
-        )
+        regressors = " + ".join(f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE)
+        formula = f"log(quantity) ~ {regressors} | importer^exporter + product_code^year"
         print(f"Formula for model:\n{formula}")
 
         # 2.5 - Write the filter expression to leave only UK imports
@@ -1239,7 +1114,6 @@ def _(mo, pl, prepare_analysis_data, run_direct_effect_regression, unified_lf):
 
         # 4. View the results
         return mo.vstack([etable, plot, model.summary()])
-
 
     _()
     return
@@ -1277,13 +1151,9 @@ def _(mo, pl, prepare_analysis_data, run_direct_effect_regression, unified_lf):
         interaction_name = "UK_from_China"
         importer_list = ["826"]  # UK
         exporter_list = ["156"]  # China
-        EFFECT_YEAR_RANGE = [
-            str(y) for y in range(2017, 2024)
-        ]  # 1 year later than the range of the data
+        EFFECT_YEAR_RANGE = [str(y) for y in range(2017, 2024)]  # 1 year later than the range of the data
 
-        regressors = " + ".join(
-            f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
-        )
+        regressors = " + ".join(f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE)
         formula = f"log(value) ~ {regressors} | importer^exporter + exporter^product_code^year"
         print(f"Formula for model:\n{formula}")
 
@@ -1305,7 +1175,6 @@ def _(mo, pl, prepare_analysis_data, run_direct_effect_regression, unified_lf):
 
         # 4. View the results
         return mo.vstack([etable, plot, model.summary()])
-
 
     _()
     return
@@ -1337,13 +1206,9 @@ def _(mo, pl, prepare_analysis_data, run_direct_effect_regression, unified_lf):
         interaction_name = "UK_from_China"
         importer_list = ["826"]  # UK
         exporter_list = ["156"]  # China
-        EFFECT_YEAR_RANGE = [
-            str(y) for y in range(2017, 2024)
-        ]  # 1 year later than the range of the data
+        EFFECT_YEAR_RANGE = [str(y) for y in range(2017, 2024)]  # 1 year later than the range of the data
 
-        regressors = " + ".join(
-            f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
-        )
+        regressors = " + ".join(f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE)
         formula = f"log(unit_value) ~ {regressors} | importer^exporter + exporter^product_code^year"
         print(f"Formula for model:\n{formula}")
 
@@ -1365,7 +1230,6 @@ def _(mo, pl, prepare_analysis_data, run_direct_effect_regression, unified_lf):
 
         # 4. View the results
         return mo.vstack([etable, plot, model.summary()])
-
 
     _()
     return
@@ -1397,13 +1261,9 @@ def _(mo, pl, prepare_analysis_data, run_direct_effect_regression, unified_lf):
         interaction_name = "UK_from_China"
         importer_list = ["826"]  # UK
         exporter_list = ["156"]  # China
-        EFFECT_YEAR_RANGE = [
-            str(y) for y in range(2017, 2024)
-        ]  # 1 year later than the range of the data
+        EFFECT_YEAR_RANGE = [str(y) for y in range(2017, 2024)]  # 1 year later than the range of the data
 
-        regressors = " + ".join(
-            f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
-        )
+        regressors = " + ".join(f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE)
         formula = f"log(quantity) ~ {regressors} | importer^exporter + exporter^product_code^year"
         print(f"Formula for model:\n{formula}")
 
@@ -1425,7 +1285,6 @@ def _(mo, pl, prepare_analysis_data, run_direct_effect_regression, unified_lf):
 
         # 4. View the results
         return mo.vstack([etable, plot, model.summary()])
-
 
     _()
     return
@@ -1503,7 +1362,6 @@ def _():
     #     # 4. View the results
     #     return mo.vstack([etable, plot, model.summary()])
 
-
     # _()
     return
 
@@ -1549,7 +1407,6 @@ def _(pycountry):
     CANADA_CC = pycountry.countries.search_fuzzy("Canada")[0].numeric
     INDONESIA_CC = pycountry.countries.search_fuzzy("Indonesia")[0].numeric
     INDIA_CC = pycountry.countries.search_fuzzy("India")[0].numeric
-
 
     HM_COUNTRY_LIST = [
         USA_CC,
@@ -1861,13 +1718,9 @@ def _(analysis_lf_HMREP, mo, run_direct_effect_regression):
         interaction_name = "USA_from_China"
         importer_list = ["840"]  # USA
         exporter_list = ["156"]  # China
-        EFFECT_YEAR_RANGE = [
-            str(y) for y in range(2017, 2024)
-        ]  # 1 year less than the range of the data
+        EFFECT_YEAR_RANGE = [str(y) for y in range(2017, 2024)]  # 1 year less than the range of the data
 
-        regressors = " + ".join(
-            f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
-        )
+        regressors = " + ".join(f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE)
         formula = f"log(value) ~ {regressors} | importer^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
@@ -1883,7 +1736,6 @@ def _(analysis_lf_HMREP, mo, run_direct_effect_regression):
 
         # 4. View the results
         return mo.vstack([etable, plot, model.summary()])
-
 
     _(analysis_lf_HMREP)
     return
@@ -1902,13 +1754,9 @@ def _(analysis_lf_HMREP, mo, run_direct_effect_regression):
         interaction_name = "USA_from_China"
         importer_list = ["840"]  # USA
         exporter_list = ["156"]  # China
-        EFFECT_YEAR_RANGE = [
-            str(y) for y in range(2017, 2024)
-        ]  # 1 year less than the range of the data
+        EFFECT_YEAR_RANGE = [str(y) for y in range(2017, 2024)]  # 1 year less than the range of the data
 
-        regressors = " + ".join(
-            f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
-        )
+        regressors = " + ".join(f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE)
         formula = f"log(unit_value) ~ {regressors} | exporter^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
@@ -1924,7 +1772,6 @@ def _(analysis_lf_HMREP, mo, run_direct_effect_regression):
 
         # 4. View the results
         return mo.vstack([etable, plot, model.summary()])
-
 
     _(analysis_lf_HMREP)
     return
@@ -1943,13 +1790,9 @@ def _(analysis_lf_HMREP, mo, run_direct_effect_regression):
         interaction_name = "USA_from_China"
         importer_list = ["840"]  # USA
         exporter_list = ["156"]  # China
-        EFFECT_YEAR_RANGE = [
-            str(y) for y in range(2017, 2024)
-        ]  # 1 year less than the range of the data
+        EFFECT_YEAR_RANGE = [str(y) for y in range(2017, 2024)]  # 1 year less than the range of the data
 
-        regressors = " + ".join(
-            f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
-        )
+        regressors = " + ".join(f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE)
         formula = f"log(quantity) ~ {regressors} | exporter^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
@@ -1965,7 +1808,6 @@ def _(analysis_lf_HMREP, mo, run_direct_effect_regression):
 
         # 4. View the results
         return mo.vstack([etable, plot, model.summary()])
-
 
     _(analysis_lf_HMREP)
     return
@@ -1990,13 +1832,9 @@ def _(analysis_lf_HMREP, mo, run_direct_effect_regression):
         interaction_name = "UK_from_China"
         importer_list = ["826"]  # UK
         exporter_list = ["156"]  # China
-        EFFECT_YEAR_RANGE = [
-            str(y) for y in range(2017, 2024)
-        ]  # 1 year less than the range of the data
+        EFFECT_YEAR_RANGE = [str(y) for y in range(2017, 2024)]  # 1 year less than the range of the data
 
-        regressors = " + ".join(
-            f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
-        )
+        regressors = " + ".join(f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE)
         formula = f"log(value) ~ {regressors} | exporter^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
@@ -2012,7 +1850,6 @@ def _(analysis_lf_HMREP, mo, run_direct_effect_regression):
 
         # 4. View the results
         return mo.vstack([etable, plot, model.summary()])
-
 
     _(analysis_lf_HMREP)
     return
@@ -2031,13 +1868,9 @@ def _(analysis_lf_HMREP, mo, run_direct_effect_regression):
         interaction_name = "UK_from_China"
         importer_list = ["826"]  # UK
         exporter_list = ["156"]  # China
-        EFFECT_YEAR_RANGE = [
-            str(y) for y in range(2017, 2024)
-        ]  # 1 year less than the range of the data
+        EFFECT_YEAR_RANGE = [str(y) for y in range(2017, 2024)]  # 1 year less than the range of the data
 
-        regressors = " + ".join(
-            f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
-        )
+        regressors = " + ".join(f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE)
         formula = f"log(unit_value) ~ {regressors} | exporter^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
@@ -2053,7 +1886,6 @@ def _(analysis_lf_HMREP, mo, run_direct_effect_regression):
 
         # 4. View the results
         return mo.vstack([etable, plot, model.summary()])
-
 
     _(analysis_lf_HMREP)
     return
@@ -2072,13 +1904,9 @@ def _(analysis_lf_HMREP, mo, run_direct_effect_regression):
         interaction_name = "UK_from_China"
         importer_list = ["826"]  # UK
         exporter_list = ["156"]  # China
-        EFFECT_YEAR_RANGE = [
-            str(y) for y in range(2017, 2024)
-        ]  # 1 year less than the range of the data
+        EFFECT_YEAR_RANGE = [str(y) for y in range(2017, 2024)]  # 1 year less than the range of the data
 
-        regressors = " + ".join(
-            f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
-        )
+        regressors = " + ".join(f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE)
         formula = f"log(quantity) ~ {regressors} | exporter^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
@@ -2094,7 +1922,6 @@ def _(analysis_lf_HMREP, mo, run_direct_effect_regression):
 
         # 4. View the results
         return mo.vstack([etable, plot, model.summary()])
-
 
     _(analysis_lf_HMREP)
     return
@@ -2119,13 +1946,9 @@ def _(HM_ROW_LIST, analysis_lf_HMREP, mo, run_direct_effect_regression):
         interaction_name = "ROW_from_China"
         importer_list = HM_ROW_LIST
         exporter_list = ["156"]  # China
-        EFFECT_YEAR_RANGE = [
-            str(y) for y in range(2017, 2024)
-        ]  # 1 year less than the range of the data
+        EFFECT_YEAR_RANGE = [str(y) for y in range(2017, 2024)]  # 1 year less than the range of the data
 
-        regressors = " + ".join(
-            f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
-        )
+        regressors = " + ".join(f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE)
         formula = f"log(value) ~ {regressors} | exporter^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
@@ -2141,7 +1964,6 @@ def _(HM_ROW_LIST, analysis_lf_HMREP, mo, run_direct_effect_regression):
 
         # 4. View the results
         return mo.vstack([etable, plot, model.summary()])
-
 
     _(analysis_lf_HMREP)
     return
@@ -2160,13 +1982,9 @@ def _(HM_ROW_LIST, analysis_lf_HMREP, mo, run_direct_effect_regression):
         interaction_name = "ROW_from_China"
         importer_list = HM_ROW_LIST
         exporter_list = ["156"]  # China
-        EFFECT_YEAR_RANGE = [
-            str(y) for y in range(2017, 2024)
-        ]  # 1 year less than the range of the data
+        EFFECT_YEAR_RANGE = [str(y) for y in range(2017, 2024)]  # 1 year less than the range of the data
 
-        regressors = " + ".join(
-            f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
-        )
+        regressors = " + ".join(f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE)
         formula = f"log(unit_value) ~ {regressors} | exporter^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
@@ -2182,7 +2000,6 @@ def _(HM_ROW_LIST, analysis_lf_HMREP, mo, run_direct_effect_regression):
 
         # 4. View the results
         return mo.vstack([etable, plot, model.summary()])
-
 
     _(analysis_lf_HMREP)
     return
@@ -2201,13 +2018,9 @@ def _(HM_ROW_LIST, analysis_lf_HMREP, mo, run_direct_effect_regression):
         interaction_name = "ROW_from_China"
         importer_list = HM_ROW_LIST
         exporter_list = ["156"]  # China
-        EFFECT_YEAR_RANGE = [
-            str(y) for y in range(2017, 2024)
-        ]  # 1 year less than the range of the data
+        EFFECT_YEAR_RANGE = [str(y) for y in range(2017, 2024)]  # 1 year less than the range of the data
 
-        regressors = " + ".join(
-            f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE
-        )
+        regressors = " + ".join(f"{interaction_name}_{year}" for year in EFFECT_YEAR_RANGE)
         formula = f"log(quantity) ~ {regressors} | exporter^year^product_code + importer^exporter"
         print(f"Formula for model:\n{formula}")
 
@@ -2223,7 +2036,6 @@ def _(HM_ROW_LIST, analysis_lf_HMREP, mo, run_direct_effect_regression):
 
         # 4. View the results
         return mo.vstack([etable, plot, model.summary()])
-
 
     _(analysis_lf_HMREP)
     return
@@ -2265,9 +2077,7 @@ def _(
             interaction_term_name = f"{country_key}_from_China"
 
             # Dynamically build the formula for the current country
-            regressors = "+".join(
-                f"{interaction_term_name}_{year}" for year in EFFECT_YEAR_RANGE
-            )
+            regressors = "+".join(f"{interaction_term_name}_{year}" for year in EFFECT_YEAR_RANGE)
             formula = f"log(value)~{regressors}|exporter^year^product_code+importer^exporter"
 
             print(f"Running for {country_key}")
@@ -2285,7 +2095,6 @@ def _(
 
         return models, model_renamer
 
-
     models_value, model_renamer_value = _(analysis_lf_HMREP)
     return model_renamer_value, models_value
 
@@ -2295,9 +2104,7 @@ def _(mo, model_renamer_value, models_value, pyfixest):
     mo.vstack(
         [
             mo.md("--- Aggregated Regression Results ---"),
-            pyfixest.etable(
-                models=models_value.values(), model_heads=models_value.keys()
-            ),
+            pyfixest.etable(models=models_value.values(), model_heads=models_value.keys()),
             mo.md("--- Aggregated Coefficient Plot ---"),
             pyfixest.coefplot(
                 models=models_value.values(),
@@ -2332,9 +2139,7 @@ def _(
             interaction_term_name = f"{country_key}_from_China"
 
             # Dynamically build the formula for the current country
-            regressors = "+".join(
-                f"{interaction_term_name}_{year}" for year in EFFECT_YEAR_RANGE
-            )
+            regressors = "+".join(f"{interaction_term_name}_{year}" for year in EFFECT_YEAR_RANGE)
             formula = f"log(unit_value)~{regressors}|exporter^year^product_code+importer^exporter"
 
             print(f"Running for {country_key}")
@@ -2352,7 +2157,6 @@ def _(
 
         return models, model_renamer
 
-
     models_price, model_renamer_price = _(analysis_lf_HMREP)
     return model_renamer_price, models_price
 
@@ -2362,9 +2166,7 @@ def _(mo, model_renamer_price, models_price, pyfixest):
     mo.vstack(
         [
             mo.md("--- Aggregated Regression Results ---"),
-            pyfixest.etable(
-                models=models_price.values(), model_heads=models_price.keys()
-            ),
+            pyfixest.etable(models=models_price.values(), model_heads=models_price.keys()),
             mo.md("--- Aggregated Coefficient Plot ---"),
             pyfixest.coefplot(
                 models=models_price.values(),
@@ -2399,9 +2201,7 @@ def _(
             interaction_term_name = f"{country_key}_from_China"
 
             # Dynamically build the formula for the current country
-            regressors = "+".join(
-                f"{interaction_term_name}_{year}" for year in EFFECT_YEAR_RANGE
-            )
+            regressors = "+".join(f"{interaction_term_name}_{year}" for year in EFFECT_YEAR_RANGE)
             formula = f"log(quantity)~{regressors}|exporter^year^product_code+importer^exporter"
 
             print(f"Running for {country_key}")
@@ -2419,7 +2219,6 @@ def _(
 
         return models, model_renamer
 
-
     models_qty, model_renamer_qty = _(analysis_lf_HMREP)
     return model_renamer_qty, models_qty
 
@@ -2429,9 +2228,7 @@ def _(mo, model_renamer_qty, models_qty, pyfixest):
     mo.vstack(
         [
             mo.md("--- x Regression Results ---"),
-            pyfixest.etable(
-                models=models_qty.values(), model_heads=models_qty.keys()
-            ),
+            pyfixest.etable(models=models_qty.values(), model_heads=models_qty.keys()),
             mo.md("--- Aggregated Coefficient Plot ---"),
             pyfixest.coefplot(
                 models=models_qty.values(),
@@ -2444,7 +2241,9 @@ def _(mo, model_renamer_qty, models_qty, pyfixest):
 
 @app.cell
 def _(mo):
-    mo.md(r"""## Expanded RoW sample - to align with [this voxEU paper](https://cepr.org/voxeu/columns/redirecting-chinese-exports-us-evidence-trade-deflection-first-us-china-trade-war)""")
+    mo.md(
+        r"""## Expanded RoW sample - to align with [this voxEU paper](https://cepr.org/voxeu/columns/redirecting-chinese-exports-us-evidence-trade-deflection-first-us-china-trade-war)"""
+    )
     return
 
 
@@ -2492,9 +2291,7 @@ def _(
             interaction_term_name = f"{country_key}_from_China"
 
             # Dynamically build the formula for the current country
-            regressors = "+".join(
-                f"{interaction_term_name}_{year}" for year in EFFECT_YEAR_RANGE
-            )
+            regressors = "+".join(f"{interaction_term_name}_{year}" for year in EFFECT_YEAR_RANGE)
             formula = f"log(value)~{regressors}|exporter^year^product_code+importer^exporter"
 
             print(f"Running for {country_key}")
@@ -2521,7 +2318,6 @@ def _(
                 ),
             ]
         )
-
 
     _(analysis_lf_HMREP_EXP)
     return
@@ -2552,9 +2348,7 @@ def _(
             interaction_term_name = f"{country_key}_from_China"
 
             # Dynamically build the formula for the current country
-            regressors = "+".join(
-                f"{interaction_term_name}_{year}" for year in EFFECT_YEAR_RANGE
-            )
+            regressors = "+".join(f"{interaction_term_name}_{year}" for year in EFFECT_YEAR_RANGE)
             formula = f"log(unit_value)~{regressors}|exporter^year^product_code+importer^exporter"
 
             print(f"Running for {country_key}")
@@ -2581,7 +2375,6 @@ def _(
                 ),
             ]
         )
-
 
     _(analysis_lf_HMREP_EXP)
     return
@@ -2612,9 +2405,7 @@ def _(
             interaction_term_name = f"{country_key}_from_China"
 
             # Dynamically build the formula for the current country
-            regressors = "+".join(
-                f"{interaction_term_name}_{year}" for year in EFFECT_YEAR_RANGE
-            )
+            regressors = "+".join(f"{interaction_term_name}_{year}" for year in EFFECT_YEAR_RANGE)
             formula = f"log(quantity)~{regressors}|exporter^year^product_code+importer^exporter"
 
             print(f"Running for {country_key}")
@@ -2641,7 +2432,6 @@ def _(
                 ),
             ]
         )
-
 
     _(analysis_lf_HMREP_EXP)
     return

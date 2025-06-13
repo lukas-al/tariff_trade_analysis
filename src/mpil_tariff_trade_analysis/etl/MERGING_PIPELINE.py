@@ -9,6 +9,7 @@ def _():
     import marimo as mo
     import polars as pl
     import time
+
     return mo, pl, time
 
 
@@ -154,9 +155,7 @@ def _(ave_mfn_clean, ave_pref_clean, baci_clean, pl, time):
     print(f"Unique years in dataset:\n{unique_years}")
 
     for i, year in enumerate(unique_years):
-        print(
-            f"--- Processing Chunk {i + 1}/{len(unique_years)}: Year = {year} ---"
-        )
+        print(f"--- Processing Chunk {i + 1}/{len(unique_years)}: Year = {year} ---")
 
         ### 1. Filtering the correct year
         print("    Filtering for correct year")
@@ -225,9 +224,7 @@ def _(ave_mfn_clean, ave_pref_clean, baci_clean, pl, time):
         )
 
         pref_mins = (
-            filtered_avepref.group_by(
-                ["partner_country", "product_code", "reporter_country"]
-            )
+            filtered_avepref.group_by(["partner_country", "product_code", "reporter_country"])
             .agg(
                 [
                     pl.col("tariff_rate_pref"),

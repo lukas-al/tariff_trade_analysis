@@ -42,18 +42,14 @@ def _(mtta):
 
 @app.cell
 def _(available_data):
-    unique_countries = (
-        available_data[available_data["isgroup"] == False].groupby(level=[0]).agg(set)
-    )
+    unique_countries = available_data[available_data["isgroup"] == False].groupby(level=[0]).agg(set)
     iso3codes = unique_countries.index.to_list()
 
     print("ISO3 char codes examples: \n ", iso3codes[0:200:50])
 
     iso3code_to_isonumcode = {}
     for country_iso3code in iso3codes:
-        iso3code_to_isonumcode[country_iso3code] = unique_countries["countrycode"][
-            country_iso3code
-        ].pop()
+        iso3code_to_isonumcode[country_iso3code] = unique_countries["countrycode"][country_iso3code].pop()
 
     print("USA Code is: ", iso3code_to_isonumcode["USA"])
     return (
@@ -123,9 +119,7 @@ def _(wits):
             return pd.DataFrame()  # Return empty dataframe on error
 
     # Main function to retrieve and save tariff data
-    def retrieve_and_save_tariff_data(
-        reporters, partners, products, output_dir="tariff_data_output"
-    ):
+    def retrieve_and_save_tariff_data(reporters, partners, products, output_dir="tariff_data_output"):
         # Create output directory if it doesn't exist
         os.makedirs(output_dir, exist_ok=True)
 
@@ -133,9 +127,7 @@ def _(wits):
         combinations = list(itertools.product(reporters, partners, products))
 
         # Process combinations with progress bar
-        for index, (reporter, partner, product) in enumerate(
-            tqdm(combinations, desc="Processing tariff data")
-        ):
+        for index, (reporter, partner, product) in enumerate(tqdm(combinations, desc="Processing tariff data")):
             # Get tariff data
             tariff_df = get_tariff_data(reporter, partner, product)
 

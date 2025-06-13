@@ -17,6 +17,7 @@ def _():
     from mpil_tariff_trade_analysis.utils.pipeline_funcs import (
         vectorized_hs_translation,
     )
+
     return Optional, Path, mo, np, pd, pl, vectorized_hs_translation
 
 
@@ -48,9 +49,7 @@ def _(mo):
 
 @app.cell
 def _(np, pd):
-    def map_tariff_rates(
-        extracted_codes_df: pd.DataFrame, tariff_rates_df: pd.DataFrame
-    ) -> pd.DataFrame:
+    def map_tariff_rates(extracted_codes_df: pd.DataFrame, tariff_rates_df: pd.DataFrame) -> pd.DataFrame:
         """
         Maps tariff rates from tariff_rates_df onto the extracted codes DataFrame.
         """
@@ -67,9 +66,7 @@ def _(np, pd):
         if tariff_rates_df is not None and not tariff_rates_df.empty:
             required_columns = ["HTS Heading", "Effective Date", "Applied Rate"]
             if not all(col in tariff_rates_df.columns for col in required_columns):
-                print(
-                    f"Error: tariff_rates_df missing one or more required columns: {required_columns}"
-                )
+                print(f"Error: tariff_rates_df missing one or more required columns: {required_columns}")
                 # Populate with default "not specified" values if lookup fails due to missing columns
                 data_for_final_df = []
                 for _, row in extracted_codes_df.iterrows():
@@ -86,9 +83,7 @@ def _(np, pd):
                 for _, row in tariff_rates_df.iterrows():
                     hts_heading = str(row["HTS Heading"]).strip()
                     try:
-                        effective_date = pd.to_datetime(
-                            row["Effective Date"]
-                        ).strftime("%Y-%m-%d")
+                        effective_date = pd.to_datetime(row["Effective Date"]).strftime("%Y-%m-%d")
                     except ValueError:
                         effective_date = str(row["Effective Date"])
 
@@ -102,9 +97,7 @@ def _(np, pd):
                         "rate": applied_rate_numeric,
                     }
         else:
-            print(
-                "Warning: tariff_rates_df is empty or None. Rates/dates will be 'not specified'."
-            )
+            print("Warning: tariff_rates_df is empty or None. Rates/dates will be 'not specified'.")
 
         data_for_final_df = []
         default_tariff_info = {
@@ -127,9 +120,7 @@ def _(np, pd):
                 }
             )
 
-        if (
-            not data_for_final_df
-        ):  # Should not happen if extracted_codes_df is not empty
+        if not data_for_final_df:  # Should not happen if extracted_codes_df is not empty
             return pd.DataFrame(columns=final_columns)
 
         final_df = pd.DataFrame(data_for_final_df, columns=final_columns)
@@ -141,6 +132,7 @@ def _(np, pd):
                 keep="first",
             )
         return final_df
+
     return
 
 
@@ -347,68 +339,48 @@ def _(np, pd):
     ]
 
     df_tariffs_comprehensive = pd.DataFrame(data_records)
-    df_tariffs_comprehensive["Effective Date"] = pd.to_datetime(
-        df_tariffs_comprehensive["Effective Date"]
-    )
+    df_tariffs_comprehensive["Effective Date"] = pd.to_datetime(df_tariffs_comprehensive["Effective Date"])
     df_tariffs_comprehensive["HTS Heading"] = pd.NA
 
     # Update HTS Headings for specific records
     df_tariffs_comprehensive.loc[
         (df_tariffs_comprehensive["Tariff Target"] == "Chinese products (List 1)")
-        & (
-            df_tariffs_comprehensive["Effective Date"]
-            == pd.to_datetime("2018-07-06")
-        )
+        & (df_tariffs_comprehensive["Effective Date"] == pd.to_datetime("2018-07-06"))
         & (df_tariffs_comprehensive["Applied Rate"] == 0.25),
         "HTS Heading",
     ] = "9903.88.01"
 
     df_tariffs_comprehensive.loc[
         (df_tariffs_comprehensive["Tariff Target"] == "Chinese products (List 2)")
-        & (
-            df_tariffs_comprehensive["Effective Date"]
-            == pd.to_datetime("2018-08-23")
-        )
+        & (df_tariffs_comprehensive["Effective Date"] == pd.to_datetime("2018-08-23"))
         & (df_tariffs_comprehensive["Applied Rate"] == 0.25),
         "HTS Heading",
     ] = "9903.88.02"
 
     df_tariffs_comprehensive.loc[
         (df_tariffs_comprehensive["Tariff Target"] == "Chinese products (List 3)")
-        & (
-            df_tariffs_comprehensive["Effective Date"]
-            == pd.to_datetime("2018-09-24")
-        )
+        & (df_tariffs_comprehensive["Effective Date"] == pd.to_datetime("2018-09-24"))
         & (df_tariffs_comprehensive["Applied Rate"] == 0.10),
         "HTS Heading",
     ] = "9903.88.03"
 
     df_tariffs_comprehensive.loc[
         (df_tariffs_comprehensive["Tariff Target"] == "Chinese products (List 3)")
-        & (
-            df_tariffs_comprehensive["Effective Date"]
-            == pd.to_datetime("2019-05-10")
-        )
+        & (df_tariffs_comprehensive["Effective Date"] == pd.to_datetime("2019-05-10"))
         & (df_tariffs_comprehensive["Applied Rate"] == 0.25),
         "HTS Heading",
     ] = "9903.88.03"
 
     df_tariffs_comprehensive.loc[
         (df_tariffs_comprehensive["Tariff Target"] == "Chinese products (List 4A)")
-        & (
-            df_tariffs_comprehensive["Effective Date"]
-            == pd.to_datetime("2019-09-01")
-        )
+        & (df_tariffs_comprehensive["Effective Date"] == pd.to_datetime("2019-09-01"))
         & (df_tariffs_comprehensive["Applied Rate"] == 0.15),
         "HTS Heading",
     ] = "9903.88.15"
 
     df_tariffs_comprehensive.loc[
         (df_tariffs_comprehensive["Tariff Target"] == "Chinese products (List 4A)")
-        & (
-            df_tariffs_comprehensive["Effective Date"]
-            == pd.to_datetime("2020-02-14")
-        )
+        & (df_tariffs_comprehensive["Effective Date"] == pd.to_datetime("2020-02-14"))
         & (df_tariffs_comprehensive["Applied Rate"] == 0.075),
         "HTS Heading",
     ] = "9903.88.15"
@@ -526,9 +498,7 @@ def _(np, pd):
         ignore_index=True,
     )
 
-    us_tariff_df = us_tariff_df.sort_values(
-        by=["Effective Date", "Action Entity", "HTS Heading", "Tariff Target"]
-    ).reset_index(drop=True)
+    us_tariff_df = us_tariff_df.sort_values(by=["Effective Date", "Action Entity", "HTS Heading", "Tariff Target"]).reset_index(drop=True)
 
     us_tariff_df
     return
@@ -1230,9 +1200,7 @@ def _(pd):
     for hts_code, exclusion_details_list in exclusion_data_1_6.items():
         for exclusion_detail in exclusion_details_list:
             hts_codes.append(hts_code)
-            dates_of_exclusion_start.append(
-                exclusion_detail["date_of_exclusion_start"]
-            )
+            dates_of_exclusion_start.append(exclusion_detail["date_of_exclusion_start"])
             chapter_99_codes.append(exclusion_detail["chapter_99_code"])
             source_document_urls.append(exclusion_detail["source_document_url"])
 
@@ -1423,14 +1391,10 @@ def _(Path, pd, pl):
             "tariff_add": "Tariff Rate Applied",
         }
     )
-    cm_us_tariffs = cm_us_tariffs.groupby(
-        "product_code"
-    ).mean()  # Take the average when grouping across the new shortened codes
+    cm_us_tariffs = cm_us_tariffs.groupby("product_code").mean()  # Take the average when grouping across the new shortened codes
     cm_us_tariffs["hs_revision"] = "HS6"
     cm_us_tariffs = cm_us_tariffs.reset_index()
-    cm_us_tariffs["Tariff Rate Applied"] = (
-        cm_us_tariffs["Tariff Rate Applied"] * 100
-    )
+    cm_us_tariffs["Tariff Rate Applied"] = cm_us_tariffs["Tariff Rate Applied"] * 100
 
     cm_us_tariffs.head()
     return (cm_us_tariffs,)
@@ -1445,9 +1409,7 @@ def _(cm_us_tariffs, pl, vectorized_hs_translation):
 
 @app.cell
 def _(cm_us_tariffs_remapped):
-    cm_us_tariffs_remapped.collect().write_csv(
-        "data/intermediate/cm_us_tariffs.csv"
-    )
+    cm_us_tariffs_remapped.collect().write_csv("data/intermediate/cm_us_tariffs.csv")
     return
 
 
@@ -1482,15 +1444,11 @@ def _(Optional, pd, pl):
             .with_columns(
                 pl.col("product_code").cast(pl.String),
                 pl.col("Effective Date").dt.year().alias("year"),
-                pl.col("Tariff Rate Applied")
-                .cast(pl.Float64)
-                .alias("base_official_tariff_join"),
+                pl.col("Tariff Rate Applied").cast(pl.Float64).alias("base_official_tariff_join"),
             )
             .select(["product_code", "year", "base_official_tariff_join"])
             # Drop rows where essential data for aggregation or join is missing
-            .drop_nulls(
-                subset=["product_code", "year", "base_official_tariff_join"]
-            )
+            .drop_nulls(subset=["product_code", "year", "base_official_tariff_join"])
             .group_by(["product_code", "year"])
             .agg(pl.col("base_official_tariff_join").mean())  # Taking mean tariff
         )
@@ -1499,61 +1457,33 @@ def _(Optional, pd, pl):
         # Use provided max_year_for_ffill or determine from unified_lf
         actual_max_year_for_ffill = max_year_for_ffill
         if actual_max_year_for_ffill is None:
-            max_year_collected = (
-                unified_lf.select(pl.col("year").cast(pl.Int32).max())
-                .collect()
-                .item()
-            )
+            max_year_collected = unified_lf.select(pl.col("year").cast(pl.Int32).max()).collect().item()
             if max_year_collected is not None:
                 actual_max_year_for_ffill = max_year_collected
             # If still None, it means unified_lf is empty or has no valid years; densification might be limited.
 
-        min_year_collect = official_base_tariffs_lf.select(
-            pl.col("year").min().alias("min_year")
-        ).collect()
+        min_year_collect = official_base_tariffs_lf.select(pl.col("year").min().alias("min_year")).collect()
         min_year_in_official_lf = None
         if not min_year_collect.is_empty():  # Should be a 1-row DF
             min_year_in_official_lf = min_year_collect.item(0, "min_year")
 
         # Create a LazyFrame of all years to be covered by the scaffold
-        all_years_lf = pl.LazyFrame(
-            {"year": []}, schema={"year": pl.Int32}
-        )  # Default to empty
-        if (
-            min_year_in_official_lf is not None
-            and actual_max_year_for_ffill is not None
-            and min_year_in_official_lf <= actual_max_year_for_ffill
-        ):
-            all_years_lf = pl.LazyFrame(
-                {
-                    "year": range(
-                        min_year_in_official_lf, actual_max_year_for_ffill + 1
-                    )
-                }
-            )
+        all_years_lf = pl.LazyFrame({"year": []}, schema={"year": pl.Int32})  # Default to empty
+        if min_year_in_official_lf is not None and actual_max_year_for_ffill is not None and min_year_in_official_lf <= actual_max_year_for_ffill:
+            all_years_lf = pl.LazyFrame({"year": range(min_year_in_official_lf, actual_max_year_for_ffill + 1)})
 
         # Part 3: Densify official_data_lf
         # Create a scaffold of unique product_codes from official_df crossed with all relevant years
-        unique_products_lf = official_base_tariffs_lf.select(
-            "product_code"
-        ).unique()
+        unique_products_lf = official_base_tariffs_lf.select("product_code").unique()
 
         # product_year_scaffold_lf will be empty if unique_products_lf or all_years_lf is empty
-        product_year_scaffold_lf = unique_products_lf.join(
-            all_years_lf, how="cross"
-        )
+        product_year_scaffold_lf = unique_products_lf.join(all_years_lf, how="cross")
 
         # Join the scaffold with the actual tariff data, then sort and forward-fill
         densified_official_tariffs_lf = (
-            product_year_scaffold_lf.join(
-                official_base_tariffs_lf, on=["product_code", "year"], how="left"
-            )
+            product_year_scaffold_lf.join(official_base_tariffs_lf, on=["product_code", "year"], how="left")
             .sort("product_code", "year")
-            .with_columns(
-                pl.col("base_official_tariff_join")
-                .forward_fill()
-                .over("product_code")
-            )
+            .with_columns(pl.col("base_official_tariff_join").forward_fill().over("product_code"))
         )
 
         # Prepare the final official_data_lf to be joined with unified_lf:
@@ -1564,9 +1494,7 @@ def _(Optional, pd, pl):
                 pl.lit("840").cast(pl.String).alias("partner_country"),  # USA
             )
             .filter(
-                pl.col(
-                    "base_official_tariff_join"
-                ).is_not_null()  # Only keep product-years that have an actual tariff
+                pl.col("base_official_tariff_join").is_not_null()  # Only keep product-years that have an actual tariff
             )
             .select(
                 [
@@ -1600,16 +1528,10 @@ def _(Optional, pd, pl):
         # which means a match occurred on product, year, and the specific reporter/partner pair.
         apply_tariff_condition = pl.col("partner_country") == "840"
 
-        s232_steel_cond = apply_tariff_condition & pl.col(
-            "product_code"
-        ).str.starts_with("72")
-        s232_aluminium_cond = apply_tariff_condition & pl.col(
-            "product_code"
-        ).str.starts_with("76")
+        s232_steel_cond = apply_tariff_condition & pl.col("product_code").str.starts_with("72")
+        s232_aluminium_cond = apply_tariff_condition & pl.col("product_code").str.starts_with("76")
 
-        general_tariff_cond = apply_tariff_condition & ~(
-            s232_steel_cond | s232_aluminium_cond
-        )
+        general_tariff_cond = apply_tariff_condition & ~(s232_steel_cond | s232_aluminium_cond)
 
         # Calculate the single 'official_effective_tariff' column
         unified_lf = unified_lf.with_columns(
@@ -1629,15 +1551,12 @@ def _(Optional, pd, pl):
         # # Multiply by 100 to bring into same space as the average_tariff_official previously
         # unified_lf = unified_lf.with_columns(pl.col("official_tariff"))
 
-        unified_lf = unified_lf.with_columns(
-            (pl.col("average_tariff") + pl.col("official_tariff")).alias(
-                "average_tariff_official"
-            )
-        )
+        unified_lf = unified_lf.with_columns((pl.col("average_tariff") + pl.col("official_tariff")).alias("average_tariff_official"))
         # Drop the intermediate helper column
         unified_lf = unified_lf.drop("base_official_tariff_join")
 
         return unified_lf
+
     return (combine_us_official_tariffs_with_unified_optimized,)
 
 
@@ -1666,9 +1585,7 @@ def _(
         max_year_for_ffill=2023,
     )
 
-    enhanced_unified_lf = enhanced_unified_lf.with_columns(
-        pl.col("year").cast(pl.String)
-    )
+    enhanced_unified_lf = enhanced_unified_lf.with_columns(pl.col("year").cast(pl.String))
 
     print("New schema for unified_lf: ", enhanced_unified_lf.collect_schema())
     return (enhanced_unified_lf,)

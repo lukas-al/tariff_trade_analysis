@@ -13,6 +13,7 @@ def _():
 
     import pycountry
     import pyfixest
+
     return mo, pd, pl, px, pycountry, pyfixest
 
 
@@ -86,27 +87,18 @@ def _(mo, pl):
         """
 
         # --- 2. PROCESS TARIFF CHANGES BY YEAR PAIR ---
-        year_pairs = [
-            (str(y1_int), str(y1_int + year_gap))
-            for y1_int in range(int(start_year), int(end_year) + 1 - year_gap)
-        ]
+        year_pairs = [(str(y1_int), str(y1_int + year_gap)) for y1_int in range(int(start_year), int(end_year) + 1 - year_gap)]
 
         group_cols = ["reporter_country", "partner_country", "product_code"]
         extracted_dfs_list = []
 
-        for y1, y2 in mo.status.progress_bar(
-            year_pairs, title="Processing year pairs"
-        ):
+        for y1, y2 in mo.status.progress_bar(year_pairs, title="Processing year pairs"):
             # The years between which we want to measure the price change
-            year_before_imposition = str(
-                int(y1) - years_before_tariff_change_unit_value
-            )
+            year_before_imposition = str(int(y1) - years_before_tariff_change_unit_value)
             year_unit_value_end = str(int(y1) + int(year_unit_value_end_gap))
 
             # Ensure relevant_years are distinct and sorted, useful for filtering
-            relevant_years = sorted(
-                list(set([year_before_imposition, y1, y2, year_unit_value_end]))
-            )
+            relevant_years = sorted(list(set([year_before_imposition, y1, y2, year_unit_value_end])))
 
             changed_groups_lf = (
                 filtered_lf.filter(pl.col("year").is_in(relevant_years))
@@ -123,64 +115,35 @@ def _(mo, pl):
                     ).alias(tariff_col_name + "_change"),
                     # Tariff percentage change calculated between y1 and y2
                     (
-                        (
-                            pl.col(tariff_col_name)
-                            .filter(pl.col("year") == y2)
-                            .mean()
-                            - pl.col(tariff_col_name)
-                            .filter(pl.col("year") == y1)
-                            .mean()
-                        )
-                        / pl.col(tariff_col_name)
-                        .filter(pl.col("year") == y1)
-                        .mean()
+                        (pl.col(tariff_col_name).filter(pl.col("year") == y2).mean() - pl.col(tariff_col_name).filter(pl.col("year") == y1).mean())
+                        / pl.col(tariff_col_name).filter(pl.col("year") == y1).mean()
                         # * 100
                     ).alias(tariff_col_name + "_perc_change"),
                     # Unit value g
                     (
-                        pl.col(price_col_name)
-                        .filter(pl.col("year") == year_unit_value_end)
-                        .mean()
-                        - pl.col(price_col_name)
-                        .filter(pl.col("year") == year_before_imposition)
-                        .mean()
+                        pl.col(price_col_name).filter(pl.col("year") == year_unit_value_end).mean()
+                        - pl.col(price_col_name).filter(pl.col("year") == year_before_imposition).mean()
                     ).alias(price_col_name + "_change"),
                     # Unit value percentage change calculated between year_before_imposition and year_unit_value_end
                     (
                         (
                             (
-                                pl.col(price_col_name)
-                                .filter(pl.col("year") == year_unit_value_end)
-                                .mean()
-                                - pl.col(price_col_name)
-                                .filter(pl.col("year") == year_before_imposition)
-                                .mean()
+                                pl.col(price_col_name).filter(pl.col("year") == year_unit_value_end).mean()
+                                - pl.col(price_col_name).filter(pl.col("year") == year_before_imposition).mean()
                             )
-                            / pl.col(price_col_name)
-                            .filter(pl.col("year") == year_before_imposition)
-                            .mean()
+                            / pl.col(price_col_name).filter(pl.col("year") == year_before_imposition).mean()
                         )
                         * 100
-                    ).alias(
-                        price_col_name + "_perc_change"
-                    ),  # price_col_name+"_perc_change"
+                    ).alias(price_col_name + "_perc_change"),  # price_col_name+"_perc_change"
                     # Value difference calculated between year_before_imposition and year_unit_value_end
                     (
-                        pl.col("value")
-                        .filter(pl.col("year") == year_unit_value_end)
-                        .sum()
-                        - pl.col("value")
-                        .filter(pl.col("year") == year_before_imposition)
-                        .sum()
+                        pl.col("value").filter(pl.col("year") == year_unit_value_end).sum()
+                        - pl.col("value").filter(pl.col("year") == year_before_imposition).sum()
                     ).alias("value_change"),
                     # Quantity difference calculated between year_before_imposition and year_unit_value_end
                     (
-                        pl.col("quantity")
-                        .filter(pl.col("year") == year_unit_value_end)
-                        .sum()
-                        - pl.col("quantity")
-                        .filter(pl.col("year") == year_before_imposition)
-                        .sum()
+                        pl.col("quantity").filter(pl.col("year") == year_unit_value_end).sum()
+                        - pl.col("quantity").filter(pl.col("year") == year_before_imposition).sum()
                     ).alias("quantity_change"),
                 )
                 .filter(
@@ -191,22 +154,19 @@ def _(mo, pl):
                 )
                 .with_columns(
                     pl.lit(y1 + "-" + y2).alias(tariff_col_name + "_change_range"),
-                    pl.lit(
-                        year_before_imposition + "-" + year_unit_value_end
-                    ).alias(price_col_name + "_change_range"),
+                    pl.lit(year_before_imposition + "-" + year_unit_value_end).alias(price_col_name + "_change_range"),
                 )
             )
 
             changed_groups_df = changed_groups_lf.collect()
-            print(
-                f"    Identified {changed_groups_df.height} cases of tariff change between {y1}-{y2}"
-            )
+            print(f"    Identified {changed_groups_df.height} cases of tariff change between {y1}-{y2}")
 
             extracted_dfs_list.append(changed_groups_df)
 
         combined_df = pl.concat(extracted_dfs_list)
 
         return combined_df
+
     return (extract_tariff_changes,)
 
 
@@ -245,26 +205,14 @@ def _(pl):
 
         for column_name in column_names:
             try:
-                lower_bound = (
-                    ldf.select(pl.col(column_name).quantile(lower_p))
-                    .collect()
-                    .item()
-                )
-                upper_bound = (
-                    ldf.select(pl.col(column_name).quantile(upper_p))
-                    .collect()
-                    .item()
-                )
-                ldf_cleaned = ldf_cleaned.filter(
-                    (pl.col(column_name) >= lower_bound)
-                    & (pl.col(column_name) <= upper_bound)
-                )
+                lower_bound = ldf.select(pl.col(column_name).quantile(lower_p)).collect().item()
+                upper_bound = ldf.select(pl.col(column_name).quantile(upper_p)).collect().item()
+                ldf_cleaned = ldf_cleaned.filter((pl.col(column_name) >= lower_bound) & (pl.col(column_name) <= upper_bound))
             except Exception:
-                print(
-                    f"Warning: Skipping outlier removal for column '{column_name}'. Ensure it is numeric."
-                )
+                print(f"Warning: Skipping outlier removal for column '{column_name}'. Ensure it is numeric.")
 
         return ldf_cleaned
+
     return (remove_outliers_by_percentile_lazy,)
 
 
@@ -316,13 +264,9 @@ def _(go, pl, px):
             price_diff_col_name,
             tariff_change_col_name,
         ]
-        missing_essential = [
-            col for col in essential_cols if col not in results_diff_df.columns
-        ]
+        missing_essential = [col for col in essential_cols if col not in results_diff_df.columns]
         if missing_essential:
-            print(
-                f"[{func_name}] Error: Input DataFrame is missing essential columns: {missing_essential}"
-            )
+            print(f"[{func_name}] Error: Input DataFrame is missing essential columns: {missing_essential}")
             return go.Figure().update_layout(
                 title_text=f"Missing Columns: {missing_essential}",
                 xaxis={"visible": False},
@@ -332,9 +276,7 @@ def _(go, pl, px):
 
         # --- Bin Tariff Changes & Calculate Stats ---
         event_id_cols = group_cols + ["impulse_year"]
-        tariff_changes_per_event = results_diff_df.select(
-            event_id_cols + [tariff_change_col_name]
-        ).unique(subset=event_id_cols, keep="first")
+        tariff_changes_per_event = results_diff_df.select(event_id_cols + [tariff_change_col_name]).unique(subset=event_id_cols, keep="first")
 
         # Adjust num_bins if fewer unique events exist
         if tariff_changes_per_event.height < num_bins:
@@ -348,14 +290,10 @@ def _(go, pl, px):
 
         try:
             binned_events = tariff_changes_per_event.with_columns(
-                pl.col(tariff_change_col_name)
-                .qcut(num_bins, labels=bin_labels)
-                .alias(bin_col_name)
+                pl.col(tariff_change_col_name).qcut(num_bins, labels=bin_labels).alias(bin_col_name)
             )
         except Exception as e:
-            print(
-                f"[{func_name}] Error binning tariff changes with qcut: {e}. Using pos/neg/zero bins."
-            )
+            print(f"[{func_name}] Error binning tariff changes with qcut: {e}. Using pos/neg/zero bins.")
             binned_events = tariff_changes_per_event.with_columns(
                 pl.when(pl.col(tariff_change_col_name) < 0)
                 .then(pl.lit("Decrease"))
@@ -364,18 +302,14 @@ def _(go, pl, px):
                 .otherwise(pl.lit("No Change"))
                 .alias(bin_col_name)
             )
-            bin_labels = sorted(
-                binned_events[bin_col_name].unique().to_list()
-            )  # Update labels based on fallback
+            bin_labels = sorted(binned_events[bin_col_name].unique().to_list())  # Update labels based on fallback
 
         # Calculate Tariff Stats per Bin using the binned data
         print(f"[{func_name}] Calculating tariff change statistics per bin...")
         bin_tariff_stats_df = binned_events.group_by(bin_col_name).agg(
             pl.mean(tariff_change_col_name).alias("mean_tariff_change_in_bin"),
             pl.median(tariff_change_col_name).alias("median_tariff_change_in_bin"),
-            pl.std(tariff_change_col_name)
-            .alias("std_tariff_change_in_bin")
-            .fill_null(0),
+            pl.std(tariff_change_col_name).alias("std_tariff_change_in_bin").fill_null(0),
         )
 
         # --- Join bin info back and Aggregate Price Diff Data ---
@@ -387,18 +321,14 @@ def _(go, pl, px):
         )
 
         if plot_df.is_empty():
-            print(
-                f"[{func_name}] No data remaining after joining tariff change bins. Cannot plot."
-            )
+            print(f"[{func_name}] No data remaining after joining tariff change bins. Cannot plot.")
             return go.Figure().update_layout(
                 title_text="No Data After Binning",
                 xaxis={"visible": False},
                 yaxis={"visible": False},
             )
 
-        print(
-            f"[{func_name}] Aggregating price differences by time and tariff change bin..."
-        )
+        print(f"[{func_name}] Aggregating price differences by time and tariff change bin...")
 
         null_count = plot_df[price_diff_col_name].is_null().sum()
         non_null_count = plot_df[price_diff_col_name].is_not_null().sum()
@@ -417,9 +347,7 @@ def _(go, pl, px):
             )
             # Join the pre-calculated tariff stats for this bin for hover info
             .join(bin_tariff_stats_df, on=bin_col_name, how="left")
-            .sort(
-                [bin_col_name, "time_relative_to_impulse"]
-            )  # Sort for consistent plotting
+            .sort([bin_col_name, "time_relative_to_impulse"])  # Sort for consistent plotting
         )
 
         if agg_df.is_empty():
@@ -438,16 +366,12 @@ def _(go, pl, px):
         print(f"[{func_name}] Plotting average trends...")
 
         fig = px.line(
-            agg_df.sort(
-                "time_relative_to_impulse"
-            ),  # Ensure time sorting for lines
+            agg_df.sort("time_relative_to_impulse"),  # Ensure time sorting for lines
             x="time_relative_to_impulse",
             y="mean_price_diff",
             color=bin_col_name,  # Use the defined bin column name
             markers=True,
-            category_orders={
-                bin_col_name: bin_labels
-            },  # Use labels for ordering legend/colors
+            category_orders={bin_col_name: bin_labels},  # Use labels for ordering legend/colors
             custom_data=[  # Add the tariff stats columns to custom data
                 "median_price_diff",
                 "std_price_diff",
@@ -471,9 +395,7 @@ def _(go, pl, px):
             yaxis_title=yaxis_title,
             legend_title_text=f"{tariff_change_title} Bin",
             hovermode="closest",
-            legend=dict(
-                orientation="h", yanchor="bottom", y=-0.2, xanchor="right", x=1
-            ),
+            legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="right", x=1),
         )
         fig.add_hline(y=0, line_dash="dash", line_color="grey")
         fig.add_vline(x=0, line_dash="dot", line_color="black")
@@ -497,6 +419,7 @@ def _(go, pl, px):
         # fig.show()  # Show the main plot
 
         return fig
+
     return
 
 
@@ -548,9 +471,7 @@ def _(mo, pl):
 
         # --- Define Schema for Empty Result ---
         price_dtype = filtered_lf.schema.get(price_col_name, pl.Float64)
-        value_dtype = filtered_lf.schema.get(
-            "value", pl.Float64
-        )  # Assuming 'value' column exists
+        value_dtype = filtered_lf.schema.get("value", pl.Float64)  # Assuming 'value' column exists
         group_cols_dtypes = {}
         for gc in group_cols:
             dtype = filtered_lf.schema.get(gc)
@@ -570,42 +491,25 @@ def _(mo, pl):
         }
 
         # --- Part 1: Identify all impulse events (tariff changes) ---
-        change_detection_year_pairs = [
-            (str(y1_int), str(y1_int + year_gap))
-            for y1_int in range(int(start_year), int(end_year) + 1 - year_gap)
-        ]
+        change_detection_year_pairs = [(str(y1_int), str(y1_int + year_gap)) for y1_int in range(int(start_year), int(end_year) + 1 - year_gap)]
 
         if not change_detection_year_pairs:
             return pl.DataFrame(schema=final_output_schema)
 
         list_of_impulse_event_lfs = []
-        for y1_str, y2_str in mo.status.progress_bar(
-            change_detection_year_pairs, title="Identifying tariff change events"
-        ):
+        for y1_str, y2_str in mo.status.progress_bar(change_detection_year_pairs, title="Identifying tariff change events"):
             y1_val = int(y1_str)
 
             current_event_lf = (
                 filtered_lf.filter(pl.col("year").is_in([y1_str, y2_str]))
                 .group_by(group_cols, maintain_order=True)
                 .agg(
-                    pl.col(tariff_col_name)
-                    .filter(pl.col("year") == y1_str)
-                    .mean()
-                    .alias("tariff_y1"),
-                    pl.col(tariff_col_name)
-                    .filter(pl.col("year") == y2_str)
-                    .mean()
-                    .alias("tariff_y2"),
+                    pl.col(tariff_col_name).filter(pl.col("year") == y1_str).mean().alias("tariff_y1"),
+                    pl.col(tariff_col_name).filter(pl.col("year") == y2_str).mean().alias("tariff_y2"),
                 )
-                .with_columns(
-                    (pl.col("tariff_y2") - pl.col("tariff_y1")).alias(
-                        "tariff_change_value"
-                    )
-                )
+                .with_columns((pl.col("tariff_y2") - pl.col("tariff_y1")).alias("tariff_change_value"))
                 .filter(
-                    pl.col("tariff_change_value").is_not_null()
-                    & (pl.col("tariff_change_value") != 0.0)
-                    & pl.col("tariff_change_value").is_not_nan()
+                    pl.col("tariff_change_value").is_not_null() & (pl.col("tariff_change_value") != 0.0) & pl.col("tariff_change_value").is_not_nan()
                 )
                 .select(group_cols + ["tariff_change_value"])
                 .with_columns(pl.lit(y1_val).cast(pl.Int32).alias("impulse_year"))
@@ -615,18 +519,12 @@ def _(mo, pl):
         if not list_of_impulse_event_lfs:
             return pl.DataFrame(schema=final_output_schema)
 
-        all_impulse_events_lf = pl.concat(
-            list_of_impulse_event_lfs, how="diagonal_relaxed"
-        )
+        all_impulse_events_lf = pl.concat(list_of_impulse_event_lfs, how="diagonal_relaxed")
 
         # --- Part 2: Join, extract series, and calculate price difference ---
-        data_with_int_year_lf = filtered_lf.with_columns(
-            pl.col("year").cast(pl.Int32).alias("year_as_int")
-        )
+        data_with_int_year_lf = filtered_lf.with_columns(pl.col("year").cast(pl.Int32).alias("year_as_int"))
 
-        series_lf = data_with_int_year_lf.join(
-            all_impulse_events_lf, on=group_cols, how="inner"
-        )
+        series_lf = data_with_int_year_lf.join(all_impulse_events_lf, on=group_cols, how="inner")
 
         min_relative_offset = -years_before_tariff_change
         max_relative_offset = series_length - 1
@@ -635,14 +533,8 @@ def _(mo, pl):
             return pl.DataFrame(schema=final_output_schema)
 
         # Calculate relative time and filter time window
-        series_lf = series_lf.with_columns(
-            (pl.col("year_as_int") - pl.col("impulse_year")).alias(
-                "time_relative_to_impulse"
-            )
-        ).filter(
-            pl.col("time_relative_to_impulse").is_between(
-                min_relative_offset, max_relative_offset, closed="both"
-            )
+        series_lf = series_lf.with_columns((pl.col("year_as_int") - pl.col("impulse_year")).alias("time_relative_to_impulse")).filter(
+            pl.col("time_relative_to_impulse").is_between(min_relative_offset, max_relative_offset, closed="both")
         )
 
         # --- Calculate Difference from t=0 ---
@@ -662,9 +554,7 @@ def _(mo, pl):
         series_lf = series_lf.filter(pl.col("price_t0").is_not_null())
 
         # Calculate the difference: price[t] - price[t=0]
-        series_lf = series_lf.with_columns(
-            (pl.col(price_col_name) - pl.col("price_t0")).alias(price_diff_col_name)
-        )
+        series_lf = series_lf.with_columns((pl.col(price_col_name) - pl.col("price_t0")).alias(price_diff_col_name))
 
         # --- Select Final Columns ---
         # Include the new difference column, exclude the original price and temporary price_t0
@@ -677,9 +567,7 @@ def _(mo, pl):
             "value",  # Include 'value' column as per original select list
         ]
 
-        result_lf = series_lf.select(final_selection_cols).sort(
-            group_cols + ["impulse_year", "time_relative_to_impulse"]
-        )
+        result_lf = series_lf.select(final_selection_cols).sort(group_cols + ["impulse_year", "time_relative_to_impulse"])
 
         result_df = result_lf.collect()
 
@@ -688,6 +576,7 @@ def _(mo, pl):
             return pl.DataFrame(schema=final_output_schema)
 
         return result_df
+
     return
 
 
@@ -705,10 +594,7 @@ def _(pl):
         """
         tariff_us_china_expr = (
             pl.col("average_tariff_official")
-            .filter(
-                (pl.col("partner_country") == usa_cc)
-                & (pl.col("reporter_country") == china_cc)
-            )
+            .filter((pl.col("partner_country") == usa_cc) & (pl.col("reporter_country") == china_cc))
             .mean()
             .over(["year", "product_code"])
             .alias("tariff_us_china")
@@ -725,11 +611,7 @@ def _(pl):
         ).filter(pl.col("year").is_in(list(effect_year_range)))
 
         interaction_expressions = [
-            pl.when(
-                (pl.col("year") == str(year))
-                & (pl.col("importer") == usa_cc)
-                & (pl.col("exporter") == china_cc)
-            )
+            pl.when((pl.col("year") == str(year)) & (pl.col("importer") == usa_cc) & (pl.col("exporter") == china_cc))
             .then(pl.col("tariff_us_china"))
             .otherwise(0.0)
             .alias(f"tariff_interaction_{year}")
@@ -737,22 +619,15 @@ def _(pl):
         ]
 
         fixed_effect_expressions = [
-            pl.concat_str(["importer", "product_code", "year"], separator="^")
-            .alias("alpha_ipt")
-            .cast(pl.Categorical),
-            pl.concat_str(["exporter", "product_code", "year"], separator="^")
-            .alias("alpha_jpt")
-            .cast(pl.Categorical),
-            pl.concat_str(["importer", "exporter"], separator="^")
-            .alias("alpha_ij")
-            .cast(pl.Categorical),
+            pl.concat_str(["importer", "product_code", "year"], separator="^").alias("alpha_ipt").cast(pl.Categorical),
+            pl.concat_str(["exporter", "product_code", "year"], separator="^").alias("alpha_jpt").cast(pl.Categorical),
+            pl.concat_str(["importer", "exporter"], separator="^").alias("alpha_ij").cast(pl.Categorical),
         ]
 
-        final_lf = input_lf.with_columns(
-            *interaction_expressions, *fixed_effect_expressions
-        )
+        final_lf = input_lf.with_columns(*interaction_expressions, *fixed_effect_expressions)
 
         return final_lf.collect()
+
     return (prepare_regression_data_HM1,)
 
 
@@ -787,22 +662,12 @@ def _(CHINA_CC, USA_CC, pl):
 
         # 1. Initial Filtering
         unified_lf_without_oil_filtered = (
-            df.filter(pl.col("year").is_in(relevant_years))
-            .filter(pl.col("partner_country").is_in(top_30_importers))
-            .filter(pl.col("value") > 0)
+            df.filter(pl.col("year").is_in(relevant_years)).filter(pl.col("partner_country").is_in(top_30_importers)).filter(pl.col("value") > 0)
         )
 
         # 2. Reshape data
-        agg_expressions = [
-            pl.col("value")
-            .filter(pl.col("year") == pl.lit(year))
-            .first()
-            .alias(f"val_{year}")
-            for year in relevant_years
-        ]
-        reshaped_lf = unified_lf_without_oil_filtered.group_by(
-            ["reporter_country", "partner_country", "product_code"]
-        ).agg(agg_expressions)
+        agg_expressions = [pl.col("value").filter(pl.col("year") == pl.lit(year)).first().alias(f"val_{year}") for year in relevant_years]
+        reshaped_lf = unified_lf_without_oil_filtered.group_by(["reporter_country", "partner_country", "product_code"]).agg(agg_expressions)
 
         val_p1_start_col = f"val_{period1_start_year}"
         val_p1_end_col = f"val_{period1_end_year}"
@@ -818,17 +683,8 @@ def _(CHINA_CC, USA_CC, pl):
                 & (pl.col(val_p1_end_col) > 0)
             )
             .with_columns(
-                y=(
-                    100
-                    * (
-                        pl.col(val_p1_end_col).log()
-                        - pl.col(val_p1_start_col).log()
-                    )
-                    / period1_duration
-                ),
-                PostEvent=pl.lit(0).cast(
-                    pl.Int8
-                ),  # Renamed from Post2017 for generality
+                y=(100 * (pl.col(val_p1_end_col).log() - pl.col(val_p1_start_col).log()) / period1_duration),
+                PostEvent=pl.lit(0).cast(pl.Int8),  # Renamed from Post2017 for generality
             )
             .select(
                 [
@@ -850,14 +706,7 @@ def _(CHINA_CC, USA_CC, pl):
                 & (pl.col(val_p2_end_col) > 0)
             )
             .with_columns(
-                y=(
-                    100
-                    * (
-                        pl.col(val_p2_end_col).log()
-                        - pl.col(val_p2_start_col).log()
-                    )
-                    / period2_duration
-                ),
+                y=(100 * (pl.col(val_p2_end_col).log() - pl.col(val_p2_start_col).log()) / period2_duration),
                 PostEvent=pl.lit(1).cast(pl.Int8),  # Renamed from Post2017
             )
             .select(
@@ -872,23 +721,13 @@ def _(CHINA_CC, USA_CC, pl):
         )
 
         # 5. Combine the two periods
-        regression_input_lf = pl.concat(
-            [period1_growth_lf, period2_growth_lf], how="vertical"
-        )
+        regression_input_lf = pl.concat([period1_growth_lf, period2_growth_lf], how="vertical")
 
         # 6. Add exporter dummies
         regression_input_lf = regression_input_lf.with_columns(
             [
-                pl.when(pl.col("reporter_country") == pl.lit(CHINA_CC))
-                .then(pl.lit(1))
-                .otherwise(pl.lit(0))
-                .cast(pl.Int8)
-                .alias("is_CHN_exporter"),
-                pl.when(pl.col("reporter_country") == pl.lit(USA_CC))
-                .then(pl.lit(1))
-                .otherwise(pl.lit(0))
-                .cast(pl.Int8)
-                .alias("is_USA_exporter"),
+                pl.when(pl.col("reporter_country") == pl.lit(CHINA_CC)).then(pl.lit(1)).otherwise(pl.lit(0)).cast(pl.Int8).alias("is_CHN_exporter"),
+                pl.when(pl.col("reporter_country") == pl.lit(USA_CC)).then(pl.lit(1)).otherwise(pl.lit(0)).cast(pl.Int8).alias("is_USA_exporter"),
             ]
         )
 
@@ -899,14 +738,13 @@ def _(CHINA_CC, USA_CC, pl):
         regression_df = regression_df.filter(pl.col("y").is_finite())
 
         return regression_df
+
     return (prepare_regression_data_HM2,)
 
 
 @app.cell(hide_code=True)
 def _(pl):
-    def get_oil_exporting_countries(
-        lzdf: pl.LazyFrame, oil_export_percentage_threshold: float
-    ) -> list[str]:
+    def get_oil_exporting_countries(lzdf: pl.LazyFrame, oil_export_percentage_threshold: float) -> list[str]:
         """
         Filters a LazyFrame to find countries where oil products (HS code starting with '27')
         constitute a certain percentage of their total export value.
@@ -921,21 +759,15 @@ def _(pl):
             A list of reporter_country names that meet the criteria.
         """
         if not 0 <= oil_export_percentage_threshold <= 100:
-            raise ValueError(
-                "oil_export_percentage_threshold must be between 0 and 100."
-            )
+            raise ValueError("oil_export_percentage_threshold must be between 0 and 100.")
 
         # Calculate total export value for each country
-        total_exports_by_country = lzdf.group_by("reporter_country").agg(
-            pl.sum("value").alias("total_value")
-        )
+        total_exports_by_country = lzdf.group_by("reporter_country").agg(pl.sum("value").alias("total_value"))
 
         # Calculate total oil export value for each country
         # HS codes for oil and mineral fuels are under Chapter 27.
         oil_exports_by_country = (
-            lzdf.filter(pl.col("product_code").str.starts_with("27"))
-            .group_by("reporter_country")
-            .agg(pl.sum("value").alias("oil_value"))
+            lzdf.filter(pl.col("product_code").str.starts_with("27")).group_by("reporter_country").agg(pl.sum("value").alias("oil_value"))
         )
 
         # Join total exports with oil exports
@@ -944,28 +776,23 @@ def _(pl):
             on="reporter_country",
             how="left",  # Use left join to keep all countries, oil_value will be null if no oil exports
         ).with_columns(
-            pl.col("oil_value").fill_null(
-                0.0
-            )  # Fill nulls with 0 for countries with no oil exports
+            pl.col("oil_value").fill_null(0.0)  # Fill nulls with 0 for countries with no oil exports
         )
 
         # Calculate the percentage of oil exports
         country_export_summary = country_export_summary.with_columns(
-            ((pl.col("oil_value") / pl.col("total_value")) * 100).alias(
-                "oil_export_percentage"
-            )
+            ((pl.col("oil_value") / pl.col("total_value")) * 100).alias("oil_export_percentage")
         )
 
         # Filter countries above the threshold
         filtered_countries = (
-            country_export_summary.filter(
-                pl.col("oil_export_percentage") > oil_export_percentage_threshold
-            )
+            country_export_summary.filter(pl.col("oil_export_percentage") > oil_export_percentage_threshold)
             .select("reporter_country")
             .collect()  # Collect the results into a DataFrame
         )
 
         return filtered_countries["reporter_country"].to_list()
+
     return (get_oil_exporting_countries,)
 
 
@@ -982,9 +809,7 @@ def _(CHINA_CC, USA_CC, pl, pycountry):
     ) -> pl.DataFrame:
         # Check if the country to isolate is in the top_30_importers list
         if country_to_isolate not in top_30_importers:
-            raise ValueError(
-                f"Country to isolate '{country_to_isolate}' is not in the top_30_importers list."
-            )
+            raise ValueError(f"Country to isolate '{country_to_isolate}' is not in the top_30_importers list.")
 
         # Convert year strings to int for duration calculation
         p1_start_int = int(period1_start_year)
@@ -1007,22 +832,12 @@ def _(CHINA_CC, USA_CC, pl, pycountry):
 
         # 1. Initial Filtering
         unified_lf_without_oil_filtered = (
-            df.filter(pl.col("year").is_in(relevant_years))
-            .filter(pl.col("partner_country").is_in(top_30_importers))
-            .filter(pl.col("value") > 0)
+            df.filter(pl.col("year").is_in(relevant_years)).filter(pl.col("partner_country").is_in(top_30_importers)).filter(pl.col("value") > 0)
         )
 
         # 2. Reshape data
-        agg_expressions = [
-            pl.col("value")
-            .filter(pl.col("year") == pl.lit(year))
-            .first()
-            .alias(f"val_{year}")
-            for year in relevant_years
-        ]
-        reshaped_lf = unified_lf_without_oil_filtered.group_by(
-            ["reporter_country", "partner_country", "product_code"]
-        ).agg(agg_expressions)
+        agg_expressions = [pl.col("value").filter(pl.col("year") == pl.lit(year)).first().alias(f"val_{year}") for year in relevant_years]
+        reshaped_lf = unified_lf_without_oil_filtered.group_by(["reporter_country", "partner_country", "product_code"]).agg(agg_expressions)
 
         val_p1_start_col = f"val_{period1_start_year}"
         val_p1_end_col = f"val_{period1_end_year}"
@@ -1038,14 +853,7 @@ def _(CHINA_CC, USA_CC, pl, pycountry):
                 & (pl.col(val_p1_end_col) > 0)
             )
             .with_columns(
-                y=(
-                    100
-                    * (
-                        pl.col(val_p1_end_col).log()
-                        - pl.col(val_p1_start_col).log()
-                    )
-                    / period1_duration
-                ),
+                y=(100 * (pl.col(val_p1_end_col).log() - pl.col(val_p1_start_col).log()) / period1_duration),
                 PostEvent=pl.lit(0).cast(pl.Int8),
             )
             .select(
@@ -1068,14 +876,7 @@ def _(CHINA_CC, USA_CC, pl, pycountry):
                 & (pl.col(val_p2_end_col) > 0)
             )
             .with_columns(
-                y=(
-                    100
-                    * (
-                        pl.col(val_p2_end_col).log()
-                        - pl.col(val_p2_start_col).log()
-                    )
-                    / period2_duration
-                ),
+                y=(100 * (pl.col(val_p2_end_col).log() - pl.col(val_p2_start_col).log()) / period2_duration),
                 PostEvent=pl.lit(1).cast(pl.Int8),
             )
             .select(
@@ -1090,54 +891,32 @@ def _(CHINA_CC, USA_CC, pl, pycountry):
         )
 
         # 5. Combine the two periods
-        regression_input_lf = pl.concat(
-            [period1_growth_lf, period2_growth_lf], how="vertical"
-        )
+        regression_input_lf = pl.concat([period1_growth_lf, period2_growth_lf], how="vertical")
 
         # 6. Add exporter dummies based on the country_to_isolate
         # CHN and USA are now hardcoded
         regression_input_lf = regression_input_lf.with_columns(
             [
-                pl.when(
-                    (pl.col("reporter_country") == pl.lit(CHINA_CC))
-                    & (pl.col("partner_country") == pl.lit(country_to_isolate))
-                )
+                pl.when((pl.col("reporter_country") == pl.lit(CHINA_CC)) & (pl.col("partner_country") == pl.lit(country_to_isolate)))
                 .then(pl.lit(1))
                 .otherwise(pl.lit(0))
                 .cast(pl.Int8)
-                .alias(
-                    f"is_{pycountry.countries.get(numeric=CHINA_CC).alpha_3}_exporter_{country_to_isolate}_importer"
-                ),
-                pl.when(
-                    (pl.col("reporter_country") == pl.lit(USA_CC))
-                    & (pl.col("partner_country") == pl.lit(country_to_isolate))
-                )
+                .alias(f"is_{pycountry.countries.get(numeric=CHINA_CC).alpha_3}_exporter_{country_to_isolate}_importer"),
+                pl.when((pl.col("reporter_country") == pl.lit(USA_CC)) & (pl.col("partner_country") == pl.lit(country_to_isolate)))
                 .then(pl.lit(1))
                 .otherwise(pl.lit(0))
                 .cast(pl.Int8)
-                .alias(
-                    f"is_{pycountry.countries.get(numeric=USA_CC).alpha_3}_exporter_{country_to_isolate}_importer"
-                ),
-                pl.when(
-                    (pl.col("reporter_country") == pl.lit(CHINA_CC))
-                    & (pl.col("partner_country") != pl.lit(country_to_isolate))
-                )
+                .alias(f"is_{pycountry.countries.get(numeric=USA_CC).alpha_3}_exporter_{country_to_isolate}_importer"),
+                pl.when((pl.col("reporter_country") == pl.lit(CHINA_CC)) & (pl.col("partner_country") != pl.lit(country_to_isolate)))
                 .then(pl.lit(1))
                 .otherwise(pl.lit(0))
                 .cast(pl.Int8)
-                .alias(
-                    f"is_{pycountry.countries.get(numeric=CHINA_CC).alpha_3}_exporter_non{country_to_isolate}_importer"
-                ),
-                pl.when(
-                    (pl.col("reporter_country") == pl.lit(USA_CC))
-                    & (pl.col("partner_country") != pl.lit(country_to_isolate))
-                )
+                .alias(f"is_{pycountry.countries.get(numeric=CHINA_CC).alpha_3}_exporter_non{country_to_isolate}_importer"),
+                pl.when((pl.col("reporter_country") == pl.lit(USA_CC)) & (pl.col("partner_country") != pl.lit(country_to_isolate)))
                 .then(pl.lit(1))
                 .otherwise(pl.lit(0))
                 .cast(pl.Int8)
-                .alias(
-                    f"is_{pycountry.countries.get(numeric=USA_CC).alpha_3}_exporter_non{country_to_isolate}_importer"
-                ),
+                .alias(f"is_{pycountry.countries.get(numeric=USA_CC).alpha_3}_exporter_non{country_to_isolate}_importer"),
             ]
         )
 
@@ -1148,6 +927,7 @@ def _(CHINA_CC, USA_CC, pl, pycountry):
         regression_df = regression_df.filter(pl.col("y").is_finite())
 
         return regression_df
+
     return (prepare_regression_data_THIRDCOUNTRY,)
 
 
@@ -1169,11 +949,10 @@ def _(CHINA_CC, USA_CC, pycountry, pyfixest):
             vcov="hetero",
         )
 
-        print(
-            f" --- Running model, isolating {pycountry.countries.get(numeric=country_of_interest_code).name} --- "
-        )
+        print(f" --- Running model, isolating {pycountry.countries.get(numeric=country_of_interest_code).name} --- ")
 
         return (model_eq2MOD_v0.summary(), model_eq2MOD_v0.coefplot())
+
     return (run_regression_THIRDCOUNTRY,)
 
 
@@ -1187,7 +966,6 @@ def _(mo):
 def _(mo, pl):
     # WITS MFN
     wits_mfn = pl.scan_parquet("data/intermediate/WITS_AVEMFN_CLEAN.parquet")
-
 
     mo.vstack(
         [
@@ -1370,19 +1148,13 @@ def _(
     # First we filter the data
     filtered_lf = unified_lf
     if REPORTER_COUNTRIES:
-        filtered_lf = filtered_lf.filter(
-            pl.col("reporter_country").is_in(REPORTER_COUNTRIES)
-        )
+        filtered_lf = filtered_lf.filter(pl.col("reporter_country").is_in(REPORTER_COUNTRIES))
 
     if PARTNER_COUNTRIES:
-        filtered_lf = filtered_lf.filter(
-            pl.col("partner_country").is_in(PARTNER_COUNTRIES)
-        )
+        filtered_lf = filtered_lf.filter(pl.col("partner_country").is_in(PARTNER_COUNTRIES))
 
     if PRODUCT_CODES:
-        conditions = [
-            pl.col("product_code").str.slice(0, len(p)) == p for p in PRODUCT_CODES
-        ]
+        conditions = [pl.col("product_code").str.slice(0, len(p)) == p for p in PRODUCT_CODES]
         # Combine conditions with an OR
         combined_condition = functools.reduce(operator.or_, conditions)
         filtered_lf = filtered_lf.filter(combined_condition)
@@ -1401,15 +1173,9 @@ def _(
 
     # Also apply a simple logarithm to the quantity, value, and price columns
     filtered_lf = filtered_lf.with_columns(
-        pl.col(VALUE_COL_NAME + "_detrended")
-        .log()
-        .alias(VALUE_COL_NAME + "_detrended_log"),
-        pl.col(QUANTITY_COL_NAME + "_detrended")
-        .log()
-        .alias(QUANTITY_COL_NAME + "_detrended_log"),
-        pl.col(PRICE_COL_NAME + "_detrended")
-        .log()
-        .alias(PRICE_COL_NAME + "_detrended_log"),
+        pl.col(VALUE_COL_NAME + "_detrended").log().alias(VALUE_COL_NAME + "_detrended_log"),
+        pl.col(QUANTITY_COL_NAME + "_detrended").log().alias(QUANTITY_COL_NAME + "_detrended_log"),
+        pl.col(PRICE_COL_NAME + "_detrended").log().alias(PRICE_COL_NAME + "_detrended_log"),
         pl.col(TARIFF_COL_NAME).log().alias(TARIFF_COL_NAME + "_log"),
     )
     return (filtered_lf,)
@@ -1429,9 +1195,7 @@ def _(filtered_lf, mo, pl, unified_lf):
 
     mo.vstack(
         [
-            mo.md(
-                "First we filter down to only the data we're interested in: US imports from China"
-            ),
+            mo.md("First we filter down to only the data we're interested in: US imports from China"),
             mo.hstack(
                 [
                     pre_filter,
@@ -1457,9 +1221,7 @@ def _(mo):
 def _(TARIFF_COL_NAME, mo):
     dependent = "value_detrended_log"
     independent = TARIFF_COL_NAME + "_log"
-    mo.md(
-        f"In this case, we're considering the change in **{dependent}** following the imposition in tariffs"
-    )
+    mo.md(f"In this case, we're considering the change in **{dependent}** following the imposition in tariffs")
     return dependent, independent
 
 
@@ -1487,9 +1249,7 @@ def _(
         price_col_name=dependent,
     )
 
-    print(
-        f"--- Identified {tariff_changes_df.height} cases of tariff change in sample ---"
-    )
+    print(f"--- Identified {tariff_changes_df.height} cases of tariff change in sample ---")
     return (tariff_changes_df,)
 
 
@@ -1580,7 +1340,6 @@ def _():
     #     num_bins=5,
     # )
 
-
     # fig_impulse_binned
     return
 
@@ -1664,12 +1423,7 @@ def _(pycountry):
 @app.cell(hide_code=True)
 def _(cc_list_incl_ROW, pl, unified_lf):
     # Filter data again
-    filtered_lf_HM = unified_lf.filter(
-        (
-            pl.col("reporter_country").is_in(cc_list_incl_ROW)
-            & pl.col("partner_country").is_in(cc_list_incl_ROW),
-        )
-    )
+    filtered_lf_HM = unified_lf.filter((pl.col("reporter_country").is_in(cc_list_incl_ROW) & pl.col("partner_country").is_in(cc_list_incl_ROW),))
     return (filtered_lf_HM,)
 
 
@@ -1690,9 +1444,7 @@ def _(
         effect_year_range=EFFECT_YEAR_RANGE,
     )
 
-    clean_input_df_HM1 = input_df_HM1.drop_nans(
-        subset=["log_value", "tariff_us_china"]
-    )
+    clean_input_df_HM1 = input_df_HM1.drop_nans(subset=["log_value", "tariff_us_china"])
 
     mo.vstack(
         [
@@ -1707,12 +1459,8 @@ def _(
 
 @app.cell(hide_code=True)
 def _(EFFECT_YEAR_RANGE, mo):
-    regressors_HM1 = " + ".join(
-        [f"tariff_interaction_{year}" for year in EFFECT_YEAR_RANGE]
-    )
-    regression_formula_HM1 = (
-        f"log_value ~ {regressors_HM1} | alpha_ipt + alpha_jpt + alpha_ij"
-    )
+    regressors_HM1 = " + ".join([f"tariff_interaction_{year}" for year in EFFECT_YEAR_RANGE])
+    regression_formula_HM1 = f"log_value ~ {regressors_HM1} | alpha_ipt + alpha_jpt + alpha_ij"
 
     mo.vstack(
         [
@@ -1783,22 +1531,15 @@ def _(get_oil_exporting_countries, mo, pl, pycountry, unified_lf):
     # Identify oil countries -> those with >40% of their exports in hs code 27
     oil_country_list = get_oil_exporting_countries(unified_lf, 40)
 
-    without_oil_unified_lf = unified_lf.filter(
-        ~pl.col("reporter_country").is_in(oil_country_list)
-    )
+    without_oil_unified_lf = unified_lf.filter(~pl.col("reporter_country").is_in(oil_country_list))
 
     oil_country_list_pycountries = [
-        pycountry.countries.get(numeric=country)
-        for country in oil_country_list
-        if pycountry.countries.get(numeric=country)
+        pycountry.countries.get(numeric=country) for country in oil_country_list if pycountry.countries.get(numeric=country)
     ]
-
 
     mo.vstack(
         [
-            mo.md(
-                "We define oil exporters as those with >40% of their exports in hs code 27. This list is as follows:"
-            ),
+            mo.md("We define oil exporters as those with >40% of their exports in hs code 27. This list is as follows:"),
             [country.name for country in oil_country_list_pycountries],
         ]
     )
@@ -1818,12 +1559,7 @@ def _(pl, without_oil_unified_lf):
     ).collect()
 
     # Filter to our top 30 importers
-    top_30_importers = (
-        country_trade_values_2017.sort(by="value", descending=True)
-        .select("partner_country")
-        .to_series()
-        .to_list()[:29]
-    )
+    top_30_importers = country_trade_values_2017.sort(by="value", descending=True).select("partner_country").to_series().to_list()[:29]
     return (top_30_importers,)
 
 
@@ -1915,9 +1651,7 @@ def _(
 
     mo.vstack(
         [
-            mo.md(
-                "Expanding our sample beyond the paper's specification, up to 2023, we get the following result:"
-            ),
+            mo.md("Expanding our sample beyond the paper's specification, up to 2023, we get the following result:"),
             model_HM2_v2.summary(),
             model_HM2_v2.coefplot(),
         ]
@@ -1949,11 +1683,7 @@ def _(
     regression_df_HM2_v2,
     regression_formula_HM2,
 ):
-    regression_df_HM2_v3 = regression_df_HM2_v2.filter(
-        pl.col("product_code").is_in(
-            pl.Series(cm_us_tariffs["product_code"]).cast(pl.Utf8)
-        )
-    )
+    regression_df_HM2_v3 = regression_df_HM2_v2.filter(pl.col("product_code").is_in(pl.Series(cm_us_tariffs["product_code"]).cast(pl.Utf8)))
 
     with mo.persistent_cache(name="model_cache"):
         model_HM2_v3 = pyfixest.feols(
@@ -1964,13 +1694,9 @@ def _(
 
     mo.vstack(
         [
-            mo.md(
-                "Data filtered to include only products affected by Trump Tariffs:"
-            ),
+            mo.md("Data filtered to include only products affected by Trump Tariffs:"),
             regression_df_HM2_v3.describe(),
-            mo.md(
-                "Results when filtered to include only products affected by the tariffs:"
-            ),
+            mo.md("Results when filtered to include only products affected by the tariffs:"),
             model_HM2_v3.summary(),
             model_HM2_v3.coefplot(),
         ]
@@ -1993,11 +1719,7 @@ def _(
     regression_df_HM2_v2,
     regression_formula_HM2,
 ):
-    regression_df_HM2_v4 = regression_df_HM2_v2.filter(
-        ~pl.col("product_code").is_in(
-            pl.Series(cm_us_tariffs["product_code"]).cast(pl.Utf8)
-        )
-    )
+    regression_df_HM2_v4 = regression_df_HM2_v2.filter(~pl.col("product_code").is_in(pl.Series(cm_us_tariffs["product_code"]).cast(pl.Utf8)))
 
     with mo.persistent_cache(name="model_cache"):
         model_HM2_v4 = pyfixest.feols(
@@ -2008,13 +1730,9 @@ def _(
 
     mo.vstack(
         [
-            mo.md(
-                "Data filtered to include only products **not affected** by Trump Tariffs:"
-            ),
+            mo.md("Data filtered to include only products **not affected** by Trump Tariffs:"),
             regression_df_HM2_v4.describe(),
-            mo.md(
-                "Results when filtered to include only products **not affected** by the tariffs:"
-            ),
+            mo.md("Results when filtered to include only products **not affected** by the tariffs:"),
             model_HM2_v4.summary(),
             model_HM2_v4.coefplot(),
         ]
@@ -2059,9 +1777,7 @@ def _(CHINA_CC, UK_CC, USA_CC, mo, pycountry):
         f"| reporter_country + C(PostEvent) + partner_country"
     )
 
-    mo.md(
-        f"Formula is as such, assuming country of interest is the UK:<br> **{formula}**"
-    )
+    mo.md(f"Formula is as such, assuming country of interest is the UK:<br> **{formula}**")
     return
 
 

@@ -16,6 +16,7 @@ def _():
     import pandas as pd
     import plotly.graph_objects as go
     from plotly.subplots import make_subplots
+
     return go, mo, pd, pf, pl, px, pycountry
 
 
@@ -44,21 +45,14 @@ def _(pl):
 
         lf_sorted = lazy_df.sort(sort_by_col)
 
-        lf_ffilled = lf_sorted.with_columns(
-            pl.col(column_to_fill)
-            .forward_fill()
-            .over(group_by_cols)
-            .alias(temp_ffill_col_name)
-        )
+        lf_ffilled = lf_sorted.with_columns(pl.col(column_to_fill).forward_fill().over(group_by_cols).alias(temp_ffill_col_name))
 
         lf_bfilled_final = lf_ffilled.with_columns(
-            pl.col(temp_ffill_col_name)
-            .backward_fill()
-            .over(group_by_cols)
-            .alias(column_to_fill)  # Overwrite original column
+            pl.col(temp_ffill_col_name).backward_fill().over(group_by_cols).alias(column_to_fill)  # Overwrite original column
         )
 
         return lf_bfilled_final.drop(temp_ffill_col_name)
+
     return
 
 
@@ -181,12 +175,7 @@ def _(pycountry):
 @app.cell
 def _(cc_list_incl_ROW, pl, unified_lf):
     ### --- 0. Initial filtering to reduce size and ffill / bfill and report only relevant countries
-    filtered_lf = unified_lf.filter(
-        (
-            pl.col("reporter_country").is_in(cc_list_incl_ROW)
-            & pl.col("partner_country").is_in(cc_list_incl_ROW),
-        )
-    )
+    filtered_lf = unified_lf.filter((pl.col("reporter_country").is_in(cc_list_incl_ROW) & pl.col("partner_country").is_in(cc_list_incl_ROW),))
 
     # filtered_lf = fill_column_grouped_sorted(
     #     lazy_df=filtered_lf,
@@ -308,14 +297,9 @@ def _(CHINA_CC, EFFECT_YEAR_RANGE, USA_CC, filtered_lf, pl):
     ### --- 1. Extract the input data as required
     tariff_us_china_expr = (
         pl.col("average_tariff_official")
-        .filter(
-            (pl.col("partner_country") == USA_CC)
-            & (pl.col("reporter_country") == CHINA_CC)
-        )
+        .filter((pl.col("partner_country") == USA_CC) & (pl.col("reporter_country") == CHINA_CC))
         .mean()  # Take the average tariff if multiple entries exist for the same product
-        .over(
-            ["year", "product_code"]
-        )  # Apply this logic within each year and product_code group
+        .over(["year", "product_code"])  # Apply this logic within each year and product_code group
         .alias("tariff_us_china")
     )
 
@@ -335,11 +319,7 @@ def _(CHINA_CC, EFFECT_YEAR_RANGE, USA_CC, filtered_lf, pl):
     ### --- 2. Create the interaction terms
     for year in EFFECT_YEAR_RANGE:
         input_lf = input_lf.with_columns(
-            pl.when(
-                (pl.col("year") == str(year))
-                & (pl.col("importer") == USA_CC)
-                & (pl.col("exporter") == CHINA_CC)
-            )
+            pl.when((pl.col("year") == str(year)) & (pl.col("importer") == USA_CC) & (pl.col("exporter") == CHINA_CC))
             .then(pl.col("tariff_us_china"))
             .otherwise(pl.lit(0.0))
             .alias(f"tariff_interaction_{year}")
@@ -412,12 +392,8 @@ def _(clean_input_df):
 def _(EFFECT_YEAR_RANGE):
     ### --- 3. Define our regression formula
     # Remember the summation term!
-    regressors = " + ".join(
-        [f"tariff_interaction_{year}" for year in EFFECT_YEAR_RANGE]
-    )
-    regression_formula = (
-        f"log_value ~ {regressors} | alpha_ipt + alpha_jpt + alpha_ij"
-    )
+    regressors = " + ".join([f"tariff_interaction_{year}" for year in EFFECT_YEAR_RANGE])
+    regression_formula = f"log_value ~ {regressors} | alpha_ipt + alpha_jpt + alpha_ij"
     print(f"Regression formula is:\n{regression_formula}")
     return (regression_formula,)
 
@@ -547,9 +523,7 @@ def _(EFFECT_YEAR_RANGE, go, model):
         )
     )
 
-    fig_elasticities.update_layout(
-        xaxis_title="Year estimate", yaxis_title="Estimated elasticity"
-    )
+    fig_elasticities.update_layout(xaxis_title="Year estimate", yaxis_title="Estimated elasticity")
 
     fig_elasticities
     return
@@ -569,11 +543,7 @@ def _(CHINA_CC, USA_CC, pl, px, unified_lf):
         pl.col("partner_country") == USA_CC,
     )
 
-    us_china_trade_through_time = (
-        us_china_trade_through_time.group_by(["year"])
-        .agg(pl.mean("value"))
-        .sort("year")
-    ).collect()
+    us_china_trade_through_time = (us_china_trade_through_time.group_by(["year"]).agg(pl.mean("value")).sort("year")).collect()
 
     px.line(us_china_trade_through_time, x="year", y="value")
     return
@@ -640,22 +610,12 @@ def _(CHINA_CC, USA_CC, pl):
 
         # 1. Initial Filtering
         unified_lf_without_oil_filtered = (
-            df.filter(pl.col("year").is_in(relevant_years))
-            .filter(pl.col("partner_country").is_in(top_30_importers))
-            .filter(pl.col("value") > 0)
+            df.filter(pl.col("year").is_in(relevant_years)).filter(pl.col("partner_country").is_in(top_30_importers)).filter(pl.col("value") > 0)
         )
 
         # 2. Reshape data
-        agg_expressions = [
-            pl.col("value")
-            .filter(pl.col("year") == pl.lit(year))
-            .first()
-            .alias(f"val_{year}")
-            for year in relevant_years
-        ]
-        reshaped_lf = unified_lf_without_oil_filtered.group_by(
-            ["reporter_country", "partner_country", "product_code"]
-        ).agg(agg_expressions)
+        agg_expressions = [pl.col("value").filter(pl.col("year") == pl.lit(year)).first().alias(f"val_{year}") for year in relevant_years]
+        reshaped_lf = unified_lf_without_oil_filtered.group_by(["reporter_country", "partner_country", "product_code"]).agg(agg_expressions)
 
         val_p1_start_col = f"val_{period1_start_year}"
         val_p1_end_col = f"val_{period1_end_year}"
@@ -671,17 +631,8 @@ def _(CHINA_CC, USA_CC, pl):
                 & (pl.col(val_p1_end_col) > 0)
             )
             .with_columns(
-                y=(
-                    100
-                    * (
-                        pl.col(val_p1_end_col).log()
-                        - pl.col(val_p1_start_col).log()
-                    )
-                    / period1_duration
-                ),
-                PostEvent=pl.lit(0).cast(
-                    pl.Int8
-                ),  # Renamed from Post2017 for generality
+                y=(100 * (pl.col(val_p1_end_col).log() - pl.col(val_p1_start_col).log()) / period1_duration),
+                PostEvent=pl.lit(0).cast(pl.Int8),  # Renamed from Post2017 for generality
             )
             .select(
                 [
@@ -703,14 +654,7 @@ def _(CHINA_CC, USA_CC, pl):
                 & (pl.col(val_p2_end_col) > 0)
             )
             .with_columns(
-                y=(
-                    100
-                    * (
-                        pl.col(val_p2_end_col).log()
-                        - pl.col(val_p2_start_col).log()
-                    )
-                    / period2_duration
-                ),
+                y=(100 * (pl.col(val_p2_end_col).log() - pl.col(val_p2_start_col).log()) / period2_duration),
                 PostEvent=pl.lit(1).cast(pl.Int8),  # Renamed from Post2017
             )
             .select(
@@ -725,23 +669,13 @@ def _(CHINA_CC, USA_CC, pl):
         )
 
         # 5. Combine the two periods
-        regression_input_lf = pl.concat(
-            [period1_growth_lf, period2_growth_lf], how="vertical"
-        )
+        regression_input_lf = pl.concat([period1_growth_lf, period2_growth_lf], how="vertical")
 
         # 6. Add exporter dummies
         regression_input_lf = regression_input_lf.with_columns(
             [
-                pl.when(pl.col("reporter_country") == pl.lit(CHINA_CC))
-                .then(pl.lit(1))
-                .otherwise(pl.lit(0))
-                .cast(pl.Int8)
-                .alias("is_CHN_exporter"),
-                pl.when(pl.col("reporter_country") == pl.lit(USA_CC))
-                .then(pl.lit(1))
-                .otherwise(pl.lit(0))
-                .cast(pl.Int8)
-                .alias("is_USA_exporter"),
+                pl.when(pl.col("reporter_country") == pl.lit(CHINA_CC)).then(pl.lit(1)).otherwise(pl.lit(0)).cast(pl.Int8).alias("is_CHN_exporter"),
+                pl.when(pl.col("reporter_country") == pl.lit(USA_CC)).then(pl.lit(1)).otherwise(pl.lit(0)).cast(pl.Int8).alias("is_USA_exporter"),
             ]
         )
 
@@ -752,14 +686,13 @@ def _(CHINA_CC, USA_CC, pl):
         regression_df = regression_df.filter(pl.col("y").is_finite())
 
         return regression_df
+
     return (eq2_filtering_flexible,)
 
 
 @app.cell
 def _(pl):
-    def get_oil_exporting_countries(
-        lzdf: pl.LazyFrame, oil_export_percentage_threshold: float
-    ) -> list[str]:
+    def get_oil_exporting_countries(lzdf: pl.LazyFrame, oil_export_percentage_threshold: float) -> list[str]:
         """
         Filters a LazyFrame to find countries where oil products (HS code starting with '27')
         constitute a certain percentage of their total export value.
@@ -774,21 +707,15 @@ def _(pl):
             A list of reporter_country names that meet the criteria.
         """
         if not 0 <= oil_export_percentage_threshold <= 100:
-            raise ValueError(
-                "oil_export_percentage_threshold must be between 0 and 100."
-            )
+            raise ValueError("oil_export_percentage_threshold must be between 0 and 100.")
 
         # Calculate total export value for each country
-        total_exports_by_country = lzdf.group_by("reporter_country").agg(
-            pl.sum("value").alias("total_value")
-        )
+        total_exports_by_country = lzdf.group_by("reporter_country").agg(pl.sum("value").alias("total_value"))
 
         # Calculate total oil export value for each country
         # HS codes for oil and mineral fuels are under Chapter 27.
         oil_exports_by_country = (
-            lzdf.filter(pl.col("product_code").str.starts_with("27"))
-            .group_by("reporter_country")
-            .agg(pl.sum("value").alias("oil_value"))
+            lzdf.filter(pl.col("product_code").str.starts_with("27")).group_by("reporter_country").agg(pl.sum("value").alias("oil_value"))
         )
 
         # Join total exports with oil exports
@@ -797,28 +724,23 @@ def _(pl):
             on="reporter_country",
             how="left",  # Use left join to keep all countries, oil_value will be null if no oil exports
         ).with_columns(
-            pl.col("oil_value").fill_null(
-                0.0
-            )  # Fill nulls with 0 for countries with no oil exports
+            pl.col("oil_value").fill_null(0.0)  # Fill nulls with 0 for countries with no oil exports
         )
 
         # Calculate the percentage of oil exports
         country_export_summary = country_export_summary.with_columns(
-            ((pl.col("oil_value") / pl.col("total_value")) * 100).alias(
-                "oil_export_percentage"
-            )
+            ((pl.col("oil_value") / pl.col("total_value")) * 100).alias("oil_export_percentage")
         )
 
         # Filter countries above the threshold
         filtered_countries = (
-            country_export_summary.filter(
-                pl.col("oil_export_percentage") > oil_export_percentage_threshold
-            )
+            country_export_summary.filter(pl.col("oil_export_percentage") > oil_export_percentage_threshold)
             .select("reporter_country")
             .collect()  # Collect the results into a DataFrame
         )
 
         return filtered_countries["reporter_country"].to_list()
+
     return (get_oil_exporting_countries,)
 
 
@@ -827,9 +749,7 @@ def _(get_oil_exporting_countries, pl, unified_lf):
     # Identify oil countries -> those with >40% of their exports in hs code 27
     oil_country_list = get_oil_exporting_countries(unified_lf, 40)
 
-    without_oil_unified_lf = unified_lf.filter(
-        ~pl.col("reporter_country").is_in(oil_country_list)
-    )
+    without_oil_unified_lf = unified_lf.filter(~pl.col("reporter_country").is_in(oil_country_list))
     return (without_oil_unified_lf,)
 
 
@@ -847,12 +767,7 @@ def _(pl, without_oil_unified_lf):
     ).collect()
 
     # Filter to our top 30 importers
-    top_30_importers = (
-        country_trade_values_2017.sort(by="value", descending=True)
-        .select("partner_country")
-        .to_series()
-        .to_list()[:29]
-    )
+    top_30_importers = country_trade_values_2017.sort(by="value", descending=True).select("partner_country").to_series().to_list()[:29]
     return (top_30_importers,)
 
 
@@ -932,9 +847,7 @@ def _(CHINA_CC, USA_CC, pl, pycountry):
     ) -> pl.DataFrame:
         # Check if the country to isolate is in the top_30_importers list
         if country_to_isolate not in top_30_importers:
-            raise ValueError(
-                f"Country to isolate '{country_to_isolate}' is not in the top_30_importers list."
-            )
+            raise ValueError(f"Country to isolate '{country_to_isolate}' is not in the top_30_importers list.")
 
         # Convert year strings to int for duration calculation
         p1_start_int = int(period1_start_year)
@@ -957,22 +870,12 @@ def _(CHINA_CC, USA_CC, pl, pycountry):
 
         # 1. Initial Filtering
         unified_lf_without_oil_filtered = (
-            df.filter(pl.col("year").is_in(relevant_years))
-            .filter(pl.col("partner_country").is_in(top_30_importers))
-            .filter(pl.col("value") > 0)
+            df.filter(pl.col("year").is_in(relevant_years)).filter(pl.col("partner_country").is_in(top_30_importers)).filter(pl.col("value") > 0)
         )
 
         # 2. Reshape data
-        agg_expressions = [
-            pl.col("value")
-            .filter(pl.col("year") == pl.lit(year))
-            .first()
-            .alias(f"val_{year}")
-            for year in relevant_years
-        ]
-        reshaped_lf = unified_lf_without_oil_filtered.group_by(
-            ["reporter_country", "partner_country", "product_code"]
-        ).agg(agg_expressions)
+        agg_expressions = [pl.col("value").filter(pl.col("year") == pl.lit(year)).first().alias(f"val_{year}") for year in relevant_years]
+        reshaped_lf = unified_lf_without_oil_filtered.group_by(["reporter_country", "partner_country", "product_code"]).agg(agg_expressions)
 
         val_p1_start_col = f"val_{period1_start_year}"
         val_p1_end_col = f"val_{period1_end_year}"
@@ -988,14 +891,7 @@ def _(CHINA_CC, USA_CC, pl, pycountry):
                 & (pl.col(val_p1_end_col) > 0)
             )
             .with_columns(
-                y=(
-                    100
-                    * (
-                        pl.col(val_p1_end_col).log()
-                        - pl.col(val_p1_start_col).log()
-                    )
-                    / period1_duration
-                ),
+                y=(100 * (pl.col(val_p1_end_col).log() - pl.col(val_p1_start_col).log()) / period1_duration),
                 PostEvent=pl.lit(0).cast(pl.Int8),
             )
             .select(
@@ -1018,14 +914,7 @@ def _(CHINA_CC, USA_CC, pl, pycountry):
                 & (pl.col(val_p2_end_col) > 0)
             )
             .with_columns(
-                y=(
-                    100
-                    * (
-                        pl.col(val_p2_end_col).log()
-                        - pl.col(val_p2_start_col).log()
-                    )
-                    / period2_duration
-                ),
+                y=(100 * (pl.col(val_p2_end_col).log() - pl.col(val_p2_start_col).log()) / period2_duration),
                 PostEvent=pl.lit(1).cast(pl.Int8),
             )
             .select(
@@ -1040,54 +929,32 @@ def _(CHINA_CC, USA_CC, pl, pycountry):
         )
 
         # 5. Combine the two periods
-        regression_input_lf = pl.concat(
-            [period1_growth_lf, period2_growth_lf], how="vertical"
-        )
+        regression_input_lf = pl.concat([period1_growth_lf, period2_growth_lf], how="vertical")
 
         # 6. Add exporter dummies based on the country_to_isolate
         # CHN and USA are now hardcoded
         regression_input_lf = regression_input_lf.with_columns(
             [
-                pl.when(
-                    (pl.col("reporter_country") == pl.lit(CHINA_CC))
-                    & (pl.col("partner_country") == pl.lit(country_to_isolate))
-                )
+                pl.when((pl.col("reporter_country") == pl.lit(CHINA_CC)) & (pl.col("partner_country") == pl.lit(country_to_isolate)))
                 .then(pl.lit(1))
                 .otherwise(pl.lit(0))
                 .cast(pl.Int8)
-                .alias(
-                    f"is_{pycountry.countries.get(numeric=CHINA_CC).alpha_3}_exporter_{country_to_isolate}_importer"
-                ),
-                pl.when(
-                    (pl.col("reporter_country") == pl.lit(USA_CC))
-                    & (pl.col("partner_country") == pl.lit(country_to_isolate))
-                )
+                .alias(f"is_{pycountry.countries.get(numeric=CHINA_CC).alpha_3}_exporter_{country_to_isolate}_importer"),
+                pl.when((pl.col("reporter_country") == pl.lit(USA_CC)) & (pl.col("partner_country") == pl.lit(country_to_isolate)))
                 .then(pl.lit(1))
                 .otherwise(pl.lit(0))
                 .cast(pl.Int8)
-                .alias(
-                    f"is_{pycountry.countries.get(numeric=USA_CC).alpha_3}_exporter_{country_to_isolate}_importer"
-                ),
-                pl.when(
-                    (pl.col("reporter_country") == pl.lit(CHINA_CC))
-                    & (pl.col("partner_country") != pl.lit(country_to_isolate))
-                )
+                .alias(f"is_{pycountry.countries.get(numeric=USA_CC).alpha_3}_exporter_{country_to_isolate}_importer"),
+                pl.when((pl.col("reporter_country") == pl.lit(CHINA_CC)) & (pl.col("partner_country") != pl.lit(country_to_isolate)))
                 .then(pl.lit(1))
                 .otherwise(pl.lit(0))
                 .cast(pl.Int8)
-                .alias(
-                    f"is_{pycountry.countries.get(numeric=CHINA_CC).alpha_3}_exporter_non{country_to_isolate}_importer"
-                ),
-                pl.when(
-                    (pl.col("reporter_country") == pl.lit(USA_CC))
-                    & (pl.col("partner_country") != pl.lit(country_to_isolate))
-                )
+                .alias(f"is_{pycountry.countries.get(numeric=CHINA_CC).alpha_3}_exporter_non{country_to_isolate}_importer"),
+                pl.when((pl.col("reporter_country") == pl.lit(USA_CC)) & (pl.col("partner_country") != pl.lit(country_to_isolate)))
                 .then(pl.lit(1))
                 .otherwise(pl.lit(0))
                 .cast(pl.Int8)
-                .alias(
-                    f"is_{pycountry.countries.get(numeric=USA_CC).alpha_3}_exporter_non{country_to_isolate}_importer"
-                ),
+                .alias(f"is_{pycountry.countries.get(numeric=USA_CC).alpha_3}_exporter_non{country_to_isolate}_importer"),
             ]
         )
 
@@ -1098,6 +965,7 @@ def _(CHINA_CC, USA_CC, pl, pycountry):
         regression_df = regression_df.filter(pl.col("y").is_finite())
 
         return regression_df
+
     return (eq2_filtering_flexible_THIRDCOUNTRY,)
 
 
@@ -1132,7 +1000,6 @@ def _(
         f"is_{pycountry.countries.get(numeric=USA_CC).alpha_3}_exporter_non{country_of_interest}_importer:PostEvent "
         f"| reporter_country + C(PostEvent) + partner_country"
     )
-
 
     model_eq2MOD_v0 = pf.feols(
         fml=formula,
@@ -1189,7 +1056,6 @@ def _(
         print(model_eq2MOD_v0.summary())
         return model_eq2MOD_v0.coefplot()
 
-
     _()
     return
 
@@ -1236,7 +1102,6 @@ def _(
         print(" --- Running model, isolating France --- ")
         print(model_eq2MOD_v0.summary())
         return model_eq2MOD_v0.coefplot()
-
 
     _()
     return
@@ -1285,7 +1150,6 @@ def _(
         print(model_eq2MOD_v0.summary())
         return model_eq2MOD_v0.coefplot()
 
-
     _()
     return
 
@@ -1301,7 +1165,6 @@ def _(
     without_oil_unified_lf,
 ):
     JAPAN_CC = pycountry.countries.search_fuzzy("Japan")[0].numeric
-
 
     def _():
         country_of_interest = JAPAN_CC
@@ -1335,7 +1198,6 @@ def _(
         print(model_eq2MOD_v0.summary())
         return model_eq2MOD_v0.coefplot()
 
-
     _()
     return
 
@@ -1351,7 +1213,6 @@ def _(
     without_oil_unified_lf,
 ):
     AUSTRALIA_CC = pycountry.countries.search_fuzzy("Australia")[0].numeric
-
 
     def _():
         country_of_interest = AUSTRALIA_CC
@@ -1385,7 +1246,6 @@ def _(
         print(model_eq2MOD_v0.summary())
         return model_eq2MOD_v0.coefplot()
 
-
     _()
     return
 
@@ -1401,7 +1261,6 @@ def _(
     without_oil_unified_lf,
 ):
     SINGAPORE_CC = pycountry.countries.search_fuzzy("Singapore")[0].numeric
-
 
     def _():
         country_of_interest = SINGAPORE_CC
@@ -1435,7 +1294,6 @@ def _(
         print(model_eq2MOD_v0.summary())
         return model_eq2MOD_v0.coefplot()
 
-
     _()
     return
 
@@ -1451,7 +1309,6 @@ def _(
     without_oil_unified_lf,
 ):
     CANADA_CC = pycountry.countries.search_fuzzy("CANADA")[0].numeric
-
 
     def _():
         country_of_interest = CANADA_CC
@@ -1484,7 +1341,6 @@ def _(
         print(" --- Running model, isolating Singapore --- ")
         print(model_eq2MOD_v0.summary())
         return model_eq2MOD_v0.coefplot()
-
 
     _()
     return
@@ -1519,26 +1375,12 @@ def _(CHINA_CC, USA_CC, pl, top_30_importers):
         )
 
         # 2. Reshape data to have year-specific values in columns using group_by and agg
-        reshaped_lf = unified_lf_without_oil_filtered.group_by(
-            ["reporter_country", "partner_country", "product_code"]
-        ).agg(
+        reshaped_lf = unified_lf_without_oil_filtered.group_by(["reporter_country", "partner_country", "product_code"]).agg(
             [
-                pl.col("value")
-                .filter(pl.col("year") == pl.lit("2012"))
-                .first()
-                .alias("val_2012"),
-                pl.col("value")
-                .filter(pl.col("year") == pl.lit("2016"))
-                .first()
-                .alias("val_2016"),
-                pl.col("value")
-                .filter(pl.col("year") == pl.lit("2017"))
-                .first()
-                .alias("val_2017"),
-                pl.col("value")
-                .filter(pl.col("year") == pl.lit("2022"))
-                .first()
-                .alias("val_2022"),
+                pl.col("value").filter(pl.col("year") == pl.lit("2012")).first().alias("val_2012"),
+                pl.col("value").filter(pl.col("year") == pl.lit("2016")).first().alias("val_2016"),
+                pl.col("value").filter(pl.col("year") == pl.lit("2017")).first().alias("val_2017"),
+                pl.col("value").filter(pl.col("year") == pl.lit("2022")).first().alias("val_2022"),
             ]
         )
 
@@ -1546,9 +1388,7 @@ def _(CHINA_CC, USA_CC, pl, top_30_importers):
         period1_growth_lf = (
             reshaped_lf.filter(
                 pl.col("val_2012").is_not_null()
-                & (
-                    pl.col("val_2012") > 0
-                )  # Ensure positivity again after aggregation
+                & (pl.col("val_2012") > 0)  # Ensure positivity again after aggregation
                 & pl.col("val_2016").is_not_null()
                 & (pl.col("val_2016") > 0)
             )
@@ -1571,10 +1411,7 @@ def _(CHINA_CC, USA_CC, pl, top_30_importers):
         # 4. Calculate growth rates for Period 2 (2017-2022)
         period2_growth_lf = (
             reshaped_lf.filter(
-                pl.col("val_2017").is_not_null()
-                & (pl.col("val_2017") > 0)
-                & pl.col("val_2022").is_not_null()
-                & (pl.col("val_2022") > 0)
+                pl.col("val_2017").is_not_null() & (pl.col("val_2017") > 0) & pl.col("val_2022").is_not_null() & (pl.col("val_2022") > 0)
             )
             .with_columns(
                 y=100 * (pl.col("val_2022").log() - pl.col("val_2017").log()) / 5,
@@ -1592,23 +1429,13 @@ def _(CHINA_CC, USA_CC, pl, top_30_importers):
         )
 
         # 5. Combine the two periods
-        regression_input_lf = pl.concat(
-            [period1_growth_lf, period2_growth_lf], how="vertical"
-        )
+        regression_input_lf = pl.concat([period1_growth_lf, period2_growth_lf], how="vertical")
 
         # 6. Add exporter dummies
         regression_input_lf = regression_input_lf.with_columns(
             [
-                pl.when(pl.col("reporter_country") == pl.lit(CHINA_CC))
-                .then(pl.lit(1))
-                .otherwise(pl.lit(0))
-                .cast(pl.Int8)
-                .alias("is_CHN_exporter"),
-                pl.when(pl.col("reporter_country") == pl.lit(USA_CC))
-                .then(pl.lit(1))
-                .otherwise(pl.lit(0))
-                .cast(pl.Int8)
-                .alias("is_USA_exporter"),
+                pl.when(pl.col("reporter_country") == pl.lit(CHINA_CC)).then(pl.lit(1)).otherwise(pl.lit(0)).cast(pl.Int8).alias("is_CHN_exporter"),
+                pl.when(pl.col("reporter_country") == pl.lit(USA_CC)).then(pl.lit(1)).otherwise(pl.lit(0)).cast(pl.Int8).alias("is_USA_exporter"),
             ]
         )
 
@@ -1618,6 +1445,7 @@ def _(CHINA_CC, USA_CC, pl, top_30_importers):
         regression_df = regression_df.drop_nulls(subset=["y"])
         regression_df = regression_df.filter(pl.col("y").is_finite())
         return regression_df
+
     return (eq2_filtering,)
 
 
@@ -1627,9 +1455,7 @@ def _(eq2_filtering, pd, pf, pl, without_oil_unified_lf):
     cm_us_tariffs = pd.read_csv("data/intermediate/cm_us_tariffs.csv")
 
     without_oil_unified_lf_only_targeted = without_oil_unified_lf.filter(
-        pl.col("product_code").is_in(
-            cm_us_tariffs["product_code"].astype(str).to_list()
-        )
+        pl.col("product_code").is_in(cm_us_tariffs["product_code"].astype(str).to_list())
     )
 
     eq2_spec2_regression_df = eq2_filtering(without_oil_unified_lf_only_targeted)
@@ -1664,14 +1490,9 @@ def _(mo):
 
 @app.cell
 def _(cm_us_tariffs, eq2_filtering, pf, pl, without_oil_unified_lf):
-    non_targeted = without_oil_unified_lf.filter(
-        ~pl.col("product_code").is_in(
-            cm_us_tariffs["product_code"].astype(str).to_list()
-        )
-    )
+    non_targeted = without_oil_unified_lf.filter(~pl.col("product_code").is_in(cm_us_tariffs["product_code"].astype(str).to_list()))
 
     regression_df_nontariffed = eq2_filtering(non_targeted)
-
 
     model_eq2_spec3 = pf.feols(
         fml="y ~ is_CHN_exporter:Post2017 + is_USA_exporter:Post2017 | reporter_country + C(Post2017)",

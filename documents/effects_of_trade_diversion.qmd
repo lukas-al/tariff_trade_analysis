@@ -1,0 +1,90 @@
+---
+title: "Effects of Diversion on the UK: Evidence from the 2018 US-China Trade War"
+author: "Lukas Alemu"
+date: today
+format:
+  html:
+    toc: true
+    toc-location: left
+    code-fold: true
+    code-summary: "Show Code"
+  pdf: default
+jupyter: tariff_trade_analysis
+bibliography: references.bib
+---
+
+```{python}
+#| label: setup
+#| include: false
+
+import re
+from typing import Optional
+
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+import polars as pl
+import pycountry
+import pyfixest
+```
+
+# Summary
+
+We investigate evidence of dumping during trade war 1 (2018-2020).
+
+We estimate the cross-elasticity of imports of a range of countries, of tariffed goods from China, to US tariffs on China of those goods.
+
+We find that trade between the US and China fell as a result of the tariffs, estimating that the direct effect of a 1% tariff imposed by the US on China for product P being an \[X%\]\[stderr\] reduction in imports of those goods over the subsequent year.
+
+We estimate that for those goods tariffed by the US, the rest-of-world imports \[X%\]\[stderr\] more in quantities and \[Y%\]\[stderr\] in values over the following year. There is evidence that some of China's trading partners do experience a reduced price of Chinese exports in tariffed products, though the effect is highly heterogenous.
+
+Turning to the UK, we do not find evidence of 'dumping' from China on the UK which is significant at the aggregate level. We estimate that for those goods tariffed by the US, the UK’s imports of those goods changed by \[X%\]\[stderr\] in values and \[Y%\]\[stderr\] in quantities. This is comparable to a basket of similar open economies, but lower than many countries in the EU.
+
+Figure \[X\] shows the estimated cross elasticity for a basket of countries, both in values (blue) and quantities (red).
+
+Conditional on the policy response remaining similar, this evidence points to the fact that dumping to the UK of Chinese goods will not be significant, and is not meaningfully relevant to UK domestic prices.
+
+```{python}
+#| label: figure-cross-elasticity
+#| include: false
+
+# Implement the cross-elasticity chart here
+
+```
+
+# Introduction
+
+Describe the US-China trade war, and the evolution of this over Trade war 1 to trade war 2.
+
+In 2018, the US administration concluded a series of investigations into 'unfair trade practices' by Chinese industry. These investigations concluded with significant tariffs on US imports of certain goods, namely tariffs of \[X%\] on \[\$Ybn\] of imports of solar-panel related goods and \[X%\] on \[\$Ybn\] of washing machine imports \[CHECK\].
+
+Following the application of unilateral tariffs by the US on imports of steel and aluminium \[X% on \\\$Ybn\], the US expanded the breadth and extent of tariffs applied to Chinese goods, enacted under section 301 of US trade law \[CHECK THIS\]. Known colloquially as the List 1, this applied a flat tariff of \[X%\] to \[\$Xbn\] dollars of Chinese goods.
+
+Far from the end, this constituted merely the opening salvo in the broader trade war to come. Without exhaustively listing the long list of measures and countermeasures, the US and its global trading partners implemented an escalating list of tariffs, retaliations, and exclusions. The position of US policy changed only little during the Biden administration. See Figure \[X\] for a view of the broad path of tariffs during trade war 1.
+
+Trade War 2, launched in early 2025, constitutes a significant escalation of the trade war, both in magnitude and breadth of targeted countries / products. While the specific details of tariffs are in constant flux, given the US administration's tendency to propose ...
+
+...
+
+Point is - trade war 2 is big, and the UK policymaker is concerned about the potential impacts at the policy horizon.
+
+## The dumping question
+
+-   The trade war is primarily targeting China.
+
+-   China is the world's largest manufacturer and exporter of goods.
+
+-   The US is the largest consumer of these goods.
+
+-   The US imposing these tariffs is a significant demand shock for Chinese exporters
+
+-   These exporters, in response to the loss of their trading relationships, must find new export markets.
+
+-   Policymakers in these potential export markets are concerned about the influx of cheap, highly-competitive Chinese manufactured goods.
+
+For the UK policymaker, the most direct channel the current trade war might impact the UK through is via ’dumping’. Dumping is defined as the following process:
+
+1.  The US imposes import duties on imports of Chinese goods
+2.  US demand for these goods falls due to their higher price
+3.  Chinese exporters, in response to lower demand creating excess supply, redirect these goods at lower prices to other markets including the UK.
+4.  The influx of goods at lower prices, a) lowers the price level, and b) dislocates local manufacturers who face higher competition than previously.

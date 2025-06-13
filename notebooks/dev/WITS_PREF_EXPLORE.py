@@ -10,6 +10,7 @@ def _():
     import polars as pl
     import altair as alt
     import pandas as pd
+
     return alt, mo, pd, pl
 
 
@@ -26,7 +27,7 @@ def _(pl):
 @app.cell
 def _(lf):
     df = lf.collect().to_pandas()
-    df['i'].unique()
+    df["i"].unique()
     return (df,)
 
 
@@ -49,7 +50,7 @@ app._unparsable_cell(
            '276', '300', '084', '116', '430', '798', '170', '296', '028',
            '012'
     """,
-    name="_"
+    name="_",
 )
 
 
@@ -80,20 +81,20 @@ def _(df, pd):
         valid_columns_count = 0
 
         # --- Identify numeric columns and create histograms ---
-        numeric_cols = dataframe.select_dtypes(include=['number']).columns.tolist()
+        numeric_cols = dataframe.select_dtypes(include=["number"]).columns.tolist()
         for col in numeric_cols:
             if dataframe[col].nunique() > 1:
-                traces.append(go.Histogram(x=dataframe[col], name=col.replace('_', ' ').title()))
-                subplot_titles.append(f'Distribution of {col.replace("_", " ").title()}')
+                traces.append(go.Histogram(x=dataframe[col], name=col.replace("_", " ").title()))
+                subplot_titles.append(f"Distribution of {col.replace('_', ' ').title()}")
                 valid_columns_count += 1
 
         # --- Identify categorical columns and create bar charts ---
-        categorical_cols = dataframe.select_dtypes(include=['object', 'category']).columns.tolist()
+        categorical_cols = dataframe.select_dtypes(include=["object", "category"]).columns.tolist()
         for col in categorical_cols:
             if dataframe[col].nunique() > 1:
                 counts = dataframe[col].value_counts()
-                traces.append(go.Bar(x=counts.index, y=counts.values, name=col.replace('_', ' ').title()))
-                subplot_titles.append(f'Frequency of {col.replace("_", " ").title()}')
+                traces.append(go.Bar(x=counts.index, y=counts.values, name=col.replace("_", " ").title()))
+                subplot_titles.append(f"Frequency of {col.replace('_', ' ').title()}")
                 valid_columns_count += 1
 
         # --- Create subplots ---
@@ -101,14 +102,17 @@ def _(df, pd):
             fig = go.Figure()
             fig.update_layout(
                 title="Dataset Profile",
-                xaxis_showgrid=False, xaxis_zeroline=False, xaxis_visible=False,
-                yaxis_showgrid=False, yaxis_zeroline=False, yaxis_visible=False,
+                xaxis_showgrid=False,
+                xaxis_zeroline=False,
+                xaxis_visible=False,
+                yaxis_showgrid=False,
+                yaxis_zeroline=False,
+                yaxis_visible=False,
                 annotations=[
                     go.layout.Annotation(
-                        text="No suitable columns found for profiling.",
-                        xref="paper", yref="paper", showarrow=False, font=dict(size=14)
+                        text="No suitable columns found for profiling.", xref="paper", yref="paper", showarrow=False, font=dict(size=14)
                     )
-                ]
+                ],
             )
             return fig
 
@@ -123,18 +127,17 @@ def _(df, pd):
                     fig.add_trace(traces[trace_index], row=r, col=c)
                     trace_index += 1
                 else:
-                     fig.update_xaxes(visible=False, row=r, col=c)
-                     fig.update_yaxes(visible=False, row=r, col=c)
+                    fig.update_xaxes(visible=False, row=r, col=c)
+                    fig.update_yaxes(visible=False, row=r, col=c)
 
         fig.update_layout(
-            title_text='Dataset Profile',
-            height=350 * rows, # Adjust height dynamically
+            title_text="Dataset Profile",
+            height=350 * rows,  # Adjust height dynamically
             showlegend=False,
-            margin=dict(t=100)
+            margin=dict(t=100),
         )
 
         return fig
-
 
     profile_chart = profile_dataframe_plotly(df)
     return go, make_subplots, math, profile_chart, profile_dataframe_plotly

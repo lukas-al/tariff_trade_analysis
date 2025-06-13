@@ -10,6 +10,7 @@ def _():
 
     import marimo as mo
     import polars as pl
+
     return mo, pl
 
 
@@ -102,20 +103,16 @@ def _(pl):
             .select(["product_code", "year", trend_line_output_col_name])
         )
 
-        detrended_lf = target_lf.join(
-            global_avg_price_trend_lf, on=["product_code", "year"], how="left"
-        )
+        detrended_lf = target_lf.join(global_avg_price_trend_lf, on=["product_code", "year"], how="left")
 
         detrended_lf = detrended_lf.with_columns(
-            (
-                pl.col(target_metric_to_detrend_col)
-                - pl.col(trend_line_output_col_name)
-            ).alias(target_metric_to_detrend_col + "_detrended")
+            (pl.col(target_metric_to_detrend_col) - pl.col(trend_line_output_col_name)).alias(target_metric_to_detrend_col + "_detrended")
         )
 
         # detrended_lf = detrended_lf.sort("year") # Leads to OOM on the full dataset
 
         return detrended_lf
+
     return (apply_detrending_to_lazyframe,)
 
 
@@ -147,9 +144,7 @@ def _(pl):
     file_to_detrend_and_overwrite = "data/final/unified_trade_tariff_partitioned/"
 
     unified_lf = pl.scan_parquet(file_to_detrend_and_overwrite)
-    unified_lf = unified_lf.with_columns(
-        (pl.col("value") / pl.col("quantity")).alias("unit_value")
-    )
+    unified_lf = unified_lf.with_columns((pl.col("value") / pl.col("quantity")).alias("unit_value"))
     print(
         "Loaded unified_lf with unit_value:\n",
         unified_lf.head().collect(engine="streaming"),
@@ -191,7 +186,6 @@ def _(pl, unified_lf):
             .alias(interpolate_col)  # Ensure the original column is updated
         )
         return processed_lf
-
 
     group_keys = ["product_code", "partner_country", "reporter_country"]
 

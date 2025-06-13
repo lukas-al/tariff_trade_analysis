@@ -21,6 +21,7 @@ def _():
     from mpil_tariff_trade_analysis.utils.pipeline_funcs import (
         vectorized_hs_translation,
     )
+
     return (
         Dict,
         List,
@@ -55,9 +56,7 @@ def _(mo):
 @app.cell
 def _(glob, os, pl, re):
     # Load and consolidate all the WITS data
-    def consolidate_wits_tariff_data(
-        tariff_type="AVEMFN", base_dir="data/raw/WITS_tariff/"
-    ) -> pl.LazyFrame:
+    def consolidate_wits_tariff_data(tariff_type="AVEMFN", base_dir="data/raw/WITS_tariff/") -> pl.LazyFrame:
         tariff_dir = os.path.join(base_dir, tariff_type)
 
         # 1: find all CSV files for this tariff type
@@ -169,27 +168,19 @@ def _(glob, os, pl, re):
         # # logger.info(
         #     f"Successfully scanned {successful_files} files, failed to scan {failed_files} files"
         # )
-        print(
-            f"Successfully scanned {successful_files} files, failed to scan {failed_files} files"
-        )
+        print(f"Successfully scanned {successful_files} files, failed to scan {failed_files} files")
 
         if not dfs:
             # # logger.warning("No valid CSV files found to scan.")
-            raise FileNotFoundError(
-                "No WITS CSV files found or scanned successfully."
-            )
+            raise FileNotFoundError("No WITS CSV files found or scanned successfully.")
 
         # Combine all dataframes
         # # logger.info("Combining all scanned dataframes")
         print("Combining all scanned dfs")
-        combined_df = pl.concat(
-            dfs, how="vertical_relaxed"
-        )  # Use relaxed to handle potential schema variations if any
+        combined_df = pl.concat(dfs, how="vertical_relaxed")  # Use relaxed to handle potential schema variations if any
 
         # Add a column for tariff type
-        combined_df = combined_df.with_columns(
-            pl.lit(tariff_type).alias("tariff_type")
-        )
+        combined_df = combined_df.with_columns(pl.lit(tariff_type).alias("tariff_type"))
 
         combined_df.head().collect()
 
@@ -200,18 +191,9 @@ def _(glob, os, pl, re):
                     pl.col("Reporter_ISO_N").alias("reporter_country"),
                     pl.col("ProductCode").alias("product_code"),
                     pl.col("NomenCode").alias("hs_revision"),
-                    pl.col("SimpleAverage")
-                    .alias("tariff_rate")
-                    .str.strip_chars()
-                    .cast(pl.Float32),
-                    pl.col("Min_Rate")
-                    .alias("min_rate")
-                    .str.strip_chars()
-                    .cast(pl.Float32),
-                    pl.col("Max_Rate")
-                    .alias("max_rate")
-                    .str.strip_chars()
-                    .cast(pl.Float32),
+                    pl.col("SimpleAverage").alias("tariff_rate").str.strip_chars().cast(pl.Float32),
+                    pl.col("Min_Rate").alias("min_rate").str.strip_chars().cast(pl.Float32),
+                    pl.col("Max_Rate").alias("max_rate").str.strip_chars().cast(pl.Float32),
                     pl.col("tariff_type"),
                 ]
             )
@@ -224,31 +206,17 @@ def _(glob, os, pl, re):
                     pl.col("Partner").alias("partner_country"),
                     pl.col("ProductCode").alias("product_code"),
                     pl.col("NomenCode").alias("hs_revision"),
-                    pl.col("SimpleAverage")
-                    .alias("tariff_rate")
-                    .str.strip_chars()
-                    .cast(pl.Float32),
-                    pl.col("Min_Rate")
-                    .alias("min_rate")
-                    .str.strip_chars()
-                    .cast(pl.Float32),
-                    pl.col("Max_Rate")
-                    .alias("max_rate")
-                    .str.strip_chars()
-                    .cast(pl.Float32),
+                    pl.col("SimpleAverage").alias("tariff_rate").str.strip_chars().cast(pl.Float32),
+                    pl.col("Min_Rate").alias("min_rate").str.strip_chars().cast(pl.Float32),
+                    pl.col("Max_Rate").alias("max_rate").str.strip_chars().cast(pl.Float32),
                     pl.col("tariff_type"),
                 ]
             )
 
         return combined_df
 
-
-    consolidated_lf_AVEMFN = consolidate_wits_tariff_data(
-        "AVEMFN", "data/raw/WITS_tariff/"
-    )
-    consolidated_lf_AVEPref = consolidate_wits_tariff_data(
-        "AVEPref", "data/raw/WITS_tariff/"
-    )
+    consolidated_lf_AVEMFN = consolidate_wits_tariff_data("AVEMFN", "data/raw/WITS_tariff/")
+    consolidated_lf_AVEPref = consolidate_wits_tariff_data("AVEPref", "data/raw/WITS_tariff/")
     return consolidated_lf_AVEMFN, consolidated_lf_AVEPref
 
 
@@ -287,17 +255,13 @@ def _(translated_lf_AVEMFN):
 @app.cell
 def _(pl, translated_lf_AVEMFN):
     # Now we've created duplicates, we need to join these duplicate product codes together
-    aggregated_lf_AVEMFN = translated_lf_AVEMFN.group_by(
-        ["reporter_country", "year", "product_code", "tariff_type"]
-    ).agg(
+    aggregated_lf_AVEMFN = translated_lf_AVEMFN.group_by(["reporter_country", "year", "product_code", "tariff_type"]).agg(
         pl.mean("tariff_rate"),
         pl.mean("min_rate"),
         pl.mean("max_rate"),
     )
 
-    print(
-        f"Translated and regaggregated lf AVEMFN head:\n{aggregated_lf_AVEMFN.head().collect()}"
-    )
+    print(f"Translated and regaggregated lf AVEMFN head:\n{aggregated_lf_AVEMFN.head().collect()}")
     return (aggregated_lf_AVEMFN,)
 
 
@@ -317,9 +281,7 @@ def _(pl, translated_lf_AVEPref):
         pl.mean("max_rate"),
     )
 
-    print(
-        f"Translated and regaggregated lf AVEPref head:\n{aggregated_lf_AVEPref.head().collect()}"
-    )
+    print(f"Translated and regaggregated lf AVEPref head:\n{aggregated_lf_AVEPref.head().collect()}")
     return (aggregated_lf_AVEPref,)
 
 
@@ -340,13 +302,9 @@ def _(aggregated_lf_AVEPref, pd, pl):
 
     # Minor cleans and convert to polars
     pref_group_mapping.columns = ["pref_group_code", "country_iso_num"]
-    pref_group_mapping["country_iso_num"] = (
-        pref_group_mapping["country_iso_num"].astype(str).str.zfill(3)
-    )
+    pref_group_mapping["country_iso_num"] = pref_group_mapping["country_iso_num"].astype(str).str.zfill(3)
     pref_group_mapping = pref_group_mapping.groupby("pref_group_code").agg(list)
-    pref_group_mapping_lf = pl.from_pandas(
-        pref_group_mapping, include_index=True
-    ).lazy()
+    pref_group_mapping_lf = pl.from_pandas(pref_group_mapping, include_index=True).lazy()
 
     # Join on the AVEpref dataset
     joined_pref_lf_AVEPref = aggregated_lf_AVEPref.join(
@@ -357,13 +315,9 @@ def _(aggregated_lf_AVEPref, pd, pl):
 
     # Explode out to create entries for each individual country (memory intensive!)
     joined_pref_lf_AVEPref = joined_pref_lf_AVEPref.explode("country_iso_num")
-    joined_pref_lf_AVEPref = joined_pref_lf_AVEPref.with_columns(
-        pl.col("country_iso_num").alias("partner_country")
-    ).drop("country_iso_num")
+    joined_pref_lf_AVEPref = joined_pref_lf_AVEPref.with_columns(pl.col("country_iso_num").alias("partner_country")).drop("country_iso_num")
 
-    print(
-        f"Joined Pref LF head, post explode:\n{joined_pref_lf_AVEPref.head().collect(engine='streaming')}"
-    )
+    print(f"Joined Pref LF head, post explode:\n{joined_pref_lf_AVEPref.head().collect(engine='streaming')}")
     return (joined_pref_lf_AVEPref,)
 
 
@@ -395,9 +349,7 @@ def _(Dict, List, pycountry):
                 "578",
                 "756",
             ],  # Europe EFTA, nes -> Iceland, Liechtenstein, Norway, Switzerland
-            "490": [
-                "158"
-            ],  # Other Asia, nes -> Taiwan (ISO 3166-1 numeric is 158)
+            "490": ["158"],  # Other Asia, nes -> Taiwan (ISO 3166-1 numeric is 158)
             "918": [
                 "040",
                 "056",
@@ -449,9 +401,7 @@ def _(Dict, List, pycountry):
             print(f"Mapped {cc} to {iso_nums}")
             return iso_nums
         except LookupError:
-            print(
-                f"Direct pycountry lookup for code '{cc}' failed. Trying name and iso3 alpha lookup."
-            )
+            print(f"Direct pycountry lookup for code '{cc}' failed. Trying name and iso3 alpha lookup.")
 
         # If that fails, try get the name of the country from the provided mappings and use that for pycountry
         country_name = baci_map_names.get(cc) or wits_map_names.get(cc)
@@ -471,18 +421,14 @@ def _(Dict, List, pycountry):
 
                     if fuzzy_matches:
                         iso_nums = [fuzzy_matches[0].numeric]
-                        print(
-                            f"Mapped {cc} to {iso_nums} using country name *fuzzy*"
-                        )
+                        print(f"Mapped {cc} to {iso_nums} using country name *fuzzy*")
                         return iso_nums
 
                     else:
                         pass
 
                 except LookupError:
-                    print(
-                        f"Unable to fuzzy find a match for {country_name}. Code {cc}."
-                    )
+                    print(f"Unable to fuzzy find a match for {country_name}. Code {cc}.")
 
         if iso3_code:
             print(f"Trying ISO3 alpha code for country {cc}.")
@@ -497,6 +443,7 @@ def _(Dict, List, pycountry):
 
         print("Failed to match entirely. Returning original code.")
         return [cc]
+
     return (identify_iso_code,)
 
 
@@ -510,72 +457,43 @@ def _(
 ):
     def create_mapping_df(lf: pl.LazyFrame, col_name: str) -> pl.DataFrame:
         # Get the unique codes from the series
-        unique_codes = (
-            lf.select(pl.col(col_name).unique()).collect().to_series().to_list()
-        )
+        unique_codes = lf.select(pl.col(col_name).unique()).collect().to_series().to_list()
 
         #! FOR TESTING ONLY!
         # unique_codes.append("697")
         # print(unique_codes)
 
         # Load our reference data - this is marginally inefficient but feels cleaner
-        baci_reference_path = Path(
-            "data/raw/BACI_HS92_V202501/country_codes_V202501.csv"
-        )
-        baci_map = pl.read_csv(
-            baci_reference_path, infer_schema=False, encoding="utf8"
-        )
+        baci_reference_path = Path("data/raw/BACI_HS92_V202501/country_codes_V202501.csv")
+        baci_map = pl.read_csv(baci_reference_path, infer_schema=False, encoding="utf8")
         baci_map = baci_map.with_columns(pl.col("country_code").str.zfill(3))
-        baci_map_names = dict(
-            zip(baci_map["country_code"], baci_map["country_name"], strict=False)
-        )
-        baci_map_iso3 = dict(
-            zip(baci_map["country_code"], baci_map["country_iso3"], strict=False)
-        )
+        baci_map_names = dict(zip(baci_map["country_code"], baci_map["country_name"], strict=False))
+        baci_map_iso3 = dict(zip(baci_map["country_code"], baci_map["country_iso3"], strict=False))
         # print(f"BACI Mapping: {baci_map_names}")
         # print(f"BACI Mapping: {baci_map_iso3}")
 
         wits_reference_path = Path("data/raw/WITS_country_codes.csv")
-        wits_map = pl.read_csv(
-            wits_reference_path, infer_schema=False, encoding="utf8"
-        )
+        wits_map = pl.read_csv(wits_reference_path, infer_schema=False, encoding="utf8")
         wits_map = wits_map.with_columns(pl.col("Numeric Code").str.zfill(3))
-        wits_map_names = dict(
-            zip(wits_map["Numeric Code"], wits_map["Country Name"], strict=False)
-        )
-        wits_map_iso3 = dict(
-            zip(wits_map["Numeric Code"], wits_map["ISO3"], strict=False)
-        )
+        wits_map_names = dict(zip(wits_map["Numeric Code"], wits_map["Country Name"], strict=False))
+        wits_map_iso3 = dict(zip(wits_map["Numeric Code"], wits_map["ISO3"], strict=False))
         # print(f"WITS Mapping: {wits_map_names}")
         # print(f"WITS Mapping: {wits_map_iso3}")
 
         # Map the codes
         mapping_data = []
         for cc in unique_codes:
-            iso_num_codes = identify_iso_code(
-                cc, baci_map_names, baci_map_iso3, wits_map_names, wits_map_iso3
-            )
-            mapping_data.append(
-                {"original_code": cc, "iso_num_list": iso_num_codes}
-            )
+            iso_num_codes = identify_iso_code(cc, baci_map_names, baci_map_iso3, wits_map_names, wits_map_iso3)
+            mapping_data.append({"original_code": cc, "iso_num_list": iso_num_codes})
 
         # Create a df
-        mapping_df = pl.DataFrame(mapping_data).with_columns(
-            pl.col("iso_num_list").cast(pl.List(pl.Utf8))
-        )
+        mapping_df = pl.DataFrame(mapping_data).with_columns(pl.col("iso_num_list").cast(pl.List(pl.Utf8)))
 
         return mapping_df
 
-
-    mapping_df_AVEPref_reporter = create_mapping_df(
-        joined_pref_lf_AVEPref, "reporter_country"
-    )
-    mapping_df_AVEPref_partner = create_mapping_df(
-        joined_pref_lf_AVEPref, "partner_country"
-    )
-    mapping_df_AVEMFN_reporter = create_mapping_df(
-        aggregated_lf_AVEMFN, "reporter_country"
-    )
+    mapping_df_AVEPref_reporter = create_mapping_df(joined_pref_lf_AVEPref, "reporter_country")
+    mapping_df_AVEPref_partner = create_mapping_df(joined_pref_lf_AVEPref, "partner_country")
+    mapping_df_AVEMFN_reporter = create_mapping_df(aggregated_lf_AVEMFN, "reporter_country")
     return (
         mapping_df_AVEMFN_reporter,
         mapping_df_AVEPref_partner,
@@ -599,9 +517,7 @@ def _(
     pl,
 ):
     # Apply these mappings
-    def apply_mapping(
-        lf: pl.LazyFrame, mapping_df: pl.DataFrame, target_col_name: str
-    ) -> pl.LazyFrame:
+    def apply_mapping(lf: pl.LazyFrame, mapping_df: pl.DataFrame, target_col_name: str) -> pl.LazyFrame:
         lf = lf.join(
             mapping_df.lazy(),
             left_on=target_col_name,
@@ -609,38 +525,23 @@ def _(
             how="left",
         )
 
-        lf = (
-            lf.explode("iso_num_list")
-            .with_columns(pl.col("iso_num_list").alias(target_col_name))
-            .drop("iso_num_list")
-        )
+        lf = lf.explode("iso_num_list").with_columns(pl.col("iso_num_list").alias(target_col_name)).drop("iso_num_list")
 
         return lf
 
-
-    AVEMFN_lf_clean = apply_mapping(
-        aggregated_lf_AVEMFN, mapping_df_AVEMFN_reporter, "reporter_country"
-    )
+    AVEMFN_lf_clean = apply_mapping(aggregated_lf_AVEMFN, mapping_df_AVEMFN_reporter, "reporter_country")
 
     # Apply mapping twice, once for reporter and partner country for the AVEPref
-    AVEPref_lf_clean = apply_mapping(
-        joined_pref_lf_AVEPref, mapping_df_AVEPref_reporter, "reporter_country"
-    )
-    AVEPref_lf_clean = apply_mapping(
-        AVEPref_lf_clean, mapping_df_AVEPref_partner, "partner_country"
-    )
+    AVEPref_lf_clean = apply_mapping(joined_pref_lf_AVEPref, mapping_df_AVEPref_reporter, "reporter_country")
+    AVEPref_lf_clean = apply_mapping(AVEPref_lf_clean, mapping_df_AVEPref_partner, "partner_country")
     return AVEMFN_lf_clean, AVEPref_lf_clean
 
 
 @app.cell
 def _(AVEMFN_lf_clean, AVEPref_lf_clean):
-    print(
-        f"AVEMFN lf head, collected post retranslation, explosion, aggregation:\n{AVEMFN_lf_clean.head().collect(engine='streaming')}"
-    )
+    print(f"AVEMFN lf head, collected post retranslation, explosion, aggregation:\n{AVEMFN_lf_clean.head().collect(engine='streaming')}")
 
-    print(
-        f"AVEPref lf head, collected post retranslation, explosion, aggregation:\n{AVEPref_lf_clean.head().collect(engine='streaming')}"
-    )
+    print(f"AVEPref lf head, collected post retranslation, explosion, aggregation:\n{AVEPref_lf_clean.head().collect(engine='streaming')}")
     return
 
 
@@ -653,18 +554,14 @@ def _(mo):
 @app.cell
 def _(AVEMFN_lf_clean):
     print("Sinking AVEMFN")
-    AVEMFN_lf_clean.sink_parquet(
-        "data/intermediate/WITS_AVEMFN_CLEAN.parquet", compression="zstd"
-    )
+    AVEMFN_lf_clean.sink_parquet("data/intermediate/WITS_AVEMFN_CLEAN.parquet", compression="zstd")
     return
 
 
 @app.cell
 def _(AVEPref_lf_clean):
     print("Sinking AVEPREF")
-    AVEPref_lf_clean.sink_parquet(
-        "data/intermediate/WITS_AVEPref_CLEAN.parquet", compression="zstd"
-    )
+    AVEPref_lf_clean.sink_parquet("data/intermediate/WITS_AVEPref_CLEAN.parquet", compression="zstd")
     return
 
 

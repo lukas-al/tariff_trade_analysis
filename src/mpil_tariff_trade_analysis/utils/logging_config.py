@@ -102,9 +102,7 @@ def setup_logging(log_level=None):
 
     # Create formatters
     # File formatter remains standard
-    file_formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s"
-    )
+    file_formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s")
     # Console formatter uses the new ColoredFormatter
     console_format = "%(asctime)s - %(levelname)s - %(message)s"
     console_formatter = ColoredFormatter(fmt=console_format)

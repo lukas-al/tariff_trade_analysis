@@ -44,3 +44,6 @@ __marimo__/*
 
 # Planning
 planning/*
+
+# Word docs lol
+*.docx

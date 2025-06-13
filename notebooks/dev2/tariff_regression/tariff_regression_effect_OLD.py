@@ -1,5 +1,3 @@
-
-
 import marimo
 
 __generated_with = "0.13.3"
@@ -52,9 +50,7 @@ def _(unified_lf):
     # This means we need to create time series of each product and country pair. Or we could simply iterate over the whole table? Maybe that's actually fine.
 
     # Unique list of all countries
-    country_list = set(
-        unified_lf.select("reporter_country").unique().collect()["reporter_country"].to_list()
-    ).intersection(
+    country_list = set(unified_lf.select("reporter_country").unique().collect()["reporter_country"].to_list()).intersection(
         unified_lf.select("partner_country").unique().collect()["partner_country"].to_list()
     )
 
@@ -76,24 +72,19 @@ def _(pl, product_list, time, tqdm, unified_lf):
         country = "840"  # Fix to be USA for now
         # country_name = pycountry.countries.get(numeric=country).name
         country_name = "USA"
-        product_vals = unified_lf.filter(
-            pl.col('partner_country') == country,
-            pl.col('product_code') == product
-        ).group_by(
-            ['year']
-        ).agg(
-            pl.sum('value'),
-            pl.sum('quantity'),
-            pl.mean('average_tariff_official'),
-        ).with_columns(
-            (pl.col('value') / pl.col('quantity')).alias('unit_value')
-        ).drop(
-            'value',
-            'quantity'
-        ).with_columns(
-            pl.lit(country).alias('country_code'),
-            pl.lit(product).alias('product_code')
-        ).sort('year')
+        product_vals = (
+            unified_lf.filter(pl.col("partner_country") == country, pl.col("product_code") == product)
+            .group_by(["year"])
+            .agg(
+                pl.sum("value"),
+                pl.sum("quantity"),
+                pl.mean("average_tariff_official"),
+            )
+            .with_columns((pl.col("value") / pl.col("quantity")).alias("unit_value"))
+            .drop("value", "quantity")
+            .with_columns(pl.lit(country).alias("country_code"), pl.lit(product).alias("product_code"))
+            .sort("year")
+        )
         df = product_vals.collect()
 
         data_list.append(df)
@@ -107,24 +98,20 @@ def _(pl, product_list, time, tqdm, unified_lf):
 
         # break
 
-    print(f"Total time to pass over table is {int(time.time()-starttime)}s")
+    print(f"Total time to pass over table is {int(time.time() - starttime)}s")
     return (data_list,)
 
 
 @app.cell
 def _(data_list, pickle):
-    with open(
-        "src/mpil_tariff_trade_analysis/dev2/visualise/processed_ts_USA_product_averages.pkl", "wb"
-    ) as f:
+    with open("src/mpil_tariff_trade_analysis/dev2/visualise/processed_ts_USA_product_averages.pkl", "wb") as f:
         pickle.dump(data_list, f)
     return
 
 
 @app.cell
 def _(pickle):
-    with open(
-        "src/mpil_tariff_trade_analysis/dev2/visualise/processed_ts_USA_product_averages.pkl", "rb"
-    ) as f:
+    with open("src/mpil_tariff_trade_analysis/dev2/visualise/processed_ts_USA_product_averages.pkl", "rb") as f:
         saved_data_list = pickle.load(f)
     return (saved_data_list,)
 
